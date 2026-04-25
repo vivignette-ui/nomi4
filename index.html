@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nomi - Instagram Drafts</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300;0,14..32,400;0,14..32,500;0,14..32,600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0e0e10;
+  --bg2:#17171b;
+  --bg3:#1f1f25;
+  --bg4:#272730;
+  --accent:#526C90;
+  --accent2:#7a9cbd;
+  --accent-soft:rgba(82,108,144,0.16);
+  --accent-border:rgba(122,156,189,0.28);
+  --green:#5caa88;
+  --green-soft:rgba(92,170,136,0.12);
+  --green-border:rgba(92,170,136,0.30);
+  --t1:#eeeef2;
+  --t2:#b8b8c8;
+  --t3:#7e7e90;
+  --b1:rgba(255,255,255,0.07);
+  --b2:rgba(255,255,255,0.11);
+  --b3:rgba(255,255,255,0.20);
+  --r8:8px;
+  --r12:12px;
+  --r16:16px;
+  --r22:16px;
+  --rpill:100px;
+  --ease:cubic-bezier(0.4,0,0.2,1);
+  --trans:0.18s cubic-bezier(0.4,0,0.2,1);
+}
+html,body{
+  min-height:100%;
+  background:radial-gradient(ellipse at 30% 20%, #141c2a 0%, #0a0a0e 60%);
+  font-family:'Inter',-apple-system,sans-serif;
+  color:var(--t1);
+  -webkit-font-smoothing:antialiased;
+  font-size:14px;
+}
+.app{min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:0 16px 96px}
+.topbar{width:100%;max-width:720px;display:flex;align-items:center;justify-content:space-between;padding:22px 0 0}
+.logo{font-size:15px;font-weight:600;letter-spacing:-0.03em;color:var(--t1)}
+.prog-wrap{width:100%;max-width:720px;margin-top:24px;display:flex;gap:6px}
+.prog-seg{flex:1;height:2px;border-radius:100px;background:var(--b1);transition:background 0.3s var(--ease)}
+.prog-seg.done{background:var(--accent2)}
+.prog-seg.active{background:var(--accent2)}
+.card{
+  width:100%;max-width:720px;
+  background:rgba(28,28,36,0.72);
+  backdrop-filter:blur(20px);
+  -webkit-backdrop-filter:blur(20px);
+  border:1px solid rgba(255,255,255,0.09);
+  border-radius:var(--r22);
+  padding:40px 44px;
+  margin-top:20px;
+  animation:fadeUp 0.35s ease both;
+  box-shadow:0 8px 40px rgba(0,0,0,0.35),inset 0 1px 0 rgba(255,255,255,0.06);
+}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:580px){.card{padding:28px 22px;border-radius:var(--r16)}}
+.screen{display:none}
+.screen.active{display:block}
+.overline{font-size:11px;font-weight:500;letter-spacing:0.07em;text-transform:uppercase;color:var(--t3);margin-bottom:10px}
+.display{font-size:28px;font-weight:500;letter-spacing:-0.035em;line-height:1.18;color:var(--t1);margin-bottom:10px}
+.h2{font-size:20px;font-weight:500;letter-spacing:-0.03em;color:var(--t1);margin-bottom:6px}
+.body{font-size:14px;font-weight:300;color:var(--t2);line-height:1.65}
+.sec-label{font-size:11px;font-weight:500;letter-spacing:0.07em;text-transform:uppercase;color:var(--t3);margin-bottom:14px}
+.div{height:1px;background:rgba(255,255,255,0.07);margin:28px 0}
+.req{color:var(--accent2)}
+.opt{font-weight:300;color:var(--t3)}
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:7px;
+  font-family:'Inter',-apple-system,sans-serif;font-weight:500;
+  cursor:pointer;border:none;border-radius:var(--rpill);
+  transition:all var(--trans);outline:none;white-space:nowrap;
+}
+.btn:focus-visible{outline:2px solid var(--accent2);outline-offset:3px}
+.btn:active{transform:scale(0.97)}
+.btn:disabled{opacity:.7;cursor:not-allowed}
+.btn-primary{background:var(--accent);color:#fff;font-size:14px;padding:11px 24px}
+.btn-primary:hover{background:var(--accent2)}
+.btn-back{
+  background:var(--bg3);border:1px solid var(--b2);font-family:'Inter',sans-serif;font-size:13px;font-weight:500;color:var(--t2);cursor:pointer;display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:var(--rpill);transition:all var(--trans)
+}
+.btn-back:hover{border-color:var(--b3);color:var(--t1);background:var(--bg4)}
+.field-label{font-size:13px;font-weight:500;color:var(--t1);display:block;margin-bottom:7px}
+input[type=email],textarea{
+  font-family:'Inter',-apple-system,sans-serif;font-size:14px;font-weight:300;
+  width:100%;padding:11px 14px;
+  background:rgba(255,255,255,0.05);
+  border:1px solid rgba(255,255,255,0.11);
+  border-radius:var(--r8);
+  color:var(--t1);outline:none;
+  transition:border-color var(--trans),box-shadow var(--trans);
+  resize:none;
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+}
+input::placeholder,textarea::placeholder{color:var(--t3)}
+input:focus,textarea:focus{border-color:rgba(90,135,197,0.6);box-shadow:0 0 0 3px rgba(61,107,170,0.15)}
+.draft-grid{display:grid;grid-template-columns:1fr;gap:10px;margin-bottom:24px}
+.draft-card{
+  background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.09);border-radius:var(--r16);
+  padding:20px 22px;cursor:pointer;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  transition:all var(--trans);position:relative;
+}
+.draft-card:hover{background:rgba(255,255,255,0.07);border-color:rgba(255,255,255,0.16);transform:translateY(-2px)}
+.draft-card.sel{background:var(--accent-soft);border-color:var(--accent-border)}
+.draft-title{font-size:14px;font-weight:500;color:var(--t1);margin-bottom:5px;padding-right:28px}
+.draft-body{font-size:13px;font-weight:300;color:var(--t2);line-height:1.65;margin-bottom:12px;white-space:pre-wrap}
+.draft-tone{
+  display:inline-block;font-size:10px;font-weight:500;letter-spacing:0.04em;text-transform:uppercase;
+  color:var(--accent2);background:var(--accent-soft);border:1px solid var(--accent-border);border-radius:var(--rpill);padding:3px 10px;
+}
+.draft-radio{
+  position:absolute;top:18px;right:18px;width:18px;height:18px;border-radius:50%;
+  border:1.5px solid var(--b2);background:var(--bg4);display:flex;align-items:center;justify-content:center;transition:all var(--trans)
+}
+.draft-card.sel .draft-radio{border-color:var(--accent);background:var(--accent)}
+.draft-card.sel .draft-radio::after{content:'';display:block;width:7px;height:7px;border-radius:50%;background:#fff}
+.rating-row{margin-bottom:22px}
+.rating-q{font-size:13px;font-weight:500;color:var(--t1);margin-bottom:10px;line-height:1.5}
+.rating-scale{display:flex;gap:6px}
+.r-btn{
+  width:42px;height:42px;border-radius:var(--r8);border:1px solid var(--b2);background:var(--bg3);
+  font-family:'Inter',sans-serif;font-size:13px;font-weight:500;color:var(--t3);cursor:pointer;transition:all var(--trans);flex-shrink:0;
+}
+.r-btn:hover{border-color:var(--b3);color:var(--t1);background:var(--bg4)}
+.r-btn.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.rating-labels{display:flex;justify-content:space-between;margin-top:7px;padding:0 2px}
+.r-lbl{font-size:11px;font-weight:500;color:var(--t2)}
+.fc-row{margin-bottom:22px}
+.fc-q{font-size:14px;font-weight:500;color:var(--t1);margin-bottom:10px;line-height:1.5}
+.fc-opts{display:flex;gap:8px;flex-wrap:wrap}
+.fc-btn{
+  font-family:'Inter',sans-serif;font-size:13px;font-weight:500;padding:9px 18px;border-radius:var(--rpill);
+  border:1px solid var(--b2);background:var(--bg3);color:var(--t2);cursor:pointer;transition:all var(--trans);
+}
+.fc-btn:hover{border-color:var(--b3);color:var(--t1);background:var(--bg4)}
+.fc-btn.chosen{background:var(--accent-soft);border-color:var(--accent-border);color:var(--accent2)}
+.act-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:24px}
+@media(max-width:440px){.act-grid{grid-template-columns:1fr}}
+.act-card{
+  background:var(--bg3);border:1px solid var(--b1);border-radius:var(--r12);padding:14px 16px;cursor:pointer;
+  font-family:'Inter',sans-serif;font-size:13px;font-weight:500;color:var(--t2);text-align:left;display:flex;align-items:center;gap:10px;transition:all var(--trans)
+}
+.act-card:hover{background:var(--bg4);border-color:var(--b2);color:var(--t1);transform:translateY(-2px)}
+.act-card.done{background:var(--green-soft);border-color:var(--green-border);color:var(--green)}
+.act-icon{
+  width:28px;height:28px;min-width:28px;border-radius:var(--r8);background:var(--bg4);border:1px solid var(--b1);
+  display:flex;align-items:center;justify-content:center;transition:all var(--trans);color:var(--t3)
+}
+.nyla-box{background:var(--bg2);border:1px solid var(--b2);border-radius:var(--r22);padding:36px 40px;margin-top:8px}
+@media(max-width:580px){.nyla-box{padding:24px 20px}}
+.nyla-logo{font-size:22px;font-weight:600;letter-spacing:-0.04em;color:var(--t1);margin-bottom:8px}
+.nyla-sub{font-size:14px;font-weight:300;color:var(--t2);line-height:1.65;margin-bottom:24px;max-width:440px}
+.nyla-box input[type=email]{background:var(--bg3);border-color:var(--b2);margin-bottom:10px}
+.nyla-confirm{font-size:13px;color:var(--green);margin-top:12px;display:none;align-items:center;gap:6px}
+.err{margin-top:10px;font-size:12px;color:#ff9696;display:none}
+.okmsg{margin-top:14px;font-size:13px;color:var(--green);display:none;align-items:center;gap:6px}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <span class="logo">nomi</span>
+  </div>
+
+  <div class="prog-wrap" id="prog">
+    <div class="prog-seg" id="ps1"></div>
+    <div class="prog-seg" id="ps2"></div>
+    <div class="prog-seg" id="ps3"></div>
+    <div class="prog-seg" id="ps4"></div>
+  </div>
+
+  <div class="screen active card" id="s1">
+    <div class="overline">NOMI</div>
+    <div class="display">Draft a post for Instagram</div>
+    <p class="body" style="margin-bottom:28px;max-width:480px;color:rgb(236,236,236)">Create content based on a social self you shape;</p>
+
+    <div style="margin-bottom:30px">
+      <label class="field-label" for="task-input">What do you want to post about? <span class="req">*</span></label>
+      <textarea id="task-input" rows="4" placeholder="Describe your idea and any context. e.g. My morning routine, honest tone, more personal than inspiring."></textarea>
+      <div class="err" id="err-s1-task"></div>
+    </div>
+
+    <button class="btn btn-primary" onclick="startFlow()">Generate drafts</button>
+  </div>
+
+  <div class="screen card" id="s4">
+    <button class="btn-back" onclick="go('s1')" style="margin-bottom:22px">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><polyline points="15 18 9 12 15 6"/></svg>
+      Back
+    </button>
+    <div class="h2" style="margin-bottom:6px">Character-shaped drafts</div>
+    <p class="body" style="margin-bottom:20px">Drafts generated through your description and a social self shaped from your intent.</p>
+    <div class="sec-label">Choose the draft you'd most likely post <span class="req">*</span></div>
+    <div class="draft-grid" id="drafts-b"></div>
+    <div class="err" id="err-s4-draft"></div>
+
+    <div class="div"></div>
+    <div class="sec-label">Rate this draft</div>
+
+    <div class="rating-row">
+      <div class="rating-q">How much editing would your chosen draft need? <span class="req">*</span></div>
+      <div class="rating-scale">
+        <button class="r-btn" onclick="rate(this,'rb1')">1</button>
+        <button class="r-btn" onclick="rate(this,'rb1')">2</button>
+        <button class="r-btn" onclick="rate(this,'rb1')">3</button>
+        <button class="r-btn" onclick="rate(this,'rb1')">4</button>
+        <button class="r-btn" onclick="rate(this,'rb1')">5</button>
+      </div>
+      <div class="rating-labels"><span class="r-lbl">No editing</span><span class="r-lbl">Lots of editing</span></div>
+    </div>
+
+    <div class="rating-row">
+      <div class="rating-q">How well does this match the social self you intended? <span class="req">*</span></div>
+      <div class="rating-scale">
+        <button class="r-btn" onclick="rate(this,'rb2')">1</button>
+        <button class="r-btn" onclick="rate(this,'rb2')">2</button>
+        <button class="r-btn" onclick="rate(this,'rb2')">3</button>
+        <button class="r-btn" onclick="rate(this,'rb2')">4</button>
+        <button class="r-btn" onclick="rate(this,'rb2')">5</button>
+      </div>
+      <div class="rating-labels"><span class="r-lbl">Doesn't match</span><span class="r-lbl">Perfect match</span></div>
+    </div>
+    <div class="err" id="err-s4-ratings"></div>
+
+    <div class="div"></div>
+    <button class="btn btn-primary" onclick="goToS6()">
+      Continue
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>
+  </div>
+
+  <div class="screen card" id="s6">
+    <button class="btn-back" onclick="go('s4')" style="margin-bottom:22px">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><polyline points="15 18 9 12 15 6"/></svg>
+      Back
+    </button>
+    <div class="overline">For future</div>
+    <div class="h2" style="margin-bottom:6px">What would you do with this character? <span class="opt">(optional)</span></div>
+    <p class="body" style="margin-bottom:24px">You don't need to do anything now. Just tap anything that feels useful to you.</p>
+
+    <div class="act-grid">
+      <button class="act-card" onclick="togAct(this)"><div class="act-icon">+</div>Save this character</button>
+      <button class="act-card" onclick="togAct(this)"><div class="act-icon">+</div>Reuse this character</button>
+      <button class="act-card" onclick="togAct(this)"><div class="act-icon">+</div>Make another character</button>
+      <button class="act-card" onclick="togAct(this)"><div class="act-icon">+</div>Make more polished</button>
+      <button class="act-card" onclick="togAct(this)"><div class="act-icon">+</div>Make more playful</button>
+    </div>
+
+    <div class="div"></div>
+    <div class="sec-label" style="margin-bottom:18px">A few quick questions</div>
+
+    <div class="fc-row">
+      <div class="fc-q">Would you want to save this social character for future posts on Instagram? <span class="opt">(optional)</span></div>
+      <div class="fc-opts">
+        <button class="fc-btn" onclick="fc(this,'p1')">Yes, definitely</button>
+        <button class="fc-btn" onclick="fc(this,'p1')">Maybe</button>
+        <button class="fc-btn" onclick="fc(this,'p1')">Not really</button>
+      </div>
+    </div>
+    <div class="fc-row">
+      <div class="fc-q">Would you want another character for a different kind of post? <span class="opt">(optional)</span></div>
+      <div class="fc-opts">
+        <button class="fc-btn" onclick="fc(this,'p2')">Yes, definitely</button>
+        <button class="fc-btn" onclick="fc(this,'p2')">Maybe</button>
+        <button class="fc-btn" onclick="fc(this,'p2')">Not really</button>
+      </div>
+    </div>
+
+    <div style="margin-top:20px">
+      <label class="field-label" for="open-q">What would make this more useful over time? <span class="opt">(optional)</span></label>
+      <textarea id="open-q" rows="3" placeholder="Share anything that comes to mind..."></textarea>
+    </div>
+
+    <div class="div"></div>
+    <button class="btn btn-primary" onclick="goToS7()">
+      Continue
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>
+  </div>
+
+  <div class="screen card" id="s7">
+    <button class="btn-back" onclick="go('s6')" style="margin-bottom:22px">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><polyline points="15 18 9 12 15 6"/></svg>
+      Back
+    </button>
+    <div class="overline">What comes next</div>
+    <div class="h2" style="margin-bottom:20px">One more concept to react to</div>
+
+    <div class="nyla-box">
+      <div class="nyla-logo">Nyla</div>
+      <p class="nyla-sub">Nyla helps you shape and manage different social characters over time: one per platform, one per context, all in one place.</p>
+      <label class="field-label" for="nyla-email">Email address <span class="opt">(optional)</span></label>
+      <input type="email" id="nyla-email" placeholder="your@email.com">
+      <button class="btn btn-primary" style="width:100%;border-radius:var(--r8);margin-top:2px" onclick="joinWL()">Join the waitlist</button>
+      <div class="nyla-confirm" id="nyla-confirm">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+        You're on the list.
+      </div>
+      <div class="err" id="err-s7-email"></div>
+    </div>
+
+    <div class="div"></div>
+    <div class="sec-label" style="margin-bottom:18px">Rate this concept <span class="opt" style="text-transform:none;letter-spacing:0">(optional)</span></div>
+
+    <div class="rating-row">
+      <div class="rating-q">How interesting is the idea of Nyla to you? <span class="opt">(optional)</span></div>
+      <div class="rating-scale">
+        <button class="r-btn" onclick="rate(this,'rn1')">1</button>
+        <button class="r-btn" onclick="rate(this,'rn1')">2</button>
+        <button class="r-btn" onclick="rate(this,'rn1')">3</button>
+        <button class="r-btn" onclick="rate(this,'rn1')">4</button>
+        <button class="r-btn" onclick="rate(this,'rn1')">5</button>
+      </div>
+      <div class="rating-labels"><span class="r-lbl">Not interesting</span><span class="r-lbl">Very interesting</span></div>
+    </div>
+
+    <div class="fc-row">
+      <div class="rating-q" style="font-size:13px">Would you join the waitlist for Nyla? <span class="opt">(optional)</span></div>
+      <div class="fc-opts">
+        <button class="fc-btn" onclick="fc(this,'n1')">Yes</button>
+        <button class="fc-btn" onclick="fc(this,'n1')">Maybe</button>
+        <button class="fc-btn" onclick="fc(this,'n1')">No</button>
+      </div>
+    </div>
+    <div class="err" id="err-s7-core"></div>
+
+    <div class="div"></div>
+    <button class="btn btn-primary" onclick="submitResponse()" style="font-size:14px;padding:11px 24px">Submit</button>
+    <div id="submit-confirm" class="okmsg">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+      Thank you. Your responses have been recorded.
+    </div>
+  </div>
+</div>
+
+<script>
+var sessionId = null;
+var selectedPlatform = 'Instagram';
+var taskText = '';
+var notesText = '';
+var chosenDraft = null;
+var drafts = [];
+var generationId = null;
+var waitlistJoined = false;
+var submitCompleted = false;
+
+var responses = {
+  ratings: {},
+  forcedChoice: {},
+  actions: [],
+  selectedDraftIndex: null
+};
+
+var inferredSelfProfile = {
+  mode: 'Instagram social self',
+  tone: 42,
+  polish: 52,
+  energy: 46,
+  selfFeel: 'Infer a natural Instagram social self from the user task and make the output feel personal, appealing, and socially intentional.',
+  vibes: ['clean', 'natural', 'socially intentional']
+};
+
+function getOrCreateSessionId() {
+  if (!sessionId) {
+    sessionId = localStorage.getItem('nomi_session_id') || (window.crypto && crypto.randomUUID ? crypto.randomUUID() : 'sess_' + Date.now() + '_' + Math.random().toString(36).slice(2));
+    localStorage.setItem('nomi_session_id', sessionId);
+  }
+  return sessionId;
+}
+
+function clearErrors() {
+  document.querySelectorAll('.err').forEach(function(el){ el.style.display = 'none'; el.textContent = ''; });
+}
+
+function showError(id, message) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = message;
+  el.style.display = 'block';
+}
+
+function safeJsonFromResponse(res) {
+  return res.text().then(function(text){
+    try { return text ? JSON.parse(text) : {}; }
+    catch(e) { return { error: text || 'Non-JSON error response from server' }; }
+  });
+}
+
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function setButtonLoading(btn, loading, loadingText) {
+  if (!btn) return;
+  if (loading) {
+    btn.dataset.originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = loadingText || 'Loading...';
+  } else {
+    btn.disabled = false;
+    if (btn.dataset.originalText) btn.innerHTML = btn.dataset.originalText;
+  }
+}
+
+function buildDrafts(targetId, data) {
+  var html = '';
+  data.forEach(function(d, i) {
+    html += '<div class="draft-card" tabindex="0" onclick="selDraft(this, ' + i + ')" onkeydown="kbDraft(event, this, ' + i + ')">';
+    html += '<div class="draft-radio"></div>';
+    html += '<div class="draft-title">' + escapeHtml(d.title || '') + '</div>';
+    html += '<div class="draft-body">' + escapeHtml(d.body || '') + '</div>';
+    html += '<span class="draft-tone">' + escapeHtml(d.tone || '') + '</span>';
+    html += '</div>';
+  });
+  document.getElementById(targetId).innerHTML = html;
+}
+
+function selDraft(el, idx){
+  el.closest('.draft-grid').querySelectorAll('.draft-card').forEach(function(c){ c.classList.remove('sel'); });
+  el.classList.add('sel');
+  chosenDraft = drafts[idx];
+  responses.selectedDraftIndex = idx;
+}
+
+function kbDraft(e, el, idx){
+  if(e.key === 'Enter' || e.key === ' ') {
+    e.preventDefault();
+    selDraft(el, idx);
+  }
+}
+
+function rate(el, grp){
+  el.closest('.rating-scale').querySelectorAll('.r-btn').forEach(function(b){ b.classList.remove('on'); });
+  el.classList.add('on');
+  responses.ratings[grp] = el.textContent.trim();
+}
+
+function fc(el, grp){
+  el.closest('.fc-opts').querySelectorAll('.fc-btn').forEach(function(b){ b.classList.remove('chosen'); });
+  el.classList.add('chosen');
+  responses.forcedChoice[grp] = el.textContent.trim();
+}
+
+function togAct(el){
+  el.classList.toggle('done');
+  var label = el.textContent.trim().replace(/\s+/g, ' ');
+  if (el.classList.contains('done')) {
+    if (!responses.actions.includes(label)) responses.actions.push(label);
+  } else {
+    responses.actions = responses.actions.filter(function(x){ return x !== label; });
+  }
+}
+
+async function startFlow() {
+  clearErrors();
+
+  var task = document.getElementById('task-input').value.trim();
+
+  if (!task) {
+    showError('err-s1-task', 'Please describe what you want to post about.');
+    return;
+  }
+
+  selectedPlatform = 'Instagram';
+  taskText = task;
+  notesText = task;
+  getOrCreateSessionId();
+
+  var btn = document.querySelector('#s1 .btn-primary');
+  setButtonLoading(btn, true, 'Generating...');
+
+  try {
+    var res = await fetch('/api/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        sessionId: getOrCreateSessionId(),
+        platform: selectedPlatform,
+        task: taskText,
+        notes: notesText,
+        selfProfile: inferredSelfProfile
+      })
+    });
+
+    var data = await safeJsonFromResponse(res);
+    if (!res.ok) throw new Error(data.error || 'Failed to generate drafts');
+
+    drafts = data.drafts || [];
+    generationId = data.generationId || null;
+    chosenDraft = null;
+    responses.selectedDraftIndex = null;
+    buildDrafts('drafts-b', drafts);
+    go('s4');
+  } catch (err) {
+    console.error(err);
+    showError('err-s1-task', err.message || 'Could not generate drafts.');
+  } finally {
+    setButtonLoading(btn, false);
+  }
+}
+
+function goToS6() {
+  clearErrors();
+  if (responses.selectedDraftIndex == null) {
+    showError('err-s4-draft', 'Please select one character-shaped draft.');
+    return;
+  }
+  if (!responses.ratings.rb1 || !responses.ratings.rb2) {
+    showError('err-s4-ratings', 'Please answer both rating questions.');
+    return;
+  }
+  go('s6');
+}
+
+function goToS7() {
+  clearErrors();
+  go('s7');
+}
+
+async function joinWL() {
+  clearErrors();
+  var email = document.getElementById('nyla-email').value.trim();
+
+  if (!email) {
+    showError('err-s7-email', 'Enter an email if you want to join the waitlist.');
+    return;
+  }
+
+  var btn = document.querySelector('#s7 .nyla-box .btn-primary');
+  setButtonLoading(btn, true, 'Joining...');
+
+  try {
+    var res = await fetch('/api/join-waitlist', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        sessionId: getOrCreateSessionId(),
+        email: email,
+        source: 'nyla_waitlist'
+      })
+    });
+
+    var data = await safeJsonFromResponse(res);
+    if (!res.ok) throw new Error(data.error || 'Failed to join waitlist');
+
+    waitlistJoined = true;
+    document.getElementById('nyla-confirm').style.display = 'flex';
+  } catch (err) {
+    console.error(err);
+    showError('err-s7-email', err.message || 'Could not join the waitlist.');
+  } finally {
+    setButtonLoading(btn, false);
+  }
+}
+
+async function submitResponse() {
+  clearErrors();
+
+  var btn = document.querySelector('#s7 > .btn-primary');
+  setButtonLoading(btn, true, 'Submitting...');
+
+  try {
+    var res = await fetch('/api/save-response', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        sessionId: getOrCreateSessionId(),
+        platform: selectedPlatform,
+        task: taskText,
+        notes: notesText,
+        generation: {
+          generationId: generationId,
+          drafts: drafts,
+          mode: inferredSelfProfile.mode,
+          tone: inferredSelfProfile.tone,
+          polish: inferredSelfProfile.polish,
+          energy: inferredSelfProfile.energy,
+          selfFeel: inferredSelfProfile.selfFeel,
+          vibes: inferredSelfProfile.vibes,
+          selectedDraftIndex: responses.selectedDraftIndex,
+          selectedDraft: chosenDraft,
+          editScore: responses.ratings.rb1 || '',
+          matchScore: responses.ratings.rb2 || ''
+        },
+        persistence: {
+          actionSelections: responses.actions,
+          saveCharacterIntent: responses.forcedChoice.p1 || '',
+          variationIntent: responses.forcedChoice.p2 || '',
+          openFeedback: document.getElementById('open-q').value.trim()
+        },
+        nyla: {
+          interestScore: responses.ratings.rn1 || '',
+          waitlistIntent: responses.forcedChoice.n1 || '',
+          waitlistJoined: waitlistJoined
+        },
+        submitCompletedAt: new Date().toISOString()
+      })
+    });
+
+    var data = await safeJsonFromResponse(res);
+    if (!res.ok) throw new Error(data.error || 'Failed to save response');
+
+    submitCompleted = true;
+    document.getElementById('submit-confirm').style.display = 'flex';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  } catch (err) {
+    console.error(err);
+    showError('err-s7-core', err.message || 'Could not submit responses.');
+  } finally {
+    setButtonLoading(btn, false);
+  }
+}
+
+var screens = ['s1','s4','s6','s7'];
+
+function go(id){
+  document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
+  var el = document.getElementById(id);
+  el.classList.add('active');
+  var idx = screens.indexOf(id);
+  for(var i=0;i<screens.length;i++){
+    var seg = document.getElementById('ps'+(i+1));
+    seg.className = 'prog-seg' + (i<idx ? ' done' : i===idx ? ' active' : '');
+  }
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+go('s1');
+</script>
+</body>
+</html>
