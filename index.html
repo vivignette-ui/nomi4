@@ -3,188 +3,1139 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Nomi - Instagram Drafts</title>
+<title>ZenyaAI | Nomi</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300;0,14..32,400;0,14..32,500;0,14..32,600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100;0,14..32,200;0,14..32,300;0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700;0,14..32,800;0,14..32,900&display=swap" rel="stylesheet">
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --bg:#0e0e10;
-  --bg2:#17171b;
-  --bg3:#1f1f25;
-  --bg4:#272730;
-  --bg5:#30303c;
-  --accent:#526C90;
-  --accent2:#7a9cbd;
-  --accent-soft:rgba(82,108,144,0.16);
-  --accent-soft2:rgba(82,108,144,0.08);
-  --accent-border:rgba(122,156,189,0.28);
-  --green:#5caa88;
-  --green-soft:rgba(92,170,136,0.12);
-  --green-border:rgba(92,170,136,0.30);
-  --t1:#eeeef2;
-  --t2:#b8b8c8;
-  --t3:#7e7e90;
-  --b1:rgba(255,255,255,0.07);
-  --b2:rgba(255,255,255,0.11);
-  --b3:rgba(255,255,255,0.20);
-  --r8:8px;
-  --r12:12px;
-  --r16:16px;
-  --r22:16px;
-  --rpill:100px;
-  --ease:cubic-bezier(0.4,0,0.2,1);
-  --trans:0.18s cubic-bezier(0.4,0,0.2,1);
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
-html,body{
-  min-height:100%;
-  background:radial-gradient(ellipse at 30% 20%, #141c2a 0%, #0a0a0e 60%);
-  font-family:'Inter',-apple-system,sans-serif;
-  color:var(--t1);
-  -webkit-font-smoothing:antialiased;
-  font-size:14px;
-}
-.app{min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:0 16px 96px}
-.topbar{width:100%;max-width:720px;display:flex;align-items:center;justify-content:space-between;padding:22px 0 0}
-.logo{font-size:15px;font-weight:600;letter-spacing:-0.03em;color:var(--t1)}
-.prog-wrap{width:100%;max-width:720px;margin-top:24px;display:flex;gap:6px}
-.prog-seg{flex:1;height:2px;border-radius:100px;background:var(--b1);transition:background 0.3s var(--ease)}
-.prog-seg.done{background:var(--accent2)}
-.prog-seg.active{background:var(--accent2)}
-.card{
-  width:100%;max-width:720px;
-  background:rgba(28,28,36,0.72);
-  backdrop-filter:blur(20px);
-  -webkit-backdrop-filter:blur(20px);
-  border:1px solid rgba(255,255,255,0.09);
-  border-radius:var(--r22);
-  padding:40px 44px;
-  margin-top:20px;
-  animation:fadeUp 0.35s ease both;
-  box-shadow:0 8px 40px rgba(0,0,0,0.35),inset 0 1px 0 rgba(255,255,255,0.06);
-}
-@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
-@media(max-width:580px){.card{padding:28px 22px;border-radius:var(--r16)}}
-.screen{display:none}
-.screen.active{display:block}
-.overline{font-size:11px;font-weight:500;letter-spacing:0.07em;text-transform:uppercase;color:var(--t3);margin-bottom:10px}
-.display{font-size:28px;font-weight:500;letter-spacing:-0.035em;line-height:1.18;color:var(--t1);margin-bottom:10px}
-.welcome-display{margin-bottom:22px}
-.h2{font-size:20px;font-weight:500;letter-spacing:-0.03em;color:var(--t1);margin-bottom:6px}
-.body{font-size:14px;font-weight:300;color:var(--t2);line-height:1.65}
-.sec-label{font-size:11px;font-weight:500;letter-spacing:0.07em;text-transform:uppercase;color:var(--t3);margin-bottom:14px}
-.div{height:1px;background:rgba(255,255,255,0.07);margin:28px 0}
-.req{color:var(--accent2)}
-.opt{font-weight:300;color:var(--t3)}
-.btn{
-  display:inline-flex;align-items:center;justify-content:center;gap:7px;
-  font-family:'Inter',-apple-system,sans-serif;font-weight:500;
-  cursor:pointer;border:none;border-radius:var(--rpill);
-  transition:all var(--trans);outline:none;white-space:nowrap;
-}
-.btn:focus-visible{outline:2px solid var(--accent2);outline-offset:3px}
-.btn:active{transform:scale(0.97)}
-.btn:disabled{opacity:.7;cursor:not-allowed}
-.btn-primary{background:var(--accent);color:#fff;font-size:14px;padding:11px 24px}
-.btn-primary:hover{background:var(--accent2)}
-.btn-back{
-  background:var(--bg3);border:1px solid var(--b2);font-family:'Inter',sans-serif;font-size:13px;font-weight:500;color:var(--t2);cursor:pointer;display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:var(--rpill);transition:all var(--trans)
-}
-.btn-back:hover{border-color:var(--b3);color:var(--t1);background:var(--bg4)}
-.field-label{font-size:13px;font-weight:500;color:var(--t1);display:block;margin-bottom:7px}
-input[type=email],textarea{
-  font-family:'Inter',-apple-system,sans-serif;font-size:14px;font-weight:300;
-  width:100%;padding:11px 14px;
-  background:rgba(255,255,255,0.05);
-  border:1px solid rgba(255,255,255,0.11);
-  border-radius:var(--r8);
-  color:var(--t1);outline:none;
-  transition:border-color var(--trans),box-shadow var(--trans);
-  resize:none;
-  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
-}
-input::placeholder,textarea::placeholder{color:var(--t3)}
-input:focus,textarea:focus{border-color:rgba(90,135,197,0.6);box-shadow:0 0 0 3px rgba(61,107,170,0.15)}
 
-.mode-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-@media(max-width:480px){.mode-grid{grid-template-columns:1fr}}
-.mode-card{
-  background:rgba(255,255,255,0.04);
-  border:1px solid rgba(255,255,255,0.09);
-  border-radius:var(--r12);
-  padding:16px 18px 16px 16px;
-  cursor:pointer;transition:all var(--trans);position:relative;
-  display:flex;flex-direction:column;gap:3px;
-  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+html,
+body {
+  width: 100%;
+  min-height: 100%;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: #000;
+  color: #fff;
 }
-.mode-card:hover{background:rgba(255,255,255,0.07);border-color:rgba(255,255,255,0.16);transform:translateY(-2px)}
-.mode-card.sel{background:var(--accent-soft);border-color:var(--accent-border)}
-.mode-title{font-size:14px;font-weight:500;color:var(--t1)}
-.mode-sub{font-size:12px;color:var(--t3)}
-.mode-check{
-  position:absolute;top:14px;right:14px;width:18px;height:18px;border-radius:50%;
-  border:1.5px solid var(--b2);background:var(--bg4);
-  display:flex;align-items:center;justify-content:center;transition:all var(--trans)
-}
-.mode-card.sel .mode-check{background:var(--accent);border-color:var(--accent)}
-.mode-check .chk{display:none}
-.mode-card.sel .mode-check .chk{display:block}
-.slider-row{display:grid;grid-template-columns:68px 1fr 68px;align-items:center;gap:12px;margin-bottom:12px}
-.sl-lbl{font-size:12px;font-weight:500;color:var(--t2)}
-.sl-lbl.r{text-align:right}
-input[type=range]{
-  -webkit-appearance:none;appearance:none;width:100%;height:5px;border-radius:100px;
-  background:linear-gradient(to right,var(--accent2) var(--pct,50%),rgba(255,255,255,0.18) var(--pct,50%));
-  outline:none;cursor:pointer;border:none;
-}
-input[type=range]::-webkit-slider-thumb{
-  -webkit-appearance:none;appearance:none;width:19px;height:19px;border-radius:50%;
-  background:var(--bg2);border:2px solid var(--accent2);box-shadow:0 1px 4px rgba(0,0,0,0.4);cursor:pointer
-}
-.chips{display:flex;gap:8px;flex-wrap:wrap}
-.chip{
-  font-family:'Inter',sans-serif;font-size:12px;font-weight:500;
-  padding:5px 14px;border-radius:var(--rpill);
-  border:1px solid var(--b2);background:var(--bg3);color:var(--t2);
-  cursor:pointer;transition:all var(--trans)
-}
-.chip:hover{border-color:var(--b3);color:var(--t1);background:var(--bg4)}
-.chip.on{background:var(--accent-soft);border-color:var(--accent-border);color:var(--accent2)}
 
-.draft-grid{display:grid;grid-template-columns:1fr;gap:10px;margin-bottom:24px}
-.draft-card{
-  background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.09);border-radius:var(--r16);
-  padding:20px 22px;cursor:pointer;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
-  transition:all var(--trans);position:relative;
+body.zenya-mode {
+  height: 100%;
+  overflow: hidden;
+  cursor: none;
 }
-.draft-card:hover{background:rgba(255,255,255,0.07);border-color:rgba(255,255,255,0.16);transform:translateY(-2px)}
-.draft-card.sel{background:var(--accent-soft);border-color:var(--accent-border)}
-.draft-title{font-size:14px;font-weight:500;color:var(--t1);margin-bottom:5px;padding-right:28px}
-.draft-body{font-size:13px;font-weight:300;color:var(--t2);line-height:1.65;margin-bottom:12px;white-space:pre-wrap}
-.draft-tone{
-  display:inline-block;font-size:10px;font-weight:500;letter-spacing:0.04em;text-transform:uppercase;
-  color:var(--accent2);background:var(--accent-soft);border:1px solid var(--accent-border);border-radius:var(--rpill);padding:3px 10px;
+
+body.nomi-mode {
+  min-height: 100%;
+  overflow: auto;
+  cursor: auto;
 }
-.draft-radio{
-  position:absolute;top:18px;right:18px;width:18px;height:18px;border-radius:50%;
-  border:1.5px solid var(--b2);background:var(--bg4);display:flex;align-items:center;justify-content:center;transition:all var(--trans)
+
+/* ZENYA LANDING */
+
+#dot-cursor {
+  position: fixed;
+  width: 16px;
+  height: 52px;
+  border-radius: 8px;
+  pointer-events: none;
+  z-index: 10000;
+  transform: translate(-50%, -50%) rotate(0deg);
+  transform-origin: center center;
 }
-.draft-card.sel .draft-radio{border-color:var(--accent);background:var(--accent)}
-.draft-card.sel .draft-radio::after{content:'';display:block;width:7px;height:7px;border-radius:50%;background:#fff}
-.nyla-box{background:var(--bg2);border:1px solid var(--b2);border-radius:var(--r22);padding:36px 40px;margin-top:8px}
-@media(max-width:580px){.nyla-box{padding:24px 20px}}
-.nyla-logo{font-size:22px;font-weight:600;letter-spacing:-0.04em;color:var(--t1);margin-bottom:8px}
-.nyla-sub{font-size:14px;font-weight:300;color:var(--t2);line-height:1.65;margin-bottom:24px;max-width:440px}
-.nyla-box input[type=email]{background:var(--bg3);border-color:var(--b2);margin-bottom:10px}
-.nyla-confirm{font-size:13px;color:var(--green);margin-top:12px;display:none;align-items:center;gap:6px}
-.err{margin-top:10px;font-size:12px;color:#ff9696;display:none}
-.okmsg{margin-top:14px;font-size:13px;color:var(--green);display:none;align-items:center;gap:6px}
+
+body.nomi-mode #dot-cursor {
+  display: none;
+}
+
+#zenya-home {
+  position: relative;
+  z-index: 1;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  background: #000;
+}
+
+body.nomi-mode #zenya-home,
+body.nomi-mode #nav,
+body.nomi-mode .z-page {
+  display: none !important;
+}
+
+.zenya-wrap {
+  position: relative;
+  display: inline-block;
+  line-height: 1;
+  padding: 52px 80px;
+  background:
+    linear-gradient(135deg,
+      rgba(255,255,255,0.07) 0%,
+      rgba(255,255,255,0.02) 40%,
+      rgba(255,255,255,0.05) 100%
+    );
+  backdrop-filter: blur(32px) saturate(1.4) brightness(1.08);
+  -webkit-backdrop-filter: blur(32px) saturate(1.4) brightness(1.08);
+  border-radius: 3px;
+  border: 1px solid rgba(255,255,255,0.13);
+  isolation: isolate;
+  transform: translateZ(0);
+  box-shadow:
+    inset 0 1.5px 0 rgba(255,255,255,0.22),
+    inset 1px 0 0 rgba(255,255,255,0.10),
+    inset 0 -1px 0 rgba(255,255,255,0.04),
+    0 16px 64px rgba(0,0,0,0.8),
+    0 4px 16px rgba(0,0,0,0.5);
+}
+
+.zenya-wrap::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 3px;
+  background: radial-gradient(ellipse 90% 70% at 50% 0%,
+    rgba(255,255,255,0.07) 0%,
+    rgba(255,255,255,0.01) 60%,
+    transparent 100%
+  );
+  pointer-events: none;
+  animation: frost-pulse 7s ease-in-out infinite;
+}
+
+.zenya-wrap::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 10%;
+  right: 10%;
+  height: 1px;
+  background: linear-gradient(to right,
+    transparent,
+    rgba(255,255,255,0.18),
+    rgba(200,200,255,0.12),
+    transparent
+  );
+  pointer-events: none;
+}
+
+.zenya-title {
+  font-family: 'Inter', sans-serif;
+  font-size: clamp(72px, 14vw, 168px);
+  font-weight: 200;
+  letter-spacing: -0.01em;
+  line-height: 1.05;
+  padding-bottom: 0.08em;
+  background: linear-gradient(135deg, #838383 0%, #a8a8a8 50%, #838383 100%);
+  background-size: 100% 100%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  user-select: none;
+  text-rendering: geometricPrecision;
+  font-style: normal;
+  position: relative;
+}
+
+@keyframes frost-pulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+.home-try-btn {
+  margin-top: 36px;
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  font-weight: 300;
+  letter-spacing: 0.12em;
+  color: rgba(255,255,255,0.55);
+  border: 1px solid rgba(255,255,255,0.22);
+  padding: 13px 36px;
+  cursor: none;
+  background: transparent;
+  border-radius: 0;
+  transition: color 0.25s, border-color 0.25s;
+  font-style: normal;
+  text-transform: uppercase;
+}
+
+.home-try-btn:hover {
+  color: rgba(255,255,255,0.92);
+  border-color: rgba(255,255,255,0.45);
+}
+
+#nav {
+  position: fixed;
+  top: 96px;
+  left: 56px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 25;
+}
+
+.nav-item {
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  font-weight: 300;
+  color: rgba(255,255,255,0.55);
+  cursor: none;
+  letter-spacing: 0.12em;
+  text-align: left;
+  text-transform: uppercase;
+  transition: color 0.2s;
+  user-select: none;
+  font-style: normal;
+}
+
+.nav-item:hover,
+.nav-active {
+  color: rgba(255,255,255,0.95);
+}
+
+.nav-current {
+  color: rgba(255,255,255,0.95);
+  cursor: none;
+  user-select: none;
+}
+
+.z-page {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  background: #000;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  padding: 80px 80px 80px 220px;
+}
+
+.z-page.active {
+  display: flex;
+}
+
+.page-inner {
+  max-width: 540px;
+  width: 100%;
+}
+
+.back-btn {
+  position: fixed;
+  top: 44px;
+  left: 56px;
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  font-weight: 300;
+  color: rgba(255,255,255,0.55);
+  cursor: none;
+  letter-spacing: 0.07em;
+  transition: color 0.2s;
+  font-style: normal;
+  user-select: none;
+  z-index: 26;
+}
+
+.back-btn:hover {
+  color: rgba(255,255,255,0.7);
+}
+
+.page-label {
+  font-family: 'Inter', sans-serif;
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.16em;
+  color: rgba(255,255,255,0.5);
+  margin-bottom: 32px;
+  text-transform: uppercase;
+  font-style: normal;
+}
+
+.page-text {
+  font-family: 'Inter', sans-serif;
+  font-size: 15px;
+  font-weight: 300;
+  line-height: 1.9;
+  color: rgba(255,255,255,0.78);
+  font-style: normal;
+  letter-spacing: 0.01em;
+}
+
+.try-btn {
+  margin-top: 40px;
+  display: inline-block;
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.12em;
+  color: rgba(255,255,255,0.55);
+  border: 1px solid rgba(255,255,255,0.16);
+  padding: 12px 30px;
+  cursor: none;
+  transition: border-color 0.2s, color 0.2s;
+  border-radius: 0;
+  background: transparent;
+  font-style: normal;
+  text-transform: uppercase;
+}
+
+.try-btn:hover {
+  border-color: rgba(255,255,255,0.4);
+  color: rgba(255,255,255,0.92);
+}
+
+.contact-note,
+.waitlist-desc {
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 300;
+  color: rgba(255,255,255,0.6);
+  margin-bottom: 28px;
+  font-style: normal;
+  letter-spacing: 0.01em;
+  line-height: 1.75;
+}
+
+.contact-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  width: 100%;
+  border: 1px solid rgba(255,255,255,0.08);
+}
+
+.form-row {
+  display: flex;
+  flex-direction: column;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.form-row:last-child {
+  border-bottom: none;
+}
+
+.form-label {
+  font-family: 'Inter', sans-serif;
+  font-size: 9px;
+  font-weight: 400;
+  letter-spacing: 0.14em;
+  color: rgba(255,255,255,0.5);
+  padding: 14px 20px 0;
+  text-transform: uppercase;
+  font-style: normal;
+}
+
+.form-input,
+.form-textarea {
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 300;
+  color: rgba(255,255,255,0.82);
+  background: transparent;
+  border: none;
+  outline: none;
+  padding: 8px 20px 14px;
+  resize: none;
+  font-style: normal;
+  letter-spacing: 0.01em;
+}
+
+.form-input::placeholder,
+.form-textarea::placeholder,
+.waitlist-input::placeholder {
+  color: rgba(255,255,255,0.35);
+}
+
+.form-submit {
+  margin-top: 20px;
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.12em;
+  color: rgba(255,255,255,0.55);
+  border: 1px solid rgba(255,255,255,0.16);
+  padding: 12px 32px;
+  cursor: none;
+  transition: border-color 0.2s, color 0.2s;
+  border-radius: 0;
+  background: transparent;
+  font-style: normal;
+  align-self: flex-start;
+  text-transform: uppercase;
+}
+
+.form-submit:hover {
+  border-color: rgba(255,255,255,0.4);
+  color: rgba(255,255,255,0.92);
+}
+
+.waitlist-row {
+  display: flex;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+.waitlist-input {
+  flex: 1;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 300;
+  color: rgba(255,255,255,0.82);
+  background: transparent;
+  border: none;
+  outline: none;
+  padding: 14px 20px;
+  font-style: normal;
+  letter-spacing: 0.01em;
+}
+
+.waitlist-submit {
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.1em;
+  color: rgba(255,255,255,0.6);
+  border: none;
+  border-left: 1px solid rgba(255,255,255,0.1);
+  background: transparent;
+  padding: 14px 24px;
+  cursor: none;
+  transition: color 0.2s, background 0.2s;
+  font-style: normal;
+  text-transform: uppercase;
+}
+
+.waitlist-submit:hover {
+  color: rgba(255,255,255,0.92);
+  background: rgba(255,255,255,0.03);
+}
+
+.waitlist-note,
+.form-status {
+  margin-top: 14px;
+  font-family: 'Inter', sans-serif;
+  font-size: 10px;
+  font-weight: 300;
+  color: rgba(255,255,255,0.5);
+  font-style: normal;
+  letter-spacing: 0.03em;
+}
+
+.form-status.success {
+  color: rgba(140, 220, 180, 0.86);
+}
+
+.form-status.error {
+  color: rgba(255, 150, 150, 0.86);
+}
+
+@media(max-width:720px) {
+  .zenya-wrap {
+    padding: 36px 34px;
+  }
+
+  #nav {
+    top: 28px;
+    left: 24px;
+  }
+
+  .z-page {
+    padding: 110px 24px 40px;
+  }
+
+  .back-btn {
+    left: 24px;
+    top: 72px;
+  }
+
+  .waitlist-row {
+    flex-direction: column;
+  }
+
+  .waitlist-submit {
+    border-left: none;
+    border-top: 1px solid rgba(255,255,255,0.1);
+  }
+}
+
+/* NOMI MVP */
+
+:root {
+  --n-bg:#0e0e10;
+  --n-bg2:#17171b;
+  --n-bg3:#1f1f25;
+  --n-bg4:#272730;
+  --n-accent:#526C90;
+  --n-accent2:#7a9cbd;
+  --n-accent-soft:rgba(82,108,144,0.16);
+  --n-accent-border:rgba(122,156,189,0.28);
+  --n-green:#5caa88;
+  --n-t1:#eeeef2;
+  --n-t2:#b8b8c8;
+  --n-t3:#7e7e90;
+  --n-b1:rgba(255,255,255,0.07);
+  --n-b2:rgba(255,255,255,0.11);
+  --n-b3:rgba(255,255,255,0.20);
+  --n-r8:8px;
+  --n-r12:12px;
+  --n-r16:16px;
+  --n-r22:16px;
+  --n-rpill:100px;
+  --n-trans:0.18s cubic-bezier(0.4,0,0.2,1);
+}
+
+#nomi-app {
+  min-height: 100vh;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 16px 96px;
+  background: radial-gradient(ellipse at 30% 20%, #141c2a 0%, #0a0a0e 60%);
+  color: var(--n-t1);
+  cursor: auto;
+}
+
+body.nomi-mode #nomi-app {
+  display: flex;
+}
+
+#nomi-app * {
+  cursor: auto;
+}
+
+.nomi-topbar {
+  width: 100%;
+  max-width: 720px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 22px 0 0;
+}
+
+.nomi-logo {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  color: var(--n-t1);
+}
+
+.prog-wrap {
+  width: 100%;
+  max-width: 720px;
+  margin-top: 24px;
+  display: flex;
+  gap: 6px;
+}
+
+.prog-seg {
+  flex: 1;
+  height: 2px;
+  border-radius: 100px;
+  background: var(--n-b1);
+  transition: background 0.3s cubic-bezier(0.4,0,0.2,1);
+}
+
+.prog-seg.done,
+.prog-seg.active {
+  background: var(--n-accent2);
+}
+
+.card {
+  width: 100%;
+  max-width: 720px;
+  background: rgba(28,28,36,0.72);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.09);
+  border-radius: var(--n-r22);
+  padding: 40px 44px;
+  margin-top: 20px;
+  animation: fadeUp 0.35s ease both;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.06);
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media(max-width:580px) {
+  .card {
+    padding: 28px 22px;
+    border-radius: var(--n-r16);
+  }
+}
+
+.screen {
+  display: none;
+}
+
+.screen.active {
+  display: block;
+}
+
+.overline {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--n-t3);
+  margin-bottom: 10px;
+}
+
+.display {
+  font-size: 28px;
+  font-weight: 500;
+  letter-spacing: -0.035em;
+  line-height: 1.18;
+  color: var(--n-t1);
+  margin-bottom: 10px;
+}
+
+.welcome-display {
+  margin-bottom: 22px;
+}
+
+.h2 {
+  font-size: 20px;
+  font-weight: 500;
+  letter-spacing: -0.03em;
+  color: var(--n-t1);
+  margin-bottom: 6px;
+}
+
+.body {
+  font-size: 14px;
+  font-weight: 300;
+  color: var(--n-t2);
+  line-height: 1.65;
+}
+
+.sec-label {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--n-t3);
+  margin-bottom: 14px;
+}
+
+.div {
+  height: 1px;
+  background: rgba(255,255,255,0.07);
+  margin: 28px 0;
+}
+
+.req {
+  color: var(--n-accent2);
+}
+
+.opt {
+  font-weight: 300;
+  color: var(--n-t3);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  font-family: 'Inter', -apple-system, sans-serif;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  border-radius: var(--n-rpill);
+  transition: all var(--n-trans);
+  outline: none;
+  white-space: nowrap;
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--n-accent2);
+  outline-offset: 3px;
+}
+
+.btn:active {
+  transform: scale(0.97);
+}
+
+.btn:disabled {
+  opacity: .7;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: var(--n-accent);
+  color: #fff;
+  font-size: 14px;
+  padding: 11px 24px;
+}
+
+.btn-primary:hover {
+  background: var(--n-accent2);
+}
+
+.btn-back {
+  background: var(--n-bg3);
+  border: 1px solid var(--n-b2);
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--n-t2);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: var(--n-rpill);
+  transition: all var(--n-trans);
+}
+
+.btn-back:hover {
+  border-color: var(--n-b3);
+  color: var(--n-t1);
+  background: var(--n-bg4);
+}
+
+.field-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--n-t1);
+  display: block;
+  margin-bottom: 7px;
+}
+
+#nomi-app input[type=email],
+#nomi-app textarea {
+  font-family: 'Inter', -apple-system, sans-serif;
+  font-size: 14px;
+  font-weight: 300;
+  width: 100%;
+  padding: 11px 14px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.11);
+  border-radius: var(--n-r8);
+  color: var(--n-t1);
+  outline: none;
+  transition: border-color var(--n-trans), box-shadow var(--n-trans);
+  resize: none;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+#nomi-app input::placeholder,
+#nomi-app textarea::placeholder {
+  color: var(--n-t3);
+}
+
+#nomi-app input:focus,
+#nomi-app textarea:focus {
+  border-color: rgba(90,135,197,0.6);
+  box-shadow: 0 0 0 3px rgba(61,107,170,0.15);
+}
+
+.mode-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+@media(max-width:480px) {
+  .mode-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.mode-card {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.09);
+  border-radius: var(--n-r12);
+  padding: 16px 18px 16px 16px;
+  cursor: pointer;
+  transition: all var(--n-trans);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.mode-card:hover {
+  background: rgba(255,255,255,0.07);
+  border-color: rgba(255,255,255,0.16);
+  transform: translateY(-2px);
+}
+
+.mode-card.sel {
+  background: var(--n-accent-soft);
+  border-color: var(--n-accent-border);
+}
+
+.mode-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--n-t1);
+}
+
+.mode-sub {
+  font-size: 12px;
+  color: var(--n-t3);
+}
+
+.mode-check {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1.5px solid var(--n-b2);
+  background: var(--n-bg4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--n-trans);
+}
+
+.mode-card.sel .mode-check {
+  background: var(--n-accent);
+  border-color: var(--n-accent);
+}
+
+.mode-check .chk {
+  display: none;
+}
+
+.mode-card.sel .mode-check .chk {
+  display: block;
+}
+
+.slider-row {
+  display: grid;
+  grid-template-columns: 68px 1fr 68px;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.sl-lbl {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--n-t2);
+}
+
+.sl-lbl.r {
+  text-align: right;
+}
+
+#nomi-app input[type=range] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 5px;
+  border-radius: 100px;
+  background: linear-gradient(to right, var(--n-accent2) var(--pct,50%), rgba(255,255,255,0.18) var(--pct,50%));
+  outline: none;
+  cursor: pointer;
+  border: none;
+}
+
+#nomi-app input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 19px;
+  height: 19px;
+  border-radius: 50%;
+  background: var(--n-bg2);
+  border: 2px solid var(--n-accent2);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.4);
+  cursor: pointer;
+}
+
+.chips {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.chip {
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 5px 14px;
+  border-radius: var(--n-rpill);
+  border: 1px solid var(--n-b2);
+  background: var(--n-bg3);
+  color: var(--n-t2);
+  cursor: pointer;
+  transition: all var(--n-trans);
+}
+
+.chip:hover {
+  border-color: var(--n-b3);
+  color: var(--n-t1);
+  background: var(--n-bg4);
+}
+
+.chip.on {
+  background: var(--n-accent-soft);
+  border-color: var(--n-accent-border);
+  color: var(--n-accent2);
+}
+
+.draft-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.draft-card {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.09);
+  border-radius: var(--n-r16);
+  padding: 20px 22px;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: all var(--n-trans);
+  position: relative;
+}
+
+.draft-card:hover {
+  background: rgba(255,255,255,0.07);
+  border-color: rgba(255,255,255,0.16);
+  transform: translateY(-2px);
+}
+
+.draft-card.sel {
+  background: var(--n-accent-soft);
+  border-color: var(--n-accent-border);
+}
+
+.draft-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--n-t1);
+  margin-bottom: 5px;
+  padding-right: 28px;
+}
+
+.draft-body {
+  font-size: 13px;
+  font-weight: 300;
+  color: var(--n-t2);
+  line-height: 1.65;
+  margin-bottom: 12px;
+  white-space: pre-wrap;
+}
+
+.draft-tone {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--n-accent2);
+  background: var(--n-accent-soft);
+  border: 1px solid var(--n-accent-border);
+  border-radius: var(--n-rpill);
+  padding: 3px 10px;
+}
+
+.draft-radio {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1.5px solid var(--n-b2);
+  background: var(--n-bg4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--n-trans);
+}
+
+.draft-card.sel .draft-radio {
+  border-color: var(--n-accent);
+  background: var(--n-accent);
+}
+
+.draft-card.sel .draft-radio::after {
+  content: '';
+  display: block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #fff;
+}
+
+.nyla-box {
+  background: var(--n-bg2);
+  border: 1px solid var(--n-b2);
+  border-radius: var(--n-r22);
+  padding: 36px 40px;
+  margin-top: 8px;
+}
+
+@media(max-width:580px) {
+  .nyla-box {
+    padding: 24px 20px;
+  }
+}
+
+.nyla-logo {
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.04em;
+  color: var(--n-t1);
+  margin-bottom: 8px;
+}
+
+.nyla-sub {
+  font-size: 14px;
+  font-weight: 300;
+  color: var(--n-t2);
+  line-height: 1.65;
+  margin-bottom: 24px;
+  max-width: 440px;
+}
+
+.nyla-box input[type=email] {
+  background: var(--n-bg3);
+  border-color: var(--n-b2);
+  margin-bottom: 10px;
+}
+
+.nyla-confirm {
+  font-size: 13px;
+  color: var(--n-green);
+  margin-top: 12px;
+  display: none;
+  align-items: center;
+  gap: 6px;
+}
+
+.err {
+  margin-top: 10px;
+  font-size: 12px;
+  color: #ff9696;
+  display: none;
+}
+
+.okmsg {
+  margin-top: 14px;
+  font-size: 13px;
+  color: var(--n-green);
+  display: none;
+  align-items: center;
+  gap: 6px;
+}
 </style>
 </head>
-<body>
-<div class="app">
-  <div class="topbar">
-    <span class="logo">nomi</span>
+
+<body class="zenya-mode">
+<div id="dot-cursor"></div>
+
+<!-- ZENYA LANDING -->
+<div id="zenya-home">
+  <div class="zenya-wrap">
+    <h1 class="zenya-title">ZenyaAI</h1>
+  </div>
+  <button class="home-try-btn" onclick="showNomiStart()">Try Nomi</button>
+</div>
+
+<nav id="nav">
+  <div class="nav-item nav-current nav-active" onclick="hidePage()">ZenyaAI</div>
+  <div class="nav-item" data-page="about" onclick="showPage('about')">About</div>
+  <div class="nav-item" data-page="nomi" onclick="showPage('nomi')">Nomi</div>
+  <div class="nav-item" data-page="nyla" onclick="showPage('nyla')">Nyla</div>
+  <div class="nav-item" data-page="contact" onclick="showPage('contact')">Contact</div>
+  <div class="nav-item" data-page="waitlist" onclick="showPage('waitlist')">Join Waitlist</div>
+</nav>
+
+<!-- ABOUT -->
+<div class="z-page" id="page-about">
+  <div class="back-btn" onclick="hidePage()">← back</div>
+  <div class="page-inner">
+    <div class="page-label">About</div>
+    <p class="page-text">Zenya AI was founded from a simple frustration: a lot of GenAI content is fast, polished, and efficient, but it often loses the thing that makes people memorable in the first place, which is their distinct point of view. As more people create with AI, content starts to sound flattened, interchangeable, and slightly detached from the person behind it. Zenya AI exists to bring that power back to you, so AI can support your expression without washing out your identity, taste, or voice.</p>
+  </div>
+</div>
+
+<!-- NOMI PAGE -->
+<div class="z-page" id="page-nomi">
+  <div class="back-btn" onclick="hidePage()">← back</div>
+  <div class="page-inner">
+    <div class="page-label">Nomi</div>
+    <p class="page-text">Nomi is the first step in that vision, and it is the MVP you can try now. It helps you shape one version of yourself, then create through it, so the result feels more intentional and closer to how you actually want to show up online. Right now, Nomi is focused on Instagram posts, giving you a lightweight way to define your tone and generate written content through that lens instead of starting from a generic prompt.</p>
+    <button class="try-btn" onclick="showNomiStart()">Try Nomi</button>
+  </div>
+</div>
+
+<!-- NYLA -->
+<div class="z-page" id="page-nyla">
+  <div class="back-btn" onclick="hidePage()">← back</div>
+  <div class="page-inner">
+    <div class="page-label">Nyla</div>
+    <p class="page-text">Nyla is the bigger idea behind everything. It is built around the belief that people do not have only one online self, and that different platforms, moods, and goals call for different ways of expressing who you are. Nyla is about owning those selves, creating through them, organizing them across platforms, keeping them consistent over time, and making creative work feel clearer, faster, and more true to you.</p>
+  </div>
+</div>
+
+<!-- CONTACT -->
+<div class="z-page" id="page-contact">
+  <div class="back-btn" onclick="hidePage()">← back</div>
+  <div class="page-inner">
+    <div class="page-label">Contact</div>
+    <p class="contact-note">We would love to hear from you. Whether you have a question, a thought, or just want to say hello, reach out.</p>
+    <div class="contact-form">
+      <div class="form-row">
+        <label class="form-label" for="contact-name">Name</label>
+        <input class="form-input" id="contact-name" type="text" placeholder="Your name">
+      </div>
+      <div class="form-row">
+        <label class="form-label" for="contact-email">Email</label>
+        <input class="form-input" id="contact-email" type="email" placeholder="you@example.com">
+      </div>
+      <div class="form-row">
+        <label class="form-label" for="contact-message">Message</label>
+        <textarea class="form-textarea" id="contact-message" rows="4" placeholder="What is on your mind?"></textarea>
+      </div>
+    </div>
+    <button class="form-submit" onclick="submitZenyaContact()">Send it</button>
+    <p class="form-status" id="contact-status"></p>
+  </div>
+</div>
+
+<!-- WAITLIST -->
+<div class="z-page" id="page-waitlist">
+  <div class="back-btn" onclick="hidePage()">← back</div>
+  <div class="page-inner">
+    <div class="page-label">Join Waitlist</div>
+    <p class="waitlist-desc">Be among the first to create with Nyla. Drop your email and we will let you know when you are in.</p>
+    <div class="waitlist-row">
+      <input class="waitlist-input" id="zenya-waitlist-email" type="email" placeholder="your@email.com">
+      <button class="waitlist-submit" onclick="joinZenyaWaitlist()">Join</button>
+    </div>
+    <p class="waitlist-note">No spam. Just a note when it is ready.</p>
+    <p class="form-status" id="zenya-waitlist-status"></p>
+  </div>
+</div>
+
+<!-- NOMI MVP -->
+<div id="nomi-app">
+  <div class="nomi-topbar">
+    <span class="nomi-logo">nomi</span>
   </div>
 
   <div class="prog-wrap" id="prog">
@@ -337,7 +1288,7 @@ input[type=range]::-webkit-slider-thumb{
       <p class="nyla-sub">Our full product helps you shape and manage different social characters over time.</p>
       <label class="field-label" for="nyla-email">Email address <span class="opt">(optional)</span></label>
       <input type="email" id="nyla-email" placeholder="your@email.com">
-      <button class="btn btn-primary" style="width:100%;border-radius:var(--r8);margin-top:2px" onclick="joinWL()">Join the waitlist</button>
+      <button class="btn btn-primary" style="width:100%;border-radius:var(--n-r8);margin-top:2px" onclick="joinWL()">Join the waitlist</button>
       <div class="nyla-confirm" id="nyla-confirm">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
         You're on the list.
@@ -356,6 +1307,224 @@ input[type=range]::-webkit-slider-thumb{
 </div>
 
 <script>
+/* ZENYA CURSOR */
+const CURSOR_COLORS = ['#50D6FF', '#FFFFFF', '#FF6C6E'];
+let colorIndex = 0;
+let colorT = 0;
+const dot = document.getElementById('dot-cursor');
+
+function hexToRgb(hex) {
+  return [parseInt(hex.slice(1,3),16), parseInt(hex.slice(3,5),16), parseInt(hex.slice(5,7),16)];
+}
+
+function lerpHex(a, b, t) {
+  const [r1,g1,b1] = hexToRgb(a);
+  const [r2,g2,b2] = hexToRgb(b);
+  return `rgb(${Math.round(r1+(r2-r1)*t)},${Math.round(g1+(g2-g1)*t)},${Math.round(b1+(b2-b1)*t)})`;
+}
+
+let mx = window.innerWidth / 2;
+let my = window.innerHeight / 2;
+let angle = 90;
+let smoothAngle = 90;
+let isMoving = false;
+let moveTimeout;
+let lastTs = 0;
+let lastMouseX = mx;
+let lastMouseY = my;
+let vx = 0;
+let vy = 0;
+let cursorEnergy = 5;
+
+function animateCursor(ts) {
+  const dt = Math.min(ts - lastTs, 50);
+  lastTs = ts;
+
+  const dynDuration = 3000 / (cursorEnergy / 5);
+  colorT += dt / dynDuration;
+
+  if (colorT >= 1) {
+    colorT -= 1;
+    colorIndex = (colorIndex + 1) % CURSOR_COLORS.length;
+  }
+
+  const nextIndex = (colorIndex + 1) % CURSOR_COLORS.length;
+  const color = lerpHex(CURSOR_COLORS[colorIndex], CURSOR_COLORS[nextIndex], colorT);
+
+  if (isMoving) {
+    let delta = angle - smoothAngle;
+    while (delta > 180) delta -= 360;
+    while (delta < -180) delta += 360;
+    smoothAngle += delta * 0.12;
+  }
+
+  const aRad = smoothAngle * Math.PI / 180;
+  const H = 26;
+  const cx = lastMouseX - H * Math.sin(aRad);
+  const cy = lastMouseY + H * Math.cos(aRad);
+
+  dot.style.left = cx + 'px';
+  dot.style.top = cy + 'px';
+  dot.style.background = `linear-gradient(to bottom, ${color} 0%, #000 100%)`;
+  dot.style.transform = `translate(-50%, -50%) rotate(${smoothAngle}deg)`;
+
+  requestAnimationFrame(animateCursor);
+}
+
+requestAnimationFrame(animateCursor);
+
+window.addEventListener('mousemove', e => {
+  if (document.body.classList.contains('nomi-mode')) return;
+
+  const dx = e.clientX - lastMouseX;
+  const dy = e.clientY - lastMouseY;
+
+  vx = vx * 0.5 + dx * 0.5;
+  vy = vy * 0.5 + dy * 0.5;
+
+  const speed = Math.sqrt(vx * vx + vy * vy);
+
+  if (speed > 0.8) {
+    angle = Math.atan2(vy, vx) * 180 / Math.PI + 90;
+    isMoving = true;
+    clearTimeout(moveTimeout);
+    moveTimeout = setTimeout(() => { isMoving = false; }, 120);
+  }
+
+  lastMouseX = e.clientX;
+  lastMouseY = e.clientY;
+});
+
+/* ZENYA PAGES */
+function showPage(name) {
+  document.querySelectorAll('.z-page').forEach(p => p.classList.remove('active'));
+  const el = document.getElementById('page-' + name);
+  if (el) el.classList.add('active');
+
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('nav-active'));
+  const navEl = document.querySelector(`.nav-item[data-page="${name}"]`);
+  if (navEl) navEl.classList.add('nav-active');
+
+  document.querySelector('.nav-current').style.color = 'rgba(255,255,255,0.38)';
+}
+
+function hidePage() {
+  document.querySelectorAll('.z-page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('nav-active'));
+  document.querySelector('.nav-current').classList.add('nav-active');
+  document.querySelector('.nav-current').style.color = '';
+}
+
+function showNomiStart() {
+  hidePage();
+  document.body.classList.remove('zenya-mode');
+  document.body.classList.add('nomi-mode');
+  go('s1');
+}
+
+function showZenyaHome() {
+  document.body.classList.remove('nomi-mode');
+  document.body.classList.add('zenya-mode');
+  hidePage();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+async function joinZenyaWaitlist() {
+  const input = document.getElementById('zenya-waitlist-email');
+  const status = document.getElementById('zenya-waitlist-status');
+  const email = input.value.trim();
+
+  status.className = 'form-status';
+  status.textContent = '';
+
+  if (!email) {
+    status.classList.add('error');
+    status.textContent = 'Please enter an email.';
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/join-waitlist', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email,
+        sessionId: getOrCreateSessionId(),
+        source: 'zenya_waitlist'
+      })
+    });
+
+    const data = await safeJsonFromResponse(res);
+    if (!res.ok) throw new Error(data.error || 'Failed to join waitlist');
+
+    status.classList.add('success');
+    status.textContent = 'You are on the list.';
+    input.value = '';
+  } catch (err) {
+    status.classList.add('error');
+    status.textContent = err.message || 'Could not join the waitlist.';
+  }
+}
+
+async function submitZenyaContact() {
+  const name = document.getElementById('contact-name').value.trim();
+  const email = document.getElementById('contact-email').value.trim();
+  const message = document.getElementById('contact-message').value.trim();
+  const status = document.getElementById('contact-status');
+
+  status.className = 'form-status';
+  status.textContent = '';
+
+  if (!email || !message) {
+    status.classList.add('error');
+    status.textContent = 'Please enter your email and message.';
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/save-contact', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name,
+        email,
+        message,
+        source: 'zenya_contact',
+        sessionId: getOrCreateSessionId()
+      })
+    });
+
+    const data = await safeJsonFromResponse(res);
+    if (!res.ok) throw new Error(data.error || 'Failed to send message');
+
+    status.classList.add('success');
+    status.textContent = 'Message sent.';
+    document.getElementById('contact-name').value = '';
+    document.getElementById('contact-email').value = '';
+    document.getElementById('contact-message').value = '';
+  } catch (err) {
+    status.classList.add('error');
+    status.textContent = err.message || 'Could not send message.';
+  }
+}
+
+/* SHARED HELPERS */
+function getOrCreateSessionId() {
+  if (!sessionId) {
+    sessionId = localStorage.getItem('nomi_session_id') || (window.crypto && crypto.randomUUID ? crypto.randomUUID() : 'sess_' + Date.now() + '_' + Math.random().toString(36).slice(2));
+    localStorage.setItem('nomi_session_id', sessionId);
+  }
+  return sessionId;
+}
+
+function safeJsonFromResponse(res) {
+  return res.text().then(function(text) {
+    try { return text ? JSON.parse(text) : {}; }
+    catch(e) { return { error: text || 'Non-JSON error response from server' }; }
+  });
+}
+
+/* NOMI MVP */
 var sessionId = null;
 var selectedPlatform = 'Instagram';
 var taskText = '';
@@ -378,16 +1547,8 @@ var selfProfile = {
   vibes: []
 };
 
-function getOrCreateSessionId() {
-  if (!sessionId) {
-    sessionId = localStorage.getItem('nomi_session_id') || (window.crypto && crypto.randomUUID ? crypto.randomUUID() : 'sess_' + Date.now() + '_' + Math.random().toString(36).slice(2));
-    localStorage.setItem('nomi_session_id', sessionId);
-  }
-  return sessionId;
-}
-
 function clearErrors() {
-  document.querySelectorAll('.err').forEach(function(el){
+  document.querySelectorAll('.err').forEach(function(el) {
     el.style.display = 'none';
     el.textContent = '';
   });
@@ -398,13 +1559,6 @@ function showError(id, message) {
   if (!el) return;
   el.textContent = message;
   el.style.display = 'block';
-}
-
-function safeJsonFromResponse(res) {
-  return res.text().then(function(text){
-    try { return text ? JSON.parse(text) : {}; }
-    catch(e) { return { error: text || 'Non-JSON error response from server' }; }
-  });
 }
 
 function escapeHtml(str) {
@@ -418,6 +1572,7 @@ function escapeHtml(str) {
 
 function setButtonLoading(btn, loading, loadingText) {
   if (!btn) return;
+
   if (loading) {
     btn.dataset.originalText = btn.innerHTML;
     btn.disabled = true;
@@ -434,13 +1589,15 @@ function syncSlider(el) {
 }
 
 function initializeSliders() {
-  document.querySelectorAll('input[type=range]').forEach(function(el){
+  document.querySelectorAll('#nomi-app input[type=range]').forEach(function(el) {
     syncSlider(el);
   });
 }
 
 function selMode(el, value) {
-  document.querySelectorAll('.mode-card').forEach(function(c){ c.classList.remove('sel'); });
+  document.querySelectorAll('.mode-card').forEach(function(c) {
+    c.classList.remove('sel');
+  });
   el.classList.add('sel');
   selfProfile.mode = value;
 }
@@ -468,7 +1625,7 @@ function collectSelfProfile() {
   selfProfile.polish = Number(document.getElementById('sl-polish').value || 35);
   selfProfile.energy = Number(document.getElementById('sl-energy').value || 42);
   selfProfile.selfFeel = document.getElementById('self-feel').value.trim();
-  selfProfile.vibes = Array.from(document.querySelectorAll('.chip.on')).map(function(el){
+  selfProfile.vibes = Array.from(document.querySelectorAll('.chip.on')).map(function(el) {
     return el.textContent.trim();
   });
   return selfProfile;
@@ -493,6 +1650,7 @@ function goToTaskScreen() {
 
 function buildDrafts(targetId, data) {
   var html = '';
+
   data.forEach(function(d, i) {
     html += '<div class="draft-card" tabindex="0" onclick="selDraft(this, ' + i + ')" onkeydown="kbDraft(event, this, ' + i + ')">';
     html += '<div class="draft-radio"></div>';
@@ -501,17 +1659,21 @@ function buildDrafts(targetId, data) {
     html += '<span class="draft-tone">' + escapeHtml(d.tone || '') + '</span>';
     html += '</div>';
   });
+
   document.getElementById(targetId).innerHTML = html;
 }
 
-function selDraft(el, idx){
-  el.closest('.draft-grid').querySelectorAll('.draft-card').forEach(function(c){ c.classList.remove('sel'); });
+function selDraft(el, idx) {
+  el.closest('.draft-grid').querySelectorAll('.draft-card').forEach(function(c) {
+    c.classList.remove('sel');
+  });
+
   el.classList.add('sel');
   chosenDraft = drafts[idx];
   responses.selectedDraftIndex = idx;
 }
 
-function kbDraft(e, el, idx){
+function kbDraft(e, el, idx) {
   if(e.key === 'Enter' || e.key === ' ') {
     e.preventDefault();
     selDraft(el, idx);
@@ -598,7 +1760,7 @@ async function joinWL() {
       body: JSON.stringify({
         sessionId: getOrCreateSessionId(),
         email: email,
-        source: 'nyla_waitlist'
+        source: 'nomi_nyla_waitlist'
       })
     });
 
@@ -664,7 +1826,7 @@ async function finishAndGoHome() {
 
     document.getElementById('submit-confirm').style.display = 'flex';
     resetFlowForHome();
-    go('s1');
+    showZenyaHome();
   } catch (err) {
     console.error(err);
     showError('err-s5-core', err.message || 'Could not save before returning home.');
@@ -697,20 +1859,24 @@ function resetFlowForHome() {
 
 var screens = ['s1','s2','s3','s4','s5'];
 
-function go(id){
-  document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
+function go(id) {
+  document.querySelectorAll('#nomi-app .screen').forEach(function(s) {
+    s.classList.remove('active');
+  });
+
   var el = document.getElementById(id);
   if (!el) return;
   el.classList.add('active');
 
   var idx = screens.indexOf(id);
-  for(var i=0;i<screens.length;i++){
-    var seg = document.getElementById('ps'+(i+1));
+
+  for(var i = 0; i < screens.length; i++) {
+    var seg = document.getElementById('ps' + (i + 1));
     if (!seg) continue;
-    seg.className = 'prog-seg' + (i<idx ? ' done' : i===idx ? ' active' : '');
+    seg.className = 'prog-seg' + (i < idx ? ' done' : i === idx ? ' active' : '');
   }
 
-  window.scrollTo({top:0,behavior:'smooth'});
+  window.scrollTo({top:0, behavior:'smooth'});
 }
 
 initializeSliders();
