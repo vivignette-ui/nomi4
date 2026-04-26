@@ -171,17 +171,6 @@ input[type=range]::-webkit-slider-thumb{
 }
 .draft-card.sel .draft-radio{border-color:var(--accent);background:var(--accent)}
 .draft-card.sel .draft-radio::after{content:'';display:block;width:7px;height:7px;border-radius:50%;background:#fff}
-.rating-row{margin-bottom:22px}
-.rating-q{font-size:13px;font-weight:500;color:var(--t1);margin-bottom:10px;line-height:1.5}
-.rating-scale{display:flex;gap:6px}
-.r-btn{
-  width:42px;height:42px;border-radius:var(--r8);border:1px solid var(--b2);background:var(--bg3);
-  font-family:'Inter',sans-serif;font-size:13px;font-weight:500;color:var(--t3);cursor:pointer;transition:all var(--trans);flex-shrink:0;
-}
-.r-btn:hover{border-color:var(--b3);color:var(--t1);background:var(--bg4)}
-.r-btn.on{background:var(--accent);border-color:var(--accent);color:#fff}
-.rating-labels{display:flex;justify-content:space-between;margin-top:7px;padding:0 2px}
-.r-lbl{font-size:11px;font-weight:500;color:var(--t2)}
 .nyla-box{background:var(--bg2);border:1px solid var(--b2);border-radius:var(--r22);padding:36px 40px;margin-top:8px}
 @media(max-width:580px){.nyla-box{padding:24px 20px}}
 .nyla-logo{font-size:22px;font-weight:600;letter-spacing:-0.04em;color:var(--t1);margin-bottom:8px}
@@ -328,34 +317,6 @@ input[type=range]::-webkit-slider-thumb{
     <div class="err" id="err-s4-draft"></div>
 
     <div class="div"></div>
-    <div class="sec-label">Rate this draft</div>
-
-    <div class="rating-row">
-      <div class="rating-q">How much editing would your chosen draft need? <span class="req">*</span></div>
-      <div class="rating-scale">
-        <button class="r-btn" onclick="rate(this,'rb1')">1</button>
-        <button class="r-btn" onclick="rate(this,'rb1')">2</button>
-        <button class="r-btn" onclick="rate(this,'rb1')">3</button>
-        <button class="r-btn" onclick="rate(this,'rb1')">4</button>
-        <button class="r-btn" onclick="rate(this,'rb1')">5</button>
-      </div>
-      <div class="rating-labels"><span class="r-lbl">No editing</span><span class="r-lbl">Lots of editing</span></div>
-    </div>
-
-    <div class="rating-row">
-      <div class="rating-q">How well does this match the social self you intended? <span class="req">*</span></div>
-      <div class="rating-scale">
-        <button class="r-btn" onclick="rate(this,'rb2')">1</button>
-        <button class="r-btn" onclick="rate(this,'rb2')">2</button>
-        <button class="r-btn" onclick="rate(this,'rb2')">3</button>
-        <button class="r-btn" onclick="rate(this,'rb2')">4</button>
-        <button class="r-btn" onclick="rate(this,'rb2')">5</button>
-      </div>
-      <div class="rating-labels"><span class="r-lbl">Doesn't match</span><span class="r-lbl">Perfect match</span></div>
-    </div>
-    <div class="err" id="err-s4-ratings"></div>
-
-    <div class="div"></div>
     <button class="btn btn-primary" onclick="goToS5()">
       Continue
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><polyline points="9 18 15 12 9 6"/></svg>
@@ -385,10 +346,10 @@ input[type=range]::-webkit-slider-thumb{
     </div>
 
     <div class="div"></div>
-    <button class="btn btn-primary" onclick="submitResponse()" style="font-size:14px;padding:11px 24px">Submit</button>
+    <button class="btn btn-primary" onclick="finishAndGoHome()" style="font-size:14px;padding:11px 24px">Home</button>
     <div id="submit-confirm" class="okmsg">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-      Thank you. Your responses have been recorded.
+      Saved.
     </div>
     <div class="err" id="err-s5-core"></div>
   </div>
@@ -403,11 +364,8 @@ var chosenDraft = null;
 var drafts = [];
 var generationId = null;
 var waitlistJoined = false;
-var submitCompleted = false;
 
 var responses = {
-  ratings: {},
-  actions: [],
   selectedDraftIndex: null
 };
 
@@ -560,12 +518,6 @@ function kbDraft(e, el, idx){
   }
 }
 
-function rate(el, grp){
-  el.closest('.rating-scale').querySelectorAll('.r-btn').forEach(function(b){ b.classList.remove('on'); });
-  el.classList.add('on');
-  responses.ratings[grp] = el.textContent.trim();
-}
-
 async function startFlow() {
   clearErrors();
 
@@ -624,11 +576,6 @@ function goToS5() {
     return;
   }
 
-  if (!responses.ratings.rb1 || !responses.ratings.rb2) {
-    showError('err-s4-ratings', 'Please answer both rating questions.');
-    return;
-  }
-
   go('s5');
 }
 
@@ -668,11 +615,11 @@ async function joinWL() {
   }
 }
 
-async function submitResponse() {
+async function finishAndGoHome() {
   clearErrors();
 
   var btn = document.querySelector('#s5 > .btn-primary');
-  setButtonLoading(btn, true, 'Submitting...');
+  setButtonLoading(btn, true, 'Saving...');
 
   try {
     var res = await fetch('/api/save-response', {
@@ -694,8 +641,8 @@ async function submitResponse() {
           vibes: selfProfile.vibes,
           selectedDraftIndex: responses.selectedDraftIndex,
           selectedDraft: chosenDraft,
-          editScore: responses.ratings.rb1 || '',
-          matchScore: responses.ratings.rb2 || ''
+          editScore: '',
+          matchScore: ''
         },
         persistence: {
           actionSelections: [],
@@ -715,15 +662,37 @@ async function submitResponse() {
     var data = await safeJsonFromResponse(res);
     if (!res.ok) throw new Error(data.error || 'Failed to save response');
 
-    submitCompleted = true;
     document.getElementById('submit-confirm').style.display = 'flex';
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    resetFlowForHome();
+    go('s1');
   } catch (err) {
     console.error(err);
-    showError('err-s5-core', err.message || 'Could not submit responses.');
+    showError('err-s5-core', err.message || 'Could not save before returning home.');
   } finally {
     setButtonLoading(btn, false);
   }
+}
+
+function resetFlowForHome() {
+  taskText = '';
+  notesText = '';
+  chosenDraft = null;
+  drafts = [];
+  generationId = null;
+  waitlistJoined = false;
+  responses = { selectedDraftIndex: null };
+
+  var taskInput = document.getElementById('task-input');
+  var emailInput = document.getElementById('nyla-email');
+  var draftsBox = document.getElementById('drafts-b');
+  var confirm = document.getElementById('nyla-confirm');
+  var submitConfirm = document.getElementById('submit-confirm');
+
+  if (taskInput) taskInput.value = '';
+  if (emailInput) emailInput.value = '';
+  if (draftsBox) draftsBox.innerHTML = '';
+  if (confirm) confirm.style.display = 'none';
+  if (submitConfirm) submitConfirm.style.display = 'none';
 }
 
 var screens = ['s1','s2','s3','s4','s5'];
