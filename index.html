@@ -69,6 +69,7 @@ html,body{
 .screen.active{display:block}
 .overline{font-size:11px;font-weight:500;letter-spacing:0.07em;text-transform:uppercase;color:var(--t3);margin-bottom:10px}
 .display{font-size:28px;font-weight:500;letter-spacing:-0.035em;line-height:1.18;color:var(--t1);margin-bottom:10px}
+.welcome-display{margin-bottom:22px}
 .h2{font-size:20px;font-weight:500;letter-spacing:-0.03em;color:var(--t1);margin-bottom:6px}
 .body{font-size:14px;font-weight:300;color:var(--t2);line-height:1.65}
 .sec-label{font-size:11px;font-weight:500;letter-spacing:0.07em;text-transform:uppercase;color:var(--t3);margin-bottom:14px}
@@ -181,27 +182,6 @@ input[type=range]::-webkit-slider-thumb{
 .r-btn.on{background:var(--accent);border-color:var(--accent);color:#fff}
 .rating-labels{display:flex;justify-content:space-between;margin-top:7px;padding:0 2px}
 .r-lbl{font-size:11px;font-weight:500;color:var(--t2)}
-.fc-row{margin-bottom:22px}
-.fc-q{font-size:14px;font-weight:500;color:var(--t1);margin-bottom:10px;line-height:1.5}
-.fc-opts{display:flex;gap:8px;flex-wrap:wrap}
-.fc-btn{
-  font-family:'Inter',sans-serif;font-size:13px;font-weight:500;padding:9px 18px;border-radius:var(--rpill);
-  border:1px solid var(--b2);background:var(--bg3);color:var(--t2);cursor:pointer;transition:all var(--trans);
-}
-.fc-btn:hover{border-color:var(--b3);color:var(--t1);background:var(--bg4)}
-.fc-btn.chosen{background:var(--accent-soft);border-color:var(--accent-border);color:var(--accent2)}
-.act-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:24px}
-@media(max-width:440px){.act-grid{grid-template-columns:1fr}}
-.act-card{
-  background:var(--bg3);border:1px solid var(--b1);border-radius:var(--r12);padding:14px 16px;cursor:pointer;
-  font-family:'Inter',sans-serif;font-size:13px;font-weight:500;color:var(--t2);text-align:left;display:flex;align-items:center;gap:10px;transition:all var(--trans)
-}
-.act-card:hover{background:var(--bg4);border-color:var(--b2);color:var(--t1);transform:translateY(-2px)}
-.act-card.done{background:var(--green-soft);border-color:var(--green-border);color:var(--green)}
-.act-icon{
-  width:28px;height:28px;min-width:28px;border-radius:var(--r8);background:var(--bg4);border:1px solid var(--b1);
-  display:flex;align-items:center;justify-content:center;transition:all var(--trans);color:var(--t3)
-}
 .nyla-box{background:var(--bg2);border:1px solid var(--b2);border-radius:var(--r22);padding:36px 40px;margin-top:8px}
 @media(max-width:580px){.nyla-box{padding:24px 20px}}
 .nyla-logo{font-size:22px;font-weight:600;letter-spacing:-0.04em;color:var(--t1);margin-bottom:8px}
@@ -224,15 +204,13 @@ input[type=range]::-webkit-slider-thumb{
     <div class="prog-seg" id="ps3"></div>
     <div class="prog-seg" id="ps4"></div>
     <div class="prog-seg" id="ps5"></div>
-    <div class="prog-seg" id="ps6"></div>
   </div>
 
   <div class="screen active card" id="s1">
     <div class="overline">NOMI</div>
-    <div class="display">Welcome to Nomi</div>
+    <div class="display welcome-display">Welcome to Nomi</div>
     <p class="body" style="margin-bottom:28px;max-width:520px;color:rgb(236,236,236)">
-      Be a GenAI-powered creator without losing your voice.<br><br>
-      Nomi helps you shape a social self that creates consistent, distinctive content.
+      Be a GenAI-powered creator without losing your voice. Nomi helps you shape a social self that creates consistent, distinctive content.
     </p>
 
     <button class="btn btn-primary" onclick="go('s2')">Start</button>
@@ -244,8 +222,8 @@ input[type=range]::-webkit-slider-thumb{
       Back
     </button>
 
-    <div class="h2" style="margin-bottom:6px">Create a social character of you</div>
-    <p class="body" style="margin-bottom:28px;max-width:460px">What is your social character behind this post?</p>
+    <div class="h2" style="margin-bottom:6px">Create a social self of you</div>
+    <p class="body" style="margin-bottom:28px;max-width:460px">What is your social self behind this post?</p>
 
     <div style="margin-bottom:28px">
       <div class="sec-label">Starting mode <span class="req">*</span></div>
@@ -344,7 +322,7 @@ input[type=range]::-webkit-slider-thumb{
     </button>
 
     <div class="h2" style="margin-bottom:6px">Character-shaped drafts</div>
-    <p class="body" style="margin-bottom:20px">Drafts generated through your description and your chosen character.</p>
+    <p class="body" style="margin-bottom:20px">Drafts generated through your description and your chosen social self.</p>
     <div class="sec-label">Choose the draft you'd most likely post <span class="req">*</span></div>
     <div class="draft-grid" id="drafts-b"></div>
     <div class="err" id="err-s4-draft"></div>
@@ -390,62 +368,12 @@ input[type=range]::-webkit-slider-thumb{
       Back
     </button>
 
-    <div class="overline">For future</div>
-    <div class="h2" style="margin-bottom:6px">What would you do with this character? <span class="opt">(optional)</span></div>
-    <p class="body" style="margin-bottom:24px">You don't need to do anything now. Just tap anything that feels useful to you.</p>
-
-    <div class="act-grid">
-      <button class="act-card" onclick="togAct(this)"><div class="act-icon">+</div>Save this character</button>
-      <button class="act-card" onclick="togAct(this)"><div class="act-icon">+</div>Reuse this character</button>
-      <button class="act-card" onclick="togAct(this)"><div class="act-icon">+</div>Make another character</button>
-      <button class="act-card" onclick="togAct(this)"><div class="act-icon">+</div>Make more polished</button>
-      <button class="act-card" onclick="togAct(this)"><div class="act-icon">+</div>Make more playful</button>
-    </div>
-
-    <div class="div"></div>
-    <div class="sec-label" style="margin-bottom:18px">A few quick questions</div>
-
-    <div class="fc-row">
-      <div class="fc-q">Would you want to save this social character for future posts on Instagram? <span class="opt">(optional)</span></div>
-      <div class="fc-opts">
-        <button class="fc-btn" onclick="fc(this,'p1')">Yes, definitely</button>
-        <button class="fc-btn" onclick="fc(this,'p1')">Maybe</button>
-        <button class="fc-btn" onclick="fc(this,'p1')">Not really</button>
-      </div>
-    </div>
-    <div class="fc-row">
-      <div class="fc-q">Would you want another character for a different kind of post? <span class="opt">(optional)</span></div>
-      <div class="fc-opts">
-        <button class="fc-btn" onclick="fc(this,'p2')">Yes, definitely</button>
-        <button class="fc-btn" onclick="fc(this,'p2')">Maybe</button>
-        <button class="fc-btn" onclick="fc(this,'p2')">Not really</button>
-      </div>
-    </div>
-
-    <div style="margin-top:20px">
-      <label class="field-label" for="open-q">What would make this more useful over time? <span class="opt">(optional)</span></label>
-      <textarea id="open-q" rows="3" placeholder="Share anything that comes to mind..."></textarea>
-    </div>
-
-    <div class="div"></div>
-    <button class="btn btn-primary" onclick="goToS6()">
-      Continue
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><polyline points="9 18 15 12 9 6"/></svg>
-    </button>
-  </div>
-
-  <div class="screen card" id="s6">
-    <button class="btn-back" onclick="go('s5')" style="margin-bottom:22px">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><polyline points="15 18 9 12 15 6"/></svg>
-      Back
-    </button>
-
     <div class="overline">What comes next</div>
-    <div class="h2" style="margin-bottom:20px">One more concept to react to</div>
+    <div class="h2" style="margin-bottom:20px">Nyla is coming soon.</div>
 
     <div class="nyla-box">
       <div class="nyla-logo">Nyla</div>
-      <p class="nyla-sub">Nyla helps you shape and manage different social characters over time: one per platform, one per context, all in one place.</p>
+      <p class="nyla-sub">Our full product helps you shape and manage different social characters over time.</p>
       <label class="field-label" for="nyla-email">Email address <span class="opt">(optional)</span></label>
       <input type="email" id="nyla-email" placeholder="your@email.com">
       <button class="btn btn-primary" style="width:100%;border-radius:var(--r8);margin-top:2px" onclick="joinWL()">Join the waitlist</button>
@@ -453,33 +381,8 @@ input[type=range]::-webkit-slider-thumb{
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
         You're on the list.
       </div>
-      <div class="err" id="err-s6-email"></div>
+      <div class="err" id="err-s5-email"></div>
     </div>
-
-    <div class="div"></div>
-    <div class="sec-label" style="margin-bottom:18px">Rate this concept <span class="opt" style="text-transform:none;letter-spacing:0">(optional)</span></div>
-
-    <div class="rating-row">
-      <div class="rating-q">How interesting is the idea of Nyla to you? <span class="opt">(optional)</span></div>
-      <div class="rating-scale">
-        <button class="r-btn" onclick="rate(this,'rn1')">1</button>
-        <button class="r-btn" onclick="rate(this,'rn1')">2</button>
-        <button class="r-btn" onclick="rate(this,'rn1')">3</button>
-        <button class="r-btn" onclick="rate(this,'rn1')">4</button>
-        <button class="r-btn" onclick="rate(this,'rn1')">5</button>
-      </div>
-      <div class="rating-labels"><span class="r-lbl">Not interesting</span><span class="r-lbl">Very interesting</span></div>
-    </div>
-
-    <div class="fc-row">
-      <div class="rating-q" style="font-size:13px">Would you join the waitlist for Nyla? <span class="opt">(optional)</span></div>
-      <div class="fc-opts">
-        <button class="fc-btn" onclick="fc(this,'n1')">Yes</button>
-        <button class="fc-btn" onclick="fc(this,'n1')">Maybe</button>
-        <button class="fc-btn" onclick="fc(this,'n1')">No</button>
-      </div>
-    </div>
-    <div class="err" id="err-s6-core"></div>
 
     <div class="div"></div>
     <button class="btn btn-primary" onclick="submitResponse()" style="font-size:14px;padding:11px 24px">Submit</button>
@@ -487,6 +390,7 @@ input[type=range]::-webkit-slider-thumb{
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
       Thank you. Your responses have been recorded.
     </div>
+    <div class="err" id="err-s5-core"></div>
   </div>
 </div>
 
@@ -503,7 +407,6 @@ var submitCompleted = false;
 
 var responses = {
   ratings: {},
-  forcedChoice: {},
   actions: [],
   selectedDraftIndex: null
 };
@@ -663,22 +566,6 @@ function rate(el, grp){
   responses.ratings[grp] = el.textContent.trim();
 }
 
-function fc(el, grp){
-  el.closest('.fc-opts').querySelectorAll('.fc-btn').forEach(function(b){ b.classList.remove('chosen'); });
-  el.classList.add('chosen');
-  responses.forcedChoice[grp] = el.textContent.trim();
-}
-
-function togAct(el){
-  el.classList.toggle('done');
-  var label = el.textContent.trim().replace(/\s+/g, ' ');
-  if (el.classList.contains('done')) {
-    if (!responses.actions.includes(label)) responses.actions.push(label);
-  } else {
-    responses.actions = responses.actions.filter(function(x){ return x !== label; });
-  }
-}
-
 async function startFlow() {
   clearErrors();
 
@@ -745,21 +632,16 @@ function goToS5() {
   go('s5');
 }
 
-function goToS6() {
-  clearErrors();
-  go('s6');
-}
-
 async function joinWL() {
   clearErrors();
   var email = document.getElementById('nyla-email').value.trim();
 
   if (!email) {
-    showError('err-s6-email', 'Enter an email if you want to join the waitlist.');
+    showError('err-s5-email', 'Enter an email if you want to join the waitlist.');
     return;
   }
 
-  var btn = document.querySelector('#s6 .nyla-box .btn-primary');
+  var btn = document.querySelector('#s5 .nyla-box .btn-primary');
   setButtonLoading(btn, true, 'Joining...');
 
   try {
@@ -780,7 +662,7 @@ async function joinWL() {
     document.getElementById('nyla-confirm').style.display = 'flex';
   } catch (err) {
     console.error(err);
-    showError('err-s6-email', err.message || 'Could not join the waitlist.');
+    showError('err-s5-email', err.message || 'Could not join the waitlist.');
   } finally {
     setButtonLoading(btn, false);
   }
@@ -789,7 +671,7 @@ async function joinWL() {
 async function submitResponse() {
   clearErrors();
 
-  var btn = document.querySelector('#s6 > .btn-primary');
+  var btn = document.querySelector('#s5 > .btn-primary');
   setButtonLoading(btn, true, 'Submitting...');
 
   try {
@@ -816,14 +698,14 @@ async function submitResponse() {
           matchScore: responses.ratings.rb2 || ''
         },
         persistence: {
-          actionSelections: responses.actions,
-          saveCharacterIntent: responses.forcedChoice.p1 || '',
-          variationIntent: responses.forcedChoice.p2 || '',
-          openFeedback: document.getElementById('open-q').value.trim()
+          actionSelections: [],
+          saveCharacterIntent: '',
+          variationIntent: '',
+          openFeedback: ''
         },
         nyla: {
-          interestScore: responses.ratings.rn1 || '',
-          waitlistIntent: responses.forcedChoice.n1 || '',
+          interestScore: '',
+          waitlistIntent: '',
           waitlistJoined: waitlistJoined
         },
         submitCompletedAt: new Date().toISOString()
@@ -838,13 +720,13 @@ async function submitResponse() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   } catch (err) {
     console.error(err);
-    showError('err-s6-core', err.message || 'Could not submit responses.');
+    showError('err-s5-core', err.message || 'Could not submit responses.');
   } finally {
     setButtonLoading(btn, false);
   }
 }
 
-var screens = ['s1','s2','s3','s4','s5','s6'];
+var screens = ['s1','s2','s3','s4','s5'];
 
 function go(id){
   document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
