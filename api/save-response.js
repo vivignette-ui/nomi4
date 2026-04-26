@@ -5,15 +5,22 @@ function serialize(value) {
   return typeof value === 'string' ? value : JSON.stringify(value);
 }
 
-function addNumber(fields, key, value) {
-  const n = Number(value);
-  if (Number.isFinite(n)) fields[key] = n;
+function hasValue(value) {
+  return value !== undefined && value !== null && value !== '';
 }
 
-function addText(fields, key, value) {
-  if (value == null) return;
-  const text = String(value);
-  if (text !== '') fields[key] = text;
+function addIfValue(fields, key, value) {
+  if (hasValue(value)) {
+    fields[key] = value;
+  }
+}
+
+function addNumberIfValue(fields, key, value) {
+  if (!hasValue(value)) return;
+  const n = Number(value);
+  if (Number.isFinite(n)) {
+    fields[key] = n;
+  }
 }
 
 export default async function handler(req, res) {
@@ -31,7 +38,7 @@ export default async function handler(req, res) {
       generation,
       persistence,
       nyla,
-      submitCompletedAt
+      submitCompletedAt,
     } = payload;
 
     if (!sessionId) {
@@ -40,37 +47,38 @@ export default async function handler(req, res) {
 
     const { responsesTable } = getAirtableConfig();
 
+    const selectedDraft = generation?.selectedDraft || {};
     const fields = {
       session_id: sessionId,
-      platform: platform || 'Instagram',
+      platform: platform || '',
       task: task || '',
       notes: notes || '',
       generation_id: generation?.generationId || '',
       generated_drafts: serialize(generation?.drafts || []),
-      selected_draft_index: String(generation?.selectedDraftIndex ?? ''),
-      selected_draft: serialize(generation?.selectedDraft),
+      selected_draft: serialize(selectedDraft),
+      selected_draft_title: selectedDraft?.title || '',
+      selected_draft_body: selectedDraft?.body || '',
+      selected_draft_tone: selectedDraft?.tone || '',
       self_mode: generation?.mode || '',
-      self_tone: String(generation?.tone ?? ''),
-      self_polish: String(generation?.polish ?? ''),
-      self_energy: String(generation?.energy ?? ''),
       self_feel: generation?.selfFeel || '',
       self_vibes: (generation?.vibes || []).join(', '),
       action_selections: (persistence?.actionSelections || []).join(', '),
       save_character_intent: persistence?.saveCharacterIntent || '',
       variation_intent: persistence?.variationIntent || '',
       open_feedback: persistence?.openFeedback || '',
-      nyla_waitlist_intent: nyla?.waitlistIntent || '',
-      nyla_waitlist_joined: nyla?.waitlistJoined ? 'yes' : 'no',
+      nyla_waitlist_joined: String(Boolean(nyla?.waitlistJoined)),
       submit_completed_at: submitCompletedAt || '',
-      created_at: new Date().toISOString()
+      created_at: new Date().toISOString(),
     };
 
-    addNumber(fields, 'edit_score', generation?.editScore);
-    addNumber(fields, 'match_score', generation?.matchScore);
-    addNumber(fields, 'nyla_interest_score', nyla?.interestScore);
-    addText(fields, 'selected_draft_title', generation?.selectedDraft?.title || '');
-    addText(fields, 'selected_draft_body', generation?.selectedDraft?.body || '');
-    addText(fields, 'selected_draft_tone', generation?.selectedDraft?.tone || '');
+    addIfValue(fields, 'selected_draft_index', generation?.selectedDraftIndex);
+    addNumberIfValue(fields, 'edit_score', generation?.editScore);
+    addNumberIfValue(fields, 'match_score', generation?.matchScore);
+    addNumberIfValue(fields, 'self_tone', generation?.tone);
+    addNumberIfValue(fields, 'self_polish', generation?.polish);
+    addNumberIfValue(fields, 'self_energy', generation?.energy);
+    addNumberIfValue(fields, 'nyla_interest_score', nyla?.interestScore);
+    addIfValue(fields, 'nyla_waitlist_intent', nyla?.waitlistIntent);
 
     await createRecord(responsesTable, fields);
 
