@@ -13,9 +13,11 @@
   --bg2:#17171b;
   --bg3:#1f1f25;
   --bg4:#272730;
+  --bg5:#30303c;
   --accent:#526C90;
   --accent2:#7a9cbd;
   --accent-soft:rgba(82,108,144,0.16);
+  --accent-soft2:rgba(82,108,144,0.08);
   --accent-border:rgba(122,156,189,0.28);
   --green:#5caa88;
   --green-soft:rgba(92,170,136,0.12);
@@ -102,6 +104,52 @@ input[type=email],textarea{
 }
 input::placeholder,textarea::placeholder{color:var(--t3)}
 input:focus,textarea:focus{border-color:rgba(90,135,197,0.6);box-shadow:0 0 0 3px rgba(61,107,170,0.15)}
+
+.mode-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:480px){.mode-grid{grid-template-columns:1fr}}
+.mode-card{
+  background:rgba(255,255,255,0.04);
+  border:1px solid rgba(255,255,255,0.09);
+  border-radius:var(--r12);
+  padding:16px 18px 16px 16px;
+  cursor:pointer;transition:all var(--trans);position:relative;
+  display:flex;flex-direction:column;gap:3px;
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+}
+.mode-card:hover{background:rgba(255,255,255,0.07);border-color:rgba(255,255,255,0.16);transform:translateY(-2px)}
+.mode-card.sel{background:var(--accent-soft);border-color:var(--accent-border)}
+.mode-title{font-size:14px;font-weight:500;color:var(--t1)}
+.mode-sub{font-size:12px;color:var(--t3)}
+.mode-check{
+  position:absolute;top:14px;right:14px;width:18px;height:18px;border-radius:50%;
+  border:1.5px solid var(--b2);background:var(--bg4);
+  display:flex;align-items:center;justify-content:center;transition:all var(--trans)
+}
+.mode-card.sel .mode-check{background:var(--accent);border-color:var(--accent)}
+.mode-check .chk{display:none}
+.mode-card.sel .mode-check .chk{display:block}
+.slider-row{display:grid;grid-template-columns:68px 1fr 68px;align-items:center;gap:12px;margin-bottom:12px}
+.sl-lbl{font-size:12px;font-weight:500;color:var(--t2)}
+.sl-lbl.r{text-align:right}
+input[type=range]{
+  -webkit-appearance:none;appearance:none;width:100%;height:5px;border-radius:100px;
+  background:linear-gradient(to right,var(--accent2) var(--pct,50%),rgba(255,255,255,0.18) var(--pct,50%));
+  outline:none;cursor:pointer;border:none;
+}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;appearance:none;width:19px;height:19px;border-radius:50%;
+  background:var(--bg2);border:2px solid var(--accent2);box-shadow:0 1px 4px rgba(0,0,0,0.4);cursor:pointer
+}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{
+  font-family:'Inter',sans-serif;font-size:12px;font-weight:500;
+  padding:5px 14px;border-radius:var(--rpill);
+  border:1px solid var(--b2);background:var(--bg3);color:var(--t2);
+  cursor:pointer;transition:all var(--trans)
+}
+.chip:hover{border-color:var(--b3);color:var(--t1);background:var(--bg4)}
+.chip.on{background:var(--accent-soft);border-color:var(--accent-border);color:var(--accent2)}
+
 .draft-grid{display:grid;grid-template-columns:1fr;gap:10px;margin-bottom:24px}
 .draft-card{
   background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.09);border-radius:var(--r16);
@@ -175,29 +223,128 @@ input:focus,textarea:focus{border-color:rgba(90,135,197,0.6);box-shadow:0 0 0 3p
     <div class="prog-seg" id="ps2"></div>
     <div class="prog-seg" id="ps3"></div>
     <div class="prog-seg" id="ps4"></div>
+    <div class="prog-seg" id="ps5"></div>
+    <div class="prog-seg" id="ps6"></div>
   </div>
 
   <div class="screen active card" id="s1">
     <div class="overline">NOMI</div>
+    <div class="display">Welcome to Nomi</div>
+    <p class="body" style="margin-bottom:28px;max-width:520px;color:rgb(236,236,236)">
+      Be a GenAI-powered creator without losing your voice.<br><br>
+      Nomi helps you shape a social self that creates consistent, distinctive content.
+    </p>
+
+    <button class="btn btn-primary" onclick="go('s2')">Start</button>
+  </div>
+
+  <div class="screen card" id="s2">
+    <button class="btn-back" onclick="go('s1')" style="margin-bottom:22px">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><polyline points="15 18 9 12 15 6"/></svg>
+      Back
+    </button>
+
+    <div class="h2" style="margin-bottom:6px">Create a social character of you</div>
+    <p class="body" style="margin-bottom:28px;max-width:460px">What is your social character behind this post?</p>
+
+    <div style="margin-bottom:28px">
+      <div class="sec-label">Starting mode <span class="req">*</span></div>
+      <div class="mode-grid" id="mode-grid">
+        <div class="mode-card" tabindex="0" onclick="selMode(this,'Thoughtful diarist')" onkeydown="kbMode(event,this,'Thoughtful diarist')">
+          <div class="mode-check"><svg class="chk" width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+          <div class="mode-title">Thoughtful diarist</div>
+          <div class="mode-sub">Reflective, honest, slow-burn</div>
+        </div>
+        <div class="mode-card" tabindex="0" onclick="selMode(this,'Polished lifestyle sharer')" onkeydown="kbMode(event,this,'Polished lifestyle sharer')">
+          <div class="mode-check"><svg class="chk" width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+          <div class="mode-title">Polished lifestyle sharer</div>
+          <div class="mode-sub">Curated, aesthetic, aspirational</div>
+        </div>
+        <div class="mode-card" tabindex="0" onclick="selMode(this,'Soft intimate storyteller')" onkeydown="kbMode(event,this,'Soft intimate storyteller')">
+          <div class="mode-check"><svg class="chk" width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+          <div class="mode-title">Soft intimate storyteller</div>
+          <div class="mode-sub">Warm, personal, tender</div>
+        </div>
+        <div class="mode-card" tabindex="0" onclick="selMode(this,'Trend-aware curator')" onkeydown="kbMode(event,this,'Trend-aware curator')">
+          <div class="mode-check"><svg class="chk" width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+          <div class="mode-title">Trend-aware curator</div>
+          <div class="mode-sub">Current, cultural, in-the-know</div>
+        </div>
+        <div class="mode-card" tabindex="0" onclick="selMode(this,'Smart playful explainer')" onkeydown="kbMode(event,this,'Smart playful explainer')">
+          <div class="mode-check"><svg class="chk" width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+          <div class="mode-title">Smart playful explainer</div>
+          <div class="mode-sub">Clear, witty, entertaining</div>
+        </div>
+      </div>
+      <div class="err" id="err-s2-mode"></div>
+    </div>
+
+    <div style="margin-bottom:28px">
+      <div class="sec-label">Adjust identity controls</div>
+      <div class="slider-row">
+        <span class="sl-lbl">Soft</span>
+        <input type="range" min="0" max="100" value="38" id="sl-tone" oninput="syncSlider(this)">
+        <span class="sl-lbl r">Sharp</span>
+      </div>
+      <div class="slider-row">
+        <span class="sl-lbl">Personal</span>
+        <input type="range" min="0" max="100" value="35" id="sl-polish" oninput="syncSlider(this)">
+        <span class="sl-lbl r">Polished</span>
+      </div>
+      <div class="slider-row">
+        <span class="sl-lbl">Calm</span>
+        <input type="range" min="0" max="100" value="42" id="sl-energy" oninput="syncSlider(this)">
+        <span class="sl-lbl r">Expressive</span>
+      </div>
+    </div>
+
+    <div style="margin-bottom:28px">
+      <label class="field-label" for="self-feel">How do you want to come across? <span class="req">*</span></label>
+      <textarea id="self-feel" rows="2" placeholder="e.g. Warm but not sentimental. Real, not polished."></textarea>
+      <div class="err" id="err-s2-self"></div>
+    </div>
+
+    <div style="margin-bottom:34px">
+      <div class="sec-label">Vibe <span class="opt" style="text-transform:none;letter-spacing:0;font-size:11px">(optional)</span></div>
+      <div class="chips">
+        <span class="chip" tabindex="0" onclick="togChip(this)" onkeydown="kbChip(event,this)">Clean</span>
+        <span class="chip" tabindex="0" onclick="togChip(this)" onkeydown="kbChip(event,this)">Cozy</span>
+        <span class="chip" tabindex="0" onclick="togChip(this)" onkeydown="kbChip(event,this)">Dreamy</span>
+        <span class="chip" tabindex="0" onclick="togChip(this)" onkeydown="kbChip(event,this)">Refined</span>
+        <span class="chip" tabindex="0" onclick="togChip(this)" onkeydown="kbChip(event,this)">Playful</span>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" onclick="goToTaskScreen()">Continue</button>
+  </div>
+
+  <div class="screen card" id="s3">
+    <button class="btn-back" onclick="go('s2')" style="margin-bottom:22px">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><polyline points="15 18 9 12 15 6"/></svg>
+      Back
+    </button>
+
+    <div class="overline">NOMI</div>
     <div class="display">Draft a post for Instagram</div>
-    <p class="body" style="margin-bottom:28px;max-width:480px;color:rgb(236,236,236)">Create content based on a social self you shape;</p>
+    <p class="body" style="margin-bottom:28px;max-width:480px;color:rgb(236,236,236)">Create content based on a social self you shape.</p>
 
     <div style="margin-bottom:30px">
       <label class="field-label" for="task-input">What do you want to post about? <span class="req">*</span></label>
       <textarea id="task-input" rows="4" placeholder="Describe your idea and any context. e.g. My morning routine, honest tone, more personal than inspiring."></textarea>
-      <div class="err" id="err-s1-task"></div>
+      <div class="err" id="err-s3-task"></div>
     </div>
 
     <button class="btn btn-primary" onclick="startFlow()">Generate drafts</button>
   </div>
 
   <div class="screen card" id="s4">
-    <button class="btn-back" onclick="go('s1')" style="margin-bottom:22px">
+    <button class="btn-back" onclick="go('s3')" style="margin-bottom:22px">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><polyline points="15 18 9 12 15 6"/></svg>
       Back
     </button>
+
     <div class="h2" style="margin-bottom:6px">Character-shaped drafts</div>
-    <p class="body" style="margin-bottom:20px">Drafts generated through your description and a social self shaped from your intent.</p>
+    <p class="body" style="margin-bottom:20px">Drafts generated through your description and your chosen character.</p>
     <div class="sec-label">Choose the draft you'd most likely post <span class="req">*</span></div>
     <div class="draft-grid" id="drafts-b"></div>
     <div class="err" id="err-s4-draft"></div>
@@ -231,17 +378,18 @@ input:focus,textarea:focus{border-color:rgba(90,135,197,0.6);box-shadow:0 0 0 3p
     <div class="err" id="err-s4-ratings"></div>
 
     <div class="div"></div>
-    <button class="btn btn-primary" onclick="goToS6()">
+    <button class="btn btn-primary" onclick="goToS5()">
       Continue
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><polyline points="9 18 15 12 9 6"/></svg>
     </button>
   </div>
 
-  <div class="screen card" id="s6">
+  <div class="screen card" id="s5">
     <button class="btn-back" onclick="go('s4')" style="margin-bottom:22px">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><polyline points="15 18 9 12 15 6"/></svg>
       Back
     </button>
+
     <div class="overline">For future</div>
     <div class="h2" style="margin-bottom:6px">What would you do with this character? <span class="opt">(optional)</span></div>
     <p class="body" style="margin-bottom:24px">You don't need to do anything now. Just tap anything that feels useful to you.</p>
@@ -280,17 +428,18 @@ input:focus,textarea:focus{border-color:rgba(90,135,197,0.6);box-shadow:0 0 0 3p
     </div>
 
     <div class="div"></div>
-    <button class="btn btn-primary" onclick="goToS7()">
+    <button class="btn btn-primary" onclick="goToS6()">
       Continue
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><polyline points="9 18 15 12 9 6"/></svg>
     </button>
   </div>
 
-  <div class="screen card" id="s7">
-    <button class="btn-back" onclick="go('s6')" style="margin-bottom:22px">
+  <div class="screen card" id="s6">
+    <button class="btn-back" onclick="go('s5')" style="margin-bottom:22px">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><polyline points="15 18 9 12 15 6"/></svg>
       Back
     </button>
+
     <div class="overline">What comes next</div>
     <div class="h2" style="margin-bottom:20px">One more concept to react to</div>
 
@@ -304,7 +453,7 @@ input:focus,textarea:focus{border-color:rgba(90,135,197,0.6);box-shadow:0 0 0 3p
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
         You're on the list.
       </div>
-      <div class="err" id="err-s7-email"></div>
+      <div class="err" id="err-s6-email"></div>
     </div>
 
     <div class="div"></div>
@@ -330,7 +479,7 @@ input:focus,textarea:focus{border-color:rgba(90,135,197,0.6);box-shadow:0 0 0 3p
         <button class="fc-btn" onclick="fc(this,'n1')">No</button>
       </div>
     </div>
-    <div class="err" id="err-s7-core"></div>
+    <div class="err" id="err-s6-core"></div>
 
     <div class="div"></div>
     <button class="btn btn-primary" onclick="submitResponse()" style="font-size:14px;padding:11px 24px">Submit</button>
@@ -359,13 +508,13 @@ var responses = {
   selectedDraftIndex: null
 };
 
-var inferredSelfProfile = {
-  mode: 'Instagram social self',
-  tone: 42,
-  polish: 52,
-  energy: 46,
-  selfFeel: 'Infer a natural Instagram social self from the user task and make the output feel personal, appealing, and socially intentional.',
-  vibes: ['clean', 'natural', 'socially intentional']
+var selfProfile = {
+  mode: '',
+  tone: 38,
+  polish: 35,
+  energy: 42,
+  selfFeel: '',
+  vibes: []
 };
 
 function getOrCreateSessionId() {
@@ -377,7 +526,10 @@ function getOrCreateSessionId() {
 }
 
 function clearErrors() {
-  document.querySelectorAll('.err').forEach(function(el){ el.style.display = 'none'; el.textContent = ''; });
+  document.querySelectorAll('.err').forEach(function(el){
+    el.style.display = 'none';
+    el.textContent = '';
+  });
 }
 
 function showError(id, message) {
@@ -413,6 +565,69 @@ function setButtonLoading(btn, loading, loadingText) {
     btn.disabled = false;
     if (btn.dataset.originalText) btn.innerHTML = btn.dataset.originalText;
   }
+}
+
+function syncSlider(el) {
+  var pct = ((el.value - el.min) / (el.max - el.min)) * 100;
+  el.style.setProperty('--pct', pct + '%');
+}
+
+function initializeSliders() {
+  document.querySelectorAll('input[type=range]').forEach(function(el){
+    syncSlider(el);
+  });
+}
+
+function selMode(el, value) {
+  document.querySelectorAll('.mode-card').forEach(function(c){ c.classList.remove('sel'); });
+  el.classList.add('sel');
+  selfProfile.mode = value;
+}
+
+function kbMode(e, el, value) {
+  if(e.key === 'Enter' || e.key === ' ') {
+    e.preventDefault();
+    selMode(el, value);
+  }
+}
+
+function togChip(el) {
+  el.classList.toggle('on');
+}
+
+function kbChip(e, el) {
+  if(e.key === 'Enter' || e.key === ' ') {
+    e.preventDefault();
+    togChip(el);
+  }
+}
+
+function collectSelfProfile() {
+  selfProfile.tone = Number(document.getElementById('sl-tone').value || 38);
+  selfProfile.polish = Number(document.getElementById('sl-polish').value || 35);
+  selfProfile.energy = Number(document.getElementById('sl-energy').value || 42);
+  selfProfile.selfFeel = document.getElementById('self-feel').value.trim();
+  selfProfile.vibes = Array.from(document.querySelectorAll('.chip.on')).map(function(el){
+    return el.textContent.trim();
+  });
+  return selfProfile;
+}
+
+function goToTaskScreen() {
+  clearErrors();
+  var profile = collectSelfProfile();
+
+  if (!profile.mode) {
+    showError('err-s2-mode', 'Please choose a starting mode.');
+    return;
+  }
+
+  if (!profile.selfFeel) {
+    showError('err-s2-self', 'Please describe how you want to come across.');
+    return;
+  }
+
+  go('s3');
 }
 
 function buildDrafts(targetId, data) {
@@ -470,16 +685,18 @@ async function startFlow() {
   var task = document.getElementById('task-input').value.trim();
 
   if (!task) {
-    showError('err-s1-task', 'Please describe what you want to post about.');
+    showError('err-s3-task', 'Please describe what you want to post about.');
     return;
   }
+
+  collectSelfProfile();
 
   selectedPlatform = 'Instagram';
   taskText = task;
   notesText = task;
   getOrCreateSessionId();
 
-  var btn = document.querySelector('#s1 .btn-primary');
+  var btn = document.querySelector('#s3 .btn-primary');
   setButtonLoading(btn, true, 'Generating...');
 
   try {
@@ -491,7 +708,7 @@ async function startFlow() {
         platform: selectedPlatform,
         task: taskText,
         notes: notesText,
-        selfProfile: inferredSelfProfile
+        selfProfile: selfProfile
       })
     });
 
@@ -506,28 +723,31 @@ async function startFlow() {
     go('s4');
   } catch (err) {
     console.error(err);
-    showError('err-s1-task', err.message || 'Could not generate drafts.');
+    showError('err-s3-task', err.message || 'Could not generate drafts.');
   } finally {
     setButtonLoading(btn, false);
   }
 }
 
-function goToS6() {
+function goToS5() {
   clearErrors();
+
   if (responses.selectedDraftIndex == null) {
     showError('err-s4-draft', 'Please select one character-shaped draft.');
     return;
   }
+
   if (!responses.ratings.rb1 || !responses.ratings.rb2) {
     showError('err-s4-ratings', 'Please answer both rating questions.');
     return;
   }
-  go('s6');
+
+  go('s5');
 }
 
-function goToS7() {
+function goToS6() {
   clearErrors();
-  go('s7');
+  go('s6');
 }
 
 async function joinWL() {
@@ -535,11 +755,11 @@ async function joinWL() {
   var email = document.getElementById('nyla-email').value.trim();
 
   if (!email) {
-    showError('err-s7-email', 'Enter an email if you want to join the waitlist.');
+    showError('err-s6-email', 'Enter an email if you want to join the waitlist.');
     return;
   }
 
-  var btn = document.querySelector('#s7 .nyla-box .btn-primary');
+  var btn = document.querySelector('#s6 .nyla-box .btn-primary');
   setButtonLoading(btn, true, 'Joining...');
 
   try {
@@ -560,7 +780,7 @@ async function joinWL() {
     document.getElementById('nyla-confirm').style.display = 'flex';
   } catch (err) {
     console.error(err);
-    showError('err-s7-email', err.message || 'Could not join the waitlist.');
+    showError('err-s6-email', err.message || 'Could not join the waitlist.');
   } finally {
     setButtonLoading(btn, false);
   }
@@ -569,7 +789,7 @@ async function joinWL() {
 async function submitResponse() {
   clearErrors();
 
-  var btn = document.querySelector('#s7 > .btn-primary');
+  var btn = document.querySelector('#s6 > .btn-primary');
   setButtonLoading(btn, true, 'Submitting...');
 
   try {
@@ -584,12 +804,12 @@ async function submitResponse() {
         generation: {
           generationId: generationId,
           drafts: drafts,
-          mode: inferredSelfProfile.mode,
-          tone: inferredSelfProfile.tone,
-          polish: inferredSelfProfile.polish,
-          energy: inferredSelfProfile.energy,
-          selfFeel: inferredSelfProfile.selfFeel,
-          vibes: inferredSelfProfile.vibes,
+          mode: selfProfile.mode,
+          tone: selfProfile.tone,
+          polish: selfProfile.polish,
+          energy: selfProfile.energy,
+          selfFeel: selfProfile.selfFeel,
+          vibes: selfProfile.vibes,
           selectedDraftIndex: responses.selectedDraftIndex,
           selectedDraft: chosenDraft,
           editScore: responses.ratings.rb1 || '',
@@ -618,26 +838,31 @@ async function submitResponse() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   } catch (err) {
     console.error(err);
-    showError('err-s7-core', err.message || 'Could not submit responses.');
+    showError('err-s6-core', err.message || 'Could not submit responses.');
   } finally {
     setButtonLoading(btn, false);
   }
 }
 
-var screens = ['s1','s4','s6','s7'];
+var screens = ['s1','s2','s3','s4','s5','s6'];
 
 function go(id){
   document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
   var el = document.getElementById(id);
+  if (!el) return;
   el.classList.add('active');
+
   var idx = screens.indexOf(id);
   for(var i=0;i<screens.length;i++){
     var seg = document.getElementById('ps'+(i+1));
+    if (!seg) continue;
     seg.className = 'prog-seg' + (i<idx ? ' done' : i===idx ? ' active' : '');
   }
+
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
+initializeSliders();
 go('s1');
 </script>
 </body>
