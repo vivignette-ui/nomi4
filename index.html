@@ -191,7 +191,7 @@ body.nomi-mode .z-page {
   letter-spacing: 0.12em;
   text-align: left;
   text-transform: uppercase;
-  transition: color 0.2s;
+  transition: color 0.2s, transform 0.2s, opacity 0.2s;
   user-select: none;
   font-style: normal;
 }
@@ -199,6 +199,15 @@ body.nomi-mode .z-page {
 .nav-item:hover,
 .nav-active {
   color: rgba(255,255,255,0.95);
+}
+
+.nav-item:hover {
+  transform: translateX(3px);
+}
+
+.nav-current:hover {
+  color: rgba(255,255,255,0.95) !important;
+  transform: translateX(3px);
 }
 
 .nav-current {
@@ -1147,8 +1156,13 @@ body.nomi-mode #nomi-app {
   </div>
 
   <div class="screen active card" id="s1">
-    <div class="overline">NOMI</div>
-    <div class="display welcome-display">Welcome to Nomi</div>
+  <button class="btn-back" onclick="showZenyaHome()" style="margin-bottom:22px">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><polyline points="15 18 9 12 15 6"/></svg>
+    Back to ZenyaAI
+  </button>
+
+  <div class="overline">NOMI</div>
+  <div class="display welcome-display">Welcome to Nomi</div>
     <p class="body" style="margin-bottom:28px;max-width:520px;color:rgb(236,236,236)">
       Be a GenAI-powered creator without losing your voice. Nomi helps you shape a social self that creates consistent, distinctive content.
     </p>
