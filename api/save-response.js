@@ -9,9 +9,9 @@ function hasValue(value) {
   return value !== undefined && value !== null && value !== '';
 }
 
-function addIfValue(fields, key, value) {
+function addTextIfValue(fields, key, value) {
   if (hasValue(value)) {
-    fields[key] = value;
+    fields[key] = String(value);
   }
 }
 
@@ -46,8 +46,8 @@ export default async function handler(req, res) {
     }
 
     const { responsesTable } = getAirtableConfig();
-
     const selectedDraft = generation?.selectedDraft || {};
+
     const fields = {
       session_id: sessionId,
       platform: platform || '',
@@ -71,14 +71,14 @@ export default async function handler(req, res) {
       created_at: new Date().toISOString(),
     };
 
-    addIfValue(fields, 'selected_draft_index', generation?.selectedDraftIndex);
+    addNumberIfValue(fields, 'selected_draft_index', generation?.selectedDraftIndex);
     addNumberIfValue(fields, 'edit_score', generation?.editScore);
     addNumberIfValue(fields, 'match_score', generation?.matchScore);
     addNumberIfValue(fields, 'self_tone', generation?.tone);
     addNumberIfValue(fields, 'self_polish', generation?.polish);
     addNumberIfValue(fields, 'self_energy', generation?.energy);
     addNumberIfValue(fields, 'nyla_interest_score', nyla?.interestScore);
-    addIfValue(fields, 'nyla_waitlist_intent', nyla?.waitlistIntent);
+    addTextIfValue(fields, 'nyla_waitlist_intent', nyla?.waitlistIntent);
 
     await createRecord(responsesTable, fields);
 
