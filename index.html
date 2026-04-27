@@ -205,15 +205,15 @@ body.nomi-mode .z-page {
   transform: translateX(3px);
 }
 
-.nav-current:hover {
-  color: rgba(255,255,255,0.95) !important;
-  transform: translateX(3px);
-}
-
 .nav-current {
   color: rgba(255,255,255,0.95);
   cursor: none;
   user-select: none;
+}
+
+.nav-current:hover {
+  color: rgba(255,255,255,0.95) !important;
+  transform: translateX(3px);
 }
 
 .z-page {
@@ -1056,7 +1056,6 @@ body.nomi-mode #nomi-app {
 <body class="zenya-mode">
 <div id="dot-cursor"></div>
 
-<!-- ZENYA LANDING -->
 <div id="zenya-home">
   <div class="zenya-wrap">
     <h1 class="zenya-title">ZenyaAI</h1>
@@ -1073,7 +1072,6 @@ body.nomi-mode #nomi-app {
   <div class="nav-item" data-page="waitlist" onclick="showPage('waitlist')">Join Waitlist</div>
 </nav>
 
-<!-- ABOUT -->
 <div class="z-page" id="page-about">
   <div class="back-btn" onclick="hidePage()">← back</div>
   <div class="page-inner">
@@ -1082,7 +1080,6 @@ body.nomi-mode #nomi-app {
   </div>
 </div>
 
-<!-- NOMI PAGE -->
 <div class="z-page" id="page-nomi">
   <div class="back-btn" onclick="hidePage()">← back</div>
   <div class="page-inner">
@@ -1092,7 +1089,6 @@ body.nomi-mode #nomi-app {
   </div>
 </div>
 
-<!-- NYLA -->
 <div class="z-page" id="page-nyla">
   <div class="back-btn" onclick="hidePage()">← back</div>
   <div class="page-inner">
@@ -1101,7 +1097,6 @@ body.nomi-mode #nomi-app {
   </div>
 </div>
 
-<!-- CONTACT -->
 <div class="z-page" id="page-contact">
   <div class="back-btn" onclick="hidePage()">← back</div>
   <div class="page-inner">
@@ -1126,7 +1121,6 @@ body.nomi-mode #nomi-app {
   </div>
 </div>
 
-<!-- WAITLIST -->
 <div class="z-page" id="page-waitlist">
   <div class="back-btn" onclick="hidePage()">← back</div>
   <div class="page-inner">
@@ -1141,7 +1135,6 @@ body.nomi-mode #nomi-app {
   </div>
 </div>
 
-<!-- NOMI MVP -->
 <div id="nomi-app">
   <div class="nomi-topbar">
     <span class="nomi-logo">nomi</span>
@@ -1156,13 +1149,13 @@ body.nomi-mode #nomi-app {
   </div>
 
   <div class="screen active card" id="s1">
-  <button class="btn-back" onclick="showZenyaHome()" style="margin-bottom:22px">
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><polyline points="15 18 9 12 15 6"/></svg>
-    Back to ZenyaAI
-  </button>
+    <button class="btn-back" onclick="showZenyaHome()" style="margin-bottom:22px">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><polyline points="15 18 9 12 15 6"/></svg>
+      Back to ZenyaAI
+    </button>
 
-  <div class="overline">NOMI</div>
-  <div class="display welcome-display">Welcome to Nomi</div>
+    <div class="overline">NOMI</div>
+    <div class="display welcome-display">Welcome to Nomi</div>
     <p class="body" style="margin-bottom:28px;max-width:520px;color:rgb(236,236,236)">
       Be a GenAI-powered creator without losing your voice. Nomi helps you shape a social self that creates consistent, distinctive content.
     </p>
@@ -1321,7 +1314,6 @@ body.nomi-mode #nomi-app {
 </div>
 
 <script>
-/* ZENYA CURSOR */
 const CURSOR_COLORS = ['#50D6FF', '#FFFFFF', '#FF6C6E'];
 let colorIndex = 0;
 let colorT = 0;
@@ -1409,7 +1401,6 @@ window.addEventListener('mousemove', e => {
   lastMouseY = e.clientY;
 });
 
-/* ZENYA PAGES */
 function showPage(name) {
   document.querySelectorAll('.z-page').forEach(p => p.classList.remove('active'));
   const el = document.getElementById('page-' + name);
@@ -1522,23 +1513,6 @@ async function submitZenyaContact() {
   }
 }
 
-/* SHARED HELPERS */
-function getOrCreateSessionId() {
-  if (!sessionId) {
-    sessionId = localStorage.getItem('nomi_session_id') || (window.crypto && crypto.randomUUID ? crypto.randomUUID() : 'sess_' + Date.now() + '_' + Math.random().toString(36).slice(2));
-    localStorage.setItem('nomi_session_id', sessionId);
-  }
-  return sessionId;
-}
-
-function safeJsonFromResponse(res) {
-  return res.text().then(function(text) {
-    try { return text ? JSON.parse(text) : {}; }
-    catch(e) { return { error: text || 'Non-JSON error response from server' }; }
-  });
-}
-
-/* NOMI MVP */
 var sessionId = null;
 var selectedPlatform = 'Instagram';
 var taskText = '';
@@ -1560,6 +1534,21 @@ var selfProfile = {
   selfFeel: '',
   vibes: []
 };
+
+function getOrCreateSessionId() {
+  if (!sessionId) {
+    sessionId = localStorage.getItem('nomi_session_id') || (window.crypto && crypto.randomUUID ? crypto.randomUUID() : 'sess_' + Date.now() + '_' + Math.random().toString(36).slice(2));
+    localStorage.setItem('nomi_session_id', sessionId);
+  }
+  return sessionId;
+}
+
+function safeJsonFromResponse(res) {
+  return res.text().then(function(text) {
+    try { return text ? JSON.parse(text) : {}; }
+    catch(e) { return { error: text || 'Non-JSON error response from server' }; }
+  });
+}
 
 function clearErrors() {
   document.querySelectorAll('.err').forEach(function(el) {
@@ -1792,13 +1781,10 @@ async function joinWL() {
 }
 
 async function finishAndGoHome() {
-  clearErrors();
-
-  var btn = document.querySelector('#s5 > .btn-primary');
-  setButtonLoading(btn, true, 'Saving...');
+  showZenyaHome();
 
   try {
-    var res = await fetch('/api/save-response', {
+    await fetch('/api/save-response', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -1817,8 +1803,8 @@ async function finishAndGoHome() {
           vibes: selfProfile.vibes,
           selectedDraftIndex: responses.selectedDraftIndex,
           selectedDraft: chosenDraft,
-          editScore: '',
-          matchScore: ''
+          editScore: null,
+          matchScore: null
         },
         persistence: {
           actionSelections: [],
@@ -1827,26 +1813,18 @@ async function finishAndGoHome() {
           openFeedback: ''
         },
         nyla: {
-          interestScore: '',
+          interestScore: null,
           waitlistIntent: '',
           waitlistJoined: waitlistJoined
         },
         submitCompletedAt: new Date().toISOString()
       })
     });
-
-    var data = await safeJsonFromResponse(res);
-    if (!res.ok) throw new Error(data.error || 'Failed to save response');
-
-    document.getElementById('submit-confirm').style.display = 'flex';
-    resetFlowForHome();
-    showZenyaHome();
   } catch (err) {
-    console.error(err);
-    showError('err-s5-core', err.message || 'Could not save before returning home.');
-  } finally {
-    setButtonLoading(btn, false);
+    console.warn('Response save skipped:', err);
   }
+
+  resetFlowForHome();
 }
 
 function resetFlowForHome() {
