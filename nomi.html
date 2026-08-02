@@ -327,6 +327,44 @@
   .pload span{font-size:13px;color:var(--ind);font-family:var(--mono);letter-spacing:.05em}
   .ptoast{position:absolute;left:50%;bottom:26px;transform:translate(-50%,20px);background:var(--navy);color:#FFFFFF;font-size:13px;border-radius:999px;padding:10px 22px;opacity:0;pointer-events:none;transition:opacity .25s ease,transform .25s ease;box-shadow:0 10px 30px rgba(30,42,56,.3);z-index:40;max-width:90%}
   .ptoast.show{opacity:1;transform:translate(-50%,0)}
+  .wl h2,.wl .wsupport{text-wrap:balance}
+  .rncell .blkcov{cursor:pointer}
+  .rncell .blkcov .blkhint{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--dim)}
+  #p-feedhost .rntitle:empty::before{content:attr(data-ph);color:var(--dim);font-weight:400}
+
+  /* phone */
+  @media (max-width:640px){
+    body{padding:8px 5px;font-size:15px}
+    .pscr{padding:18px 13px 24px;min-height:0}
+    .pstage{min-height:0}
+    .pchrome{flex-wrap:wrap;gap:8px;padding:10px 12px}
+    .psteps{order:3;width:100%;overflow-x:auto;margin-left:0;padding-bottom:2px}
+    .pstep{flex:none;padding:6px 12px;font-size:10.5px}
+    .langtog{margin-left:auto}
+    .phead{flex-wrap:wrap;gap:8px;margin-bottom:18px}
+    .phead h4{font-size:17px}
+    .phead .headright{margin-left:auto;gap:10px}
+    .wl{gap:16px}
+    .wchoice{padding:18px}
+    .pshelf{grid-template-columns:1fr;gap:14px}
+    .pbuild{grid-template-columns:1fr;gap:14px}
+    .pfoot{flex-direction:column;align-items:stretch;gap:12px}
+    .pfoot .pbtn{width:100%;padding:13px}
+    .attachbtn{justify-content:center}
+    .clangrow{justify-content:space-between}
+    .pstudio{grid-template-columns:1fr}
+    .pdrafts{grid-template-columns:1fr}
+    .pfeed{height:auto;min-height:0}
+    .pgridwrap{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .authbox{width:100%;padding:20px}
+    .projrow{padding:13px 14px;flex-wrap:wrap}
+    .projrow .pjmeta{margin-left:0;width:100%}
+    .peditbar{padding:12px}
+    .pbottom{flex-direction:column;align-items:stretch}
+    .pbottom .endrow{margin-left:0;justify-content:space-between}
+    .shapefoot .pbtn{width:100%}
+    .traygrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  }
 </style>
 </head>
 <body>
@@ -391,7 +429,7 @@
 
       <!-- 01 SELF -->
       <div class="pscr" id="p-self">
-        <div class="phead"><h4 data-i="selfHead">Your shelf</h4>
+        <div class="phead"><button class="pback" id="self-back" data-go="w-welcome" style="display:none">&larr;</button><h4 data-i="selfHead">Your shelf</h4>
           <div class="headright"><button class="plink" id="p-signout" data-i="signOut" style="display:none">Sign out</button></div>
         </div>
         <p class="pexplain" data-i="selfExplain">A social-self is your saved RedNote voice. It remembers how you sound, so every note starts from you. Nomi holds one; Nyla will hold as many as you need.</p>
@@ -630,6 +668,7 @@ this is my whole personality now</div>
         <input type="file" id="p-file" accept="image/*" hidden aria-label="Upload cover image">
         <input type="file" id="p-pageshot" accept="image/*" hidden aria-label="Upload page screenshot">
         <input type="file" id="p-simfile" accept="image/*" hidden aria-label="Replace an extracted page image">
+        <input type="file" id="p-blockfile" accept="image/*" hidden aria-label="Upload a placeholder note image">
       </div>
 
       <!-- overlays -->
@@ -692,6 +731,7 @@ this is my whole personality now</div>
       addPrev:"add to page", removePrev:"on page ✓",
       tAttReading:"reading your files…", tAttImg:"image content added to your idea",
       tAttNoText:"no readable text in that image", tAttFile:"file content added to your idea",
+      blkTitleHint:"tap to add a title", blkImgHint:"tap to add an image",
       wEyebrow:"Welcome to Nomi", wHead:"Create through the version of you you want to share.",
       wSupport:"Shape a reusable social-self and turn your ideas into RedNote-ready content in Chinese or English.",
       wAsp:"Build a recognizable creator presence, one post at a time.",
@@ -801,6 +841,7 @@ this is my whole personality now</div>
       addPrev:"加入主页预览", removePrev:"已在主页 ✓",
       tAttReading:"正在读取文件…", tAttImg:"图片内容已加入想法",
       tAttNoText:"图片中没有可识别的文字", tAttFile:"文件内容已加入想法",
+      blkTitleHint:"点击添加标题", blkImgHint:"点击添加图片",
       wEyebrow:"欢迎来到 Nomi", wHead:"塑造你的 social-self，让每一篇内容都更像你。",
       wSupport:"选择你想呈现的自己，把想法转化为适合小红书的中文、英文或双语内容。",
       wAsp:"从一个 social-self 开始，逐步建立有辨识度的创作者表达。",
@@ -918,13 +959,39 @@ this is my whole personality now</div>
   };
   function catLabel(key){ var m=CATL[key]; return m ? (m[S.lang]||m.en) : key; }
   function t(k){ return (I18N[S.lang] && I18N[S.lang][k]) || I18N.en[k] || k; }
+  // Anonymous analytics id: never changes for a returning browser; once the
+  // user registers, the server links their email to the same uid.
+  function uid(){
+    try{
+      var u=localStorage.getItem("nomiUid");
+      if(!u){
+        u=(crypto.randomUUID?crypto.randomUUID():("u"+Date.now().toString(36)+Math.random().toString(36).slice(2,10)));
+        localStorage.setItem("nomiUid",u);
+      }
+      return u;
+    }catch(e){return "u-nolocal"}
+  }
+  function track(event,meta){
+    try{
+      fetch(API+"/api/track",{method:"POST",keepalive:true,
+        headers:Object.assign({"Content-Type":"application/json"},S.token?{Authorization:"Bearer "+S.token}:{}),
+        body:JSON.stringify({uid:uid(),events:[{event:event,meta:meta||undefined}]})}).catch(function(){});
+    }catch(e){}
+  }
   function applyLang(){
     document.querySelectorAll("[data-i]").forEach(function(el){ el.textContent = t(el.dataset.i); });
     document.querySelectorAll("[data-ip]").forEach(function(el){ el.placeholder = t(el.dataset.ip); });
     document.getElementById("lang-zh").classList.toggle("on", S.lang==="zh");
     document.getElementById("lang-en").classList.toggle("on", S.lang==="en");
     document.documentElement.lang = S.lang==="zh" ? "zh-CN" : "en";
-    document.querySelectorAll(".parch[data-cat]").forEach(function(b){ b.textContent=catLabel(b.dataset.cat); });
+    document.querySelectorAll(".parch[data-cat]").forEach(function(b){
+      b.textContent=catLabel(b.dataset.cat);
+      if(b.dataset.rm==="1"){
+        var x=document.createElement("span");x.className="rmx";x.textContent="\u00d7";
+        x.addEventListener("click",function(e){e.stopPropagation();pushShapeUndo();b.remove();});
+        b.appendChild(x);
+      }
+    });
     renderAuthBoxes();
     trayButtons();
     updateSaveLabel();
@@ -984,6 +1051,7 @@ this is my whole personality now</div>
   document.querySelectorAll(".wchoice").forEach(function(c){
     c.addEventListener("click",function(){
       S.experience=c.dataset.exp;
+      track("welcome_choice",{exp:c.dataset.exp});
       pGoDirect("p-self");
     });
   });
@@ -1017,7 +1085,7 @@ this is my whole personality now</div>
       contentLang: S.contentLang,
       redNoteExperience: S.experience,
       projects: S.projects,
-      pageSim: { cells: S.pageSim ? S.pageSim.cells : null },
+      pageSim: { cells: S.pageSim ? S.pageSim.cells : null, blocks: S.blocks || null },
     };
   }
   function finishAuth(ctx, session){
@@ -1052,8 +1120,9 @@ this is my whole personality now</div>
           S.projects=d.projects; S.generated=true;
           S.cur=0; loadProject(0);
         }
-        if(d.state && d.state.pageSim && d.state.pageSim.cells && d.state.pageSim.cells.length){
-          S.pageSim={cells:d.state.pageSim.cells};
+        if(d.state && d.state.pageSim){
+          if(d.state.pageSim.cells && d.state.pageSim.cells.length) S.pageSim={cells:d.state.pageSim.cells};
+          if(Array.isArray(d.state.pageSim.blocks) && d.state.pageSim.blocks.length) S.blocks=d.state.pageSim.blocks;
           feedRender();
         }
       }).catch(function(){});
@@ -1131,7 +1200,7 @@ this is my whole personality now</div>
     document.querySelectorAll("[data-oauth]").forEach(function(b){
       b.onclick=function(){
         var ctx=b.dataset.ctx;
-        var startUrl=API+"/auth/google/start?ctx="+ctx;
+        var startUrl=API+"/auth/google/start?ctx="+ctx+"&uid="+encodeURIComponent(uid());
         var pop=window.open(startUrl,"nomiGoogle","width=480,height=640,menubar=no,toolbar=no");
         if(!pop){ location.href=startUrl; } // popup blocked: full-page fallback
       };
@@ -1161,7 +1230,7 @@ this is my whole personality now</div>
         var email=document.getElementById(ctx+"-email").value.trim();
         var code=document.getElementById(ctx+"-code").value.trim();
         loading(true,"loadAuth");
-        fetch(API+"/api/auth/email/verify",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:email,code:code,guestState:migrationState(ctx)})})
+        fetch(API+"/api/auth/email/verify",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:email,code:code,uid:uid(),guestState:migrationState(ctx)})})
           .then(function(r){return r.json()})
           .then(function(d){ loading(false); if(d.ok) finishAuth(ctx,d.session); else toast(t("tAuthErr")); })
           .catch(function(){ loading(false); toast(t("tOffline")); });
@@ -1200,6 +1269,7 @@ this is my whole personality now</div>
     document.getElementById("self-empty").style.display = S.hasSelf ? "none" : "flex";
     document.getElementById("self-full").style.display = S.hasSelf ? "flex" : "none";
     document.getElementById("p-signout").style.display = S.signedIn ? "" : "none";
+    document.getElementById("self-back").style.display = S.signedIn ? "none" : "";
     var host=document.getElementById("p-recentlist");
     host.innerHTML="";
     if(S.projects.length){
@@ -1258,6 +1328,7 @@ this is my whole personality now</div>
     if(!S.projects[ix])return;
     S.cur=ix;
     loadProject(ix);
+    track("project_open");
     pGo("p-studio");
   }
   var nameIn=document.getElementById("p-namein"),nameEl=document.querySelector(".pnamerow .pnm");
@@ -1324,7 +1395,7 @@ this is my whole personality now</div>
       try{emailInput.focus({preventScroll:true})}catch(e){emailInput.focus()}
       return;
     }
-    fetch(API+"/api/waitlist",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:email,source:"nomi-mvp"})})
+    fetch(API+"/api/waitlist",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:email,source:"nomi-mvp",uid:uid()})})
       .then(function(r){return r.json()})
       .then(function(d){
         if(d.ok){
@@ -1413,7 +1484,8 @@ this is my whole personality now</div>
   document.querySelectorAll("#p-sugg button").forEach(function(s){
     s.addEventListener("click",function(){
       var inp=document.getElementById("p-trait");
-      inp.value=s.textContent;
+      var cur=inp.value.replace(/[,\uFF0C\s]+$/,"");
+      inp.value=cur?(cur+", "+s.textContent):s.textContent;
       try{inp.focus({preventScroll:true})}catch(e){inp.focus()}
     });
   });
@@ -1421,7 +1493,9 @@ this is my whole personality now</div>
     var inp=document.getElementById("p-trait"),v=inp.value.trim();
     if(!v)return;
     pushShapeUndo();
-    if(customs.indexOf(v)<0)customs.push(v);
+    v.split(/[,\uFF0C]+/).map(function(x){return x.trim()}).filter(Boolean).forEach(function(w){
+      if(customs.indexOf(w)<0)customs.push(w);
+    });
     inp.value="";chipDesc();
     toast(t("tFedTrait")+" "+v);
     voicecheckLive();
@@ -1575,6 +1649,7 @@ this is my whole personality now</div>
   document.getElementById("p-save").addEventListener("click",function(){
     var first=!S.hasSelf;
     S.hasSelf=true;
+    track("self_saved",{first:first});
     saveState();
     toast(first?(currentName()+" "+t("tShelfSaved")):t("tSelfSaved"));
     pGoDirect("p-self");
@@ -1609,7 +1684,8 @@ this is my whole personality now</div>
   function pushStudioUndo(){
     undoStudioStack.push({
       drafts:JSON.parse(JSON.stringify(drafts())),
-      pstate:pstate.map(function(x){return{kept:x.kept,discarded:x.discarded,cover:x.cover}}),
+      covers:covers().slice(),
+      pstate:pstate.map(function(x){return{kept:x.kept,discarded:x.discarded}}),
       ordList:ordList.slice(),psel:psel
     });
     if(undoStudioStack.length>25)undoStudioStack.shift();
@@ -1618,7 +1694,8 @@ this is my whole personality now</div>
     var s=undoStudioStack.pop();
     if(!s){toast(t("tNothingUndo"));return;}
     var p=curProject();
-    if(p)p.drafts=s.drafts;
+    if(p){p.drafts=s.drafts;p.covers=s.covers.slice();}
+    else guestCovers=s.covers.slice();
     pstate=s.pstate;ordList=s.ordList;psel=s.psel;
     syncProject();
     drawDrafts();toast(t("tUndo"));
@@ -1668,7 +1745,7 @@ this is my whole personality now</div>
           fetch(API+"/api/vision/text",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({image:sm})})
             .then(function(x){return x.json()})
             .then(function(d){
-              if(d.text){ appendIdea("["+f.name+"]\n"+d.text); chipOk(); toast(t("tAttImg")); }
+              if(d.text){ appendIdea("["+f.name+"]\n"+d.text); chipOk(); toast(t("tAttImg")); track("attach",{type:"image"}); }
               else { chipErr(); toast(t("tAttNoText")); }
             })
             .catch(function(){ chipErr(); toast(t("tOffline")); });
@@ -1706,7 +1783,7 @@ this is my whole personality now</div>
     fetch(API+"/api/generate",{
       method:"POST",
       headers:Object.assign({"Content-Type":"application/json"},S.token?{Authorization:"Bearer "+S.token}:{}),
-      body:JSON.stringify({idea:idea,self:collectSelf(),contentLang:S.contentLang,category:currentCategory()})
+      body:JSON.stringify({idea:idea,self:collectSelf(),contentLang:S.contentLang,category:currentCategory(),uid:uid()})
     })
     .then(function(r){return r.json()})
     .then(function(d){
@@ -1774,13 +1851,24 @@ this is my whole personality now</div>
   function trayTitle(id){return id<3?drafts()[id].title:KEPT[id-3].title}
   // View state (pstate, ordList) is loaded from the current project and written
   // back through syncProject() so every project keeps its own covers and order.
+  var guestCovers=[null,null,null];
+  // Covers live in ONE place - the current project (or guestCovers before any
+  // project exists). Every renderer reads through covers(), so the left
+  // preview, the draft cards, and the drafts box can never disagree.
+  function covers(){
+    var p=curProject();
+    if(p){
+      if(!Array.isArray(p.covers)||p.covers.length<p.drafts.length)p.covers=p.drafts.map(function(){return null});
+      return p.covers;
+    }
+    return guestCovers;
+  }
   function loadProject(ix){
     var p=S.projects[ix];
     if(!p)return;
     S.cur=ix;
-    if(!Array.isArray(p.covers)||p.covers.length<p.drafts.length)p.covers=p.drafts.map(function(){return null});
     if(!Array.isArray(p.ordList)||!p.ordList.length)p.ordList=[0,1,2];
-    pstate=p.drafts.map(function(d,i){return {kept:false,discarded:false,cover:p.covers[i]||null}});
+    pstate=p.drafts.map(function(){return {kept:false,discarded:false}});
     ordList=p.ordList.slice();
     psel=0;
     drawDrafts();
@@ -1789,10 +1877,9 @@ this is my whole personality now</div>
     var p=curProject();
     if(!p)return;
     p.ordList=ordList.slice();
-    p.covers=pstate.map(function(x){return x.cover||null});
   }
   function renderStudio(){
-    pstate=drafts().map(function(d,ix){return pstate[ix]||{kept:false,discarded:false,cover:null}});
+    pstate=drafts().map(function(d,ix){return pstate[ix]||{kept:false,discarded:false}});
     if(psel>=drafts().length)psel=0;
     if(!ordList.length)ordList=[psel];
     drawDrafts();
@@ -1850,9 +1937,8 @@ this is my whole personality now</div>
     });
     var cov=document.createElement("div");
     cov.className="rncov"+(id%2?" t2":"");
-    if(id<3&&pstate[id]&&pstate[id].cover)cov.style.backgroundImage="url("+pstate[id].cover+")";
+    if(id<3&&covers()[id])cov.style.backgroundImage="url("+covers()[id]+")";
     if(id===psel){var tg=document.createElement("span");tg.className="curtag";tg.textContent="current";cov.appendChild(tg);}
-    if(id<3){var rg=document.createElement("span");rg.className="regtag";rg.textContent=(drafts()[id]||{}).register||"";cov.appendChild(rg);}
     var txt=document.createElement("div");txt.className="rntxt";
     var tt=document.createElement("div");tt.className="rntitle";tt.textContent=trayTitle(id);
     var row=document.createElement("div");row.className="rnrow";
@@ -1892,6 +1978,19 @@ this is my whole personality now</div>
     cell.appendChild(cov);cell.appendChild(txt);
     return cell;
   }
+  document.getElementById("p-blockfile").addEventListener("change",function(e){
+    var f=e.target.files&&e.target.files[0];
+    if(!f||blockEditIx<0)return;
+    var target=blockEditIx; blockEditIx=-1;
+    var r=new FileReader();
+    r.onload=function(){ shrink(r.result,900,function(sm){
+      blocks()[target].img=sm;
+      feedRender();toast(t("tCover"));saveState();
+      track("block_upload");
+    }); };
+    r.readAsDataURL(f);
+    e.target.value="";
+  });
   document.getElementById("p-simfile").addEventListener("change",function(e){
     var f=e.target.files&&e.target.files[0];
     if(!f||simEditIx<0||!S.pageSim)return;
@@ -1909,14 +2008,38 @@ this is my whole personality now</div>
     r.readAsDataURL(f);
     e.target.value="";
   });
-  function decoyCell(i){
+  // Editable RedNote-style placeholder blocks: the user hand-builds the rest
+  // of their page - tap the title to name a note, tap the image to upload.
+  var blockEditIx=-1;
+  function blocks(){
+    if(!Array.isArray(S.blocks)||!S.blocks.length){
+      S.blocks=[{title:"",img:null},{title:"",img:null},{title:"",img:null},{title:"",img:null},{title:"",img:null}];
+    }
+    return S.blocks;
+  }
+  function blockCell(i,ix){
+    var b=blocks()[i];
     var cell=document.createElement("div");cell.className="rncell";
-    var cov=document.createElement("div");cov.className="rncov"+(i%2?" t2":"");
+    var cov=document.createElement("div");cov.className="rncov blkcov"+(ix%2?" t2":"");
+    if(b.img)cov.style.backgroundImage="url("+b.img+")";
+    else{var h=document.createElement("span");h.className="blkhint";h.textContent=t("blkImgHint");cov.appendChild(h);}
+    cov.setAttribute("role","button");
+    cov.setAttribute("aria-label","Upload an image for this placeholder note");
+    cov.addEventListener("click",function(){blockEditIx=i;document.getElementById("p-blockfile").click();});
     var txt=document.createElement("div");txt.className="rntxt";
-    var s1=document.createElement("div");s1.className="skel";s1.style.width="90%";
-    var s2=document.createElement("div");s2.className="skel";s2.style.width="55%";
-    var s3=document.createElement("div");s3.className="skel";s3.style.width="40%";s3.style.marginTop="auto";
-    txt.appendChild(s1);txt.appendChild(s2);txt.appendChild(s3);
+    var tt=document.createElement("div");tt.className="rntitle";
+    tt.textContent=b.title||"";
+    tt.setAttribute("data-ph",t("blkTitleHint"));
+    tt.contentEditable="true";tt.spellcheck=false;
+    tt.setAttribute("aria-label","Placeholder note title, editable");
+    tt.addEventListener("keydown",function(e){e.stopPropagation();if(e.key==="Enter"){e.preventDefault();tt.blur();}});
+    tt.addEventListener("blur",function(){
+      var v=tt.innerText.replace(/\n+/g," ").trim().slice(0,60);
+      if(v!==b.title){b.title=v;saveState();}
+    });
+    var row=document.createElement("div");row.className="rnrow";
+    row.innerHTML=authorRow("");
+    txt.appendChild(tt);txt.appendChild(row);
     cell.appendChild(cov);cell.appendChild(txt);
     return cell;
   }
@@ -1946,7 +2069,7 @@ this is my whole personality now</div>
         if(e.target===grid2&&dragId!=null){e.preventDefault();clearDropMarks();moveOrdRel(dragId,null,false);}
       });
       ordList.forEach(function(id){grid2.appendChild(youCell(id))});
-      for(var i=ordList.length;i<6;i++)grid2.appendChild(decoyCell(i));
+      blocks().forEach(function(b,i){grid2.appendChild(blockCell(i,ordList.length+i))});
       host.appendChild(grid2);
     }
   }
@@ -1978,7 +2101,7 @@ this is my whole personality now</div>
         cell.setAttribute("aria-label",trayTitle(id));
       }
       var cov=document.createElement("div");cov.className="rncov"+(ix%2?" t2":"");
-      if(id<3&&pstate[id]&&pstate[id].cover)cov.style.backgroundImage="url("+pstate[id].cover+")";
+      if(id<3&&covers()[id])cov.style.backgroundImage="url("+covers()[id]+")";
       if(!browse&&id===psel){var tg=document.createElement("span");tg.className="curtag";tg.textContent="current";cov.appendChild(tg);}
       if(!browse){var bd=document.createElement("span");bd.className="selbadge";cov.appendChild(bd);}
       var txt=document.createElement("div");txt.className="rntxt";
@@ -2079,6 +2202,7 @@ this is my whole personality now</div>
               S.pageSim={cells:out};
               feedRender();
               toast(t("tShotSimDone"));
+              track("sim_upload",{cells:out.length});
               saveState();
             });
           } else { toast(t("tShotSimFail")); }
@@ -2135,14 +2259,15 @@ this is my whole personality now</div>
     var host=document.getElementById("p-drafts");
     host.innerHTML="";
     drafts().forEach(function(d,ix){
-      var st=pstate[ix]||{kept:false,discarded:false,cover:null};
+      var st=pstate[ix]||{kept:false,discarded:false};
+      var cvr=covers()[ix];
       var card=document.createElement("div");
       card.className="pdraft"+(ix===psel?" sel":"")+(st.discarded?" discarded":"");
       card.setAttribute("role","button");card.tabIndex=0;
-      var cv=document.createElement("div");cv.className="pcov"+(st.cover?" hasimg":"");
+      var cv=document.createElement("div");cv.className="pcov"+(cvr?" hasimg":"");
       cv.setAttribute("role","button");cv.tabIndex=0;
       cv.setAttribute("aria-label","Upload a cover image for this draft");
-      if(st.cover){cv.style.backgroundImage="url("+st.cover+")";}
+      if(cvr){cv.style.backgroundImage="url("+cvr+")";}
       else{cv.innerHTML="<u>upload cover</u>";}
       var cc=document.createElement("div");cc.className="pconcept";cc.textContent="cover concept: "+(d.coverConcept||"");
       var reg=document.createElement("div");reg.className="preg";reg.textContent=d.register;
@@ -2188,8 +2313,8 @@ this is my whole personality now</div>
     r.onload=function(){
       shrink(r.result,1200,function(sm){
         pushStudioUndo();
-        if(pstate[target])pstate[target].cover=sm;
-        syncProject();drawDrafts();toast(t("tCover"));saveState();
+        covers()[target]=sm;
+        drawDrafts();toast(t("tCover"));saveState();
       });
     };
     r.readAsDataURL(f);
@@ -2215,7 +2340,7 @@ this is my whole personality now</div>
     var proj=curProject();
     fetch(API+"/api/refine",{
       method:"POST",headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({draft:proj.drafts[psel],instruction:instruction,self:collectSelf(),contentLang:proj.contentLang||S.contentLang,category:proj.category||currentCategory()})
+      body:JSON.stringify({draft:proj.drafts[psel],instruction:instruction,self:collectSelf(),contentLang:proj.contentLang||S.contentLang,category:proj.category||currentCategory(),uid:uid()})
     })
     .then(function(r){return r.json()})
     .then(function(d){
@@ -2273,6 +2398,7 @@ this is my whole personality now</div>
   document.getElementById("p-copy").addEventListener("click",function(){
     navigator.clipboard.writeText(draftText()).then(function(){toast(t("tCopied"))})
       .catch(function(){toast(t("tCopyFail"))});
+    track("export",{type:"copy"});
     syncProject();doSaveNow();
   });
   document.getElementById("p-dl").addEventListener("click",function(){
@@ -2285,6 +2411,7 @@ this is my whole personality now</div>
       setTimeout(function(){URL.revokeObjectURL(a.href)},2000);
       toast(t("tDl"));
     }catch(err){toast(t("tDlFail"))}
+    track("export",{type:"download"});
     syncProject();doSaveNow();
   });
 
@@ -2301,6 +2428,7 @@ this is my whole personality now</div>
       S.googleClientId=d.googleClientId||null;
       S.emailDelivery=d.emailDelivery||"console";
     }).catch(function(){});
+    track("visit",{source:document.referrer?document.referrer.slice(0,80):"direct",lang:S.lang});
     // Session persistence: a full-page OAuth fallback lands with #gauth=…;
     // otherwise restore the last session from localStorage so neither a page
     // reload nor a server restart requires signing in again.

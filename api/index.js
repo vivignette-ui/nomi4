@@ -91,6 +91,49 @@ async function kvSet(key, val) {
   db[key] = val; tmpSave();
 }
 
+/* ---------- analytics (Airtable: Nomi Users / Nomi Events) ---------- */
+const USER_FLAG_BY_EVENT = { self_saved: "profile_completed", generate: "generated_once", export: "exported_once", waitlist_join: "joined_waitlist" };
+async function atPost(path, payload) {
+  const base = process.env.AIRTABLE_BASE_ID, tok = process.env.AIRTABLE_TOKEN;
+  if (!base || !tok) return;
+  try {
+    const r = await fetch(`https://api.airtable.com/v0/${base}/${path}`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${tok}`, "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    if (!r.ok) console.error("[track]", path, r.status, (await r.text().catch(()=>"")).slice(0,150));
+  } catch (e) { console.error("[track]", e.message); }
+}
+// uid: anonymous browser id that NEVER changes for a returning user; once the
+// user registers, the same row also carries their email (registered=true).
+async function track(uid, email, events) {
+  if (!uid && !email) return;
+  uid = String(uid || ("email:" + email)).slice(0, 64);
+  const now = new Date();
+  const day = now.toISOString().slice(0, 10);
+  const registered = !!email;
+  const evs = (events || []).slice(0, 10).map(e => ({ fields: {
+    event: String(e.event || "").slice(0, 50), uid,
+    email: email || undefined,
+    registered: registered || undefined,
+    meta: e.meta ? JSON.stringify(e.meta).slice(0, 500) : undefined,
+    day, ts: now.toISOString(),
+  } }));
+  const userFields = { uid, last_seen: now.toISOString() };
+  if (email) { userFields.email = email; userFields.registered = true; }
+  for (const e of (events || [])) {
+    const flag = USER_FLAG_BY_EVENT[e.event]; if (flag) userFields[flag] = true;
+    if (e.event === "welcome_choice" && e.meta && e.meta.exp) userFields.rednote_experience = e.meta.exp === "experienced" ? "experienced" : "new";
+    if ((e.event === "register" || e.event === "sign_in") && e.meta && e.meta.method) userFields.auth_method = e.meta.method;
+    if (e.event === "visit" && e.meta && e.meta.source) userFields.source = String(e.meta.source).slice(0, 80);
+  }
+  await Promise.all([
+    evs.length ? atPost("Nomi%20Events", { records: evs }) : null,
+    atPost("Nomi%20Users", { performUpsert: { fieldsToMergeOn: ["uid"] }, records: [{ fields: userFields }] }),
+  ]);
+}
+
 /* ---------- email delivery ---------- */
 function emailTransport() {
   if (process.env.RESEND_API_KEY) return "resend";
@@ -451,9 +494,9 @@ function localShorten(body, cap) {
 function clamp01(v) { const n = Number(v); return isFinite(n) ? Math.max(0, Math.min(1, n)) : 0; }
 
 /* ---------- google oauth (stateless state param) ---------- */
-function makeOauthState(ctx) {
+function makeOauthState(ctx, uid) {
   const exp = Date.now() + 10 * 60 * 1000;
-  const body = (ctx === "g" ? "g" : "m") + "." + exp;
+  const body = (ctx === "g" ? "g" : "m") + "|" + String(uid || "").replace(/[^\w-]/g, "").slice(0, 40) + "." + exp;
   return body + "." + hmac("state:" + body);
 }
 function checkOauthState(state) {
@@ -461,7 +504,8 @@ function checkOauthState(state) {
   if (parts.length !== 3) return null;
   if (hmac("state:" + parts[0] + "." + parts[1]) !== parts[2]) return null;
   if (Number(parts[1]) < Date.now()) return null;
-  return parts[0];
+  const seg = parts[0].split("|");
+  return { ctx: seg[0], uid: seg[1] || null };
 }
 function originOf(req) {
   const proto = req.headers["x-forwarded-proto"] || "https";
@@ -543,7 +587,9 @@ export default async function handler(req, res) {
       const email = String(body.email || "").trim().toLowerCase();
       if (!checkCode(email, body.code)) return res.status(400).json({ error: "wrong_code" });
       const session = makeSession(email);
+      const existed = !!(await kvGet("state:" + session.userId));
       await migrateGuestState(session.userId, body.guestState);
+      await track(body.uid, email, [{ event: existed ? "sign_in" : "register", meta: { method: "email" } }]);
       return res.status(200).json({ ok: true, session });
     }
 
@@ -554,7 +600,7 @@ export default async function handler(req, res) {
       const qp = new URLSearchParams({
         client_id: clientId, redirect_uri: redirect, response_type: "code",
         scope: "openid email profile", prompt: "select_account",
-        state: makeOauthState(q.get("ctx")),
+        state: makeOauthState(q.get("ctx"), q.get("uid")),
       });
       res.statusCode = 302;
       res.setHeader("Location", "https://accounts.google.com/o/oauth2/v2/auth?" + qp.toString());
@@ -564,7 +610,8 @@ export default async function handler(req, res) {
     if (req.method === "GET" && p === "/api/auth/google/callback") {
       const origin = originOf(req);
       let payload;
-      const ctx = checkOauthState(q.get("state"));
+      const st = checkOauthState(q.get("state"));
+      const ctx = st && st.ctx;
       if (q.get("error") || !ctx) {
         payload = { type: "nomi-gauth-error", error: q.get("error") || "bad_state" };
       } else {
@@ -591,7 +638,10 @@ export default async function handler(req, res) {
           if (!claims || claims.aud !== process.env.GOOGLE_CLIENT_ID || !claims.email || claims.email_verified === false) {
             payload = { type: "nomi-gauth-error", error: "google_bad_token" };
           } else {
-            const session = makeSession(String(claims.email).toLowerCase());
+            const gmail = String(claims.email).toLowerCase();
+            const session = makeSession(gmail);
+            const existed = !!(await kvGet("state:" + session.userId));
+            await track(st.uid, gmail, [{ event: existed ? "sign_in" : "register", meta: { method: "google" } }]);
             payload = { type: "nomi-gauth", token: session.token, identity: session.identity, ctx };
           }
         }
@@ -612,6 +662,12 @@ export default async function handler(req, res) {
 })();
 </script>
 Signing you in… you can close this window.</body>`);
+    }
+
+    if (req.method === "POST" && p === "/api/track") {
+      const sess = sessionFromToken(tokenFrom(req));
+      await track(body.uid, sess ? sess.identity : null, Array.isArray(body.events) ? body.events : []);
+      return res.status(200).json({ ok: true });
     }
 
     if (req.method === "POST" && p === "/api/auth/signout") {
@@ -648,6 +704,7 @@ Signing you in… you can close this window.</body>`);
         cur.projects = projects.slice(0, 30);
         await kvSet("state:" + sess.userId, cur);
       }
+      await track(body.uid, sess ? sess.identity : null, [{ event: "generate", meta: { researched, category: cat, lang: body.contentLang || "en" } }]);
       return res.status(200).json({ drafts, projectName, projectId, model, usage, researched });
     }
 
@@ -675,6 +732,8 @@ Signing you in… you can close this window.</body>`);
         firstComment: draft.firstComment || "",
         bestTime: draft.bestTime || bestTime(body.category || "lifestyle", draft.register),
       };
+      const sessR = sessionFromToken(tokenFrom(req));
+      await track(body.uid, sessR ? sessR.identity : null, [{ event: "refine", meta: { instruction: String(body.instruction).slice(0, 60) } }]);
       return res.status(200).json({ draft: out, usage });
     }
 
@@ -734,6 +793,8 @@ Signing you in… you can close this window.</body>`);
       if (!list.some(e => e.email === email)) list.push({ email, joinedAt: new Date().toISOString(), source: body.source || "nomi" });
       await kvSet("waitlist", list);
       console.log(`[waitlist] ${email}`);
+      const sessW = sessionFromToken(tokenFrom(req));
+      await track(body.uid, (sessW && sessW.identity) || email, [{ event: "waitlist_join" }]);
       return res.status(200).json({ ok: true });
     }
 
