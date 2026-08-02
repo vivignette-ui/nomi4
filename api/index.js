@@ -98,7 +98,7 @@ async function atPost(path, payload) {
   if (!base || !tok) return;
   try {
     const r = await fetch(`https://api.airtable.com/v0/${base}/${path}`, {
-      method: "POST",
+      method: payload.performUpsert ? "PATCH" : "POST",
       headers: { Authorization: `Bearer ${tok}`, "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
