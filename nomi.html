@@ -1,0 +1,2334 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Nomi</title>
+<style>
+  :root{
+    --bg:#FFFFFF; --tint:#F1F6FB; --tint2:#E6EDF4; --lav:#EFEDFA;
+    --panel:#FFFFFF; --line:#D8E0EA;
+    --text:#1E2A38; --mut:#46566A; --dim:#5E6B7C;
+    --ind:#332FA6; --ind-soft:#EAF0FA;
+    --blue:#2B6A9F; --navy:#24315E;
+    --disp:"Avenir Next","Helvetica Neue",system-ui,sans-serif;
+    --body:system-ui,-apple-system,"Helvetica Neue","PingFang SC","Hiragino Sans GB",sans-serif;
+    --mono:ui-monospace,"SF Mono",Menlo,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+  body{background:var(--tint);color:var(--text);font-family:var(--body);font-size:15.5px;line-height:1.65;font-weight:400;-webkit-font-smoothing:antialiased;padding:24px 16px}
+  .wrap{max-width:1080px;margin:0 auto}
+  .orbi{display:block}
+  a{color:var(--ind)}
+  a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,[contenteditable]:focus-visible{outline:2px solid var(--ind);outline-offset:2px}
+
+  .proto{background:var(--panel);border:1px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:0 24px 60px rgba(30,42,56,.1)}
+  .pchrome{display:flex;align-items:center;gap:12px;padding:12px 18px;background:var(--tint2);border-bottom:1px solid var(--line)}
+  .pchrome .dots3{display:flex;gap:5px}
+  .pchrome .dots3 i{width:9px;height:9px;border-radius:50%;background:#C2CDD9}
+  .pchrome .pttl{font-family:var(--disp);font-weight:500;font-size:12.5px;color:var(--mut)}
+  .chromeshelf{font-size:11px;color:var(--ind);background:none;border:0;cursor:pointer;text-decoration:underline;text-underline-offset:2px;font-family:var(--body)}
+  .psteps{margin-left:auto;display:flex;gap:4px}
+  .pstep{font-family:var(--mono);font-size:10px;letter-spacing:.05em;color:var(--dim);background:transparent;border:1px solid var(--line);border-radius:999px;padding:4px 10px;cursor:pointer}
+  .pstep.on{color:var(--ind);border-color:var(--ind);background:var(--ind-soft)}
+  .langtog{display:flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;margin-left:10px}
+  .langtog button{border:0;background:var(--panel);color:var(--mut);font-size:11px;padding:4px 11px;cursor:pointer;font-family:var(--body)}
+  .langtog button.on{background:var(--ind);color:#fff}
+  .pstage{position:relative;min-height:640px}
+  .pscr{display:none;position:relative;min-height:640px;padding:36px 40px 40px;background:linear-gradient(180deg,#FFFFFF,var(--tint))}
+  .pscr.on{display:flex;flex-direction:column;animation:pfade .35s ease}
+  @keyframes pfade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  .phead{display:flex;align-items:center;gap:14px;margin-bottom:26px}
+  .phead .pback{background:none;border:0;color:var(--dim);font-size:13px;cursor:pointer;padding:4px 8px;border-radius:6px;font-family:var(--body)}
+  .phead .pback:hover{color:var(--text);background:var(--tint2)}
+  .phead h4{font-family:var(--disp);font-weight:500;font-size:20px;color:var(--text);display:flex;align-items:center;gap:8px}
+  .phead .psub{font-size:12.5px;color:var(--dim)}
+  .phead .headright{margin-left:auto;display:flex;align-items:center;gap:14px}
+  .pbtn{border:0;cursor:pointer;border-radius:999px;padding:11px 24px;font-size:13.5px;font-weight:400;font-family:var(--body);background:var(--ind);color:#FFFFFF;transition:filter .15s ease}
+  .pbtn:hover{filter:brightness(1.12)}
+  .pbtn.sm{padding:7px 16px;font-size:12px}
+  .pbtn.ghost{background:var(--panel);color:var(--mut);border:1px solid var(--line)}
+  .pbtn.ghost:hover{color:var(--text)}
+  .plink{font-size:12.5px;color:var(--ind);background:none;border:0;cursor:pointer;text-decoration:underline;text-underline-offset:2px;font-family:var(--body);padding:2px 0}
+  .peditlook{font-size:10.5px;color:var(--ind);background:none;border:0;cursor:pointer;text-decoration:underline;font-family:var(--body);padding:2px 0}
+
+  /* welcome */
+  .wl{max-width:660px;margin:auto;width:100%;display:flex;flex-direction:column;gap:22px;text-align:center;align-items:center}
+  .wl .weyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim)}
+  .wl h2{font-family:var(--disp);font-weight:500;font-size:clamp(24px,3.4vw,34px);line-height:1.2}
+  .wl .wsupport{color:var(--mut);max-width:52ch}
+  .wl .wasp{font-size:13px;color:var(--dim)}
+  .wchoices{display:grid;grid-template-columns:1fr 1fr;gap:16px;width:100%;margin-top:8px}
+  .wchoice{background:var(--panel);border:2px solid var(--line);border-radius:14px;padding:24px;text-align:left;cursor:pointer;font-family:var(--body);transition:border-color .15s ease,box-shadow .15s ease}
+  .wchoice:hover{border-color:var(--ind);box-shadow:0 10px 28px rgba(30,42,56,.08)}
+  .wchoice .wt{font-family:var(--disp);font-weight:500;font-size:16px;color:var(--text);margin-bottom:6px}
+  .wchoice .wd{font-size:13px;color:var(--mut)}
+  .wsignin{font-size:13.5px;color:var(--mut);display:flex;gap:18px;flex-wrap:wrap;justify-content:center}
+  .wdisc{font-size:10.5px;color:var(--dim);max-width:60ch;margin-top:14px}
+  @media (max-width:700px){.wchoices{grid-template-columns:1fr}}
+
+  /* auth */
+  .authbox{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:26px;display:flex;flex-direction:column;gap:12px;width:min(400px,100%)}
+  .authbox h5{font-family:var(--disp);font-weight:500;font-size:18px}
+  .authbox .asub{font-size:13px;color:var(--mut)}
+  .abtn{border:1px solid var(--line);background:var(--panel);border-radius:10px;padding:11px 16px;font-size:13.5px;color:var(--text);cursor:pointer;font-family:var(--body);display:flex;align-items:center;justify-content:center;gap:8px}
+  .abtn:hover{border-color:var(--ind)}
+  .adiv{display:flex;align-items:center;gap:10px;color:var(--dim);font-size:11px}
+  .adiv::before,.adiv::after{content:"";flex:1;height:1px;background:var(--line)}
+  .ain{border:1px solid var(--line);border-radius:10px;padding:11px 14px;font-size:13.5px;font-family:var(--body);color:var(--text);width:100%}
+  .amsg{font-size:12px;color:var(--blue);min-height:1.2em}
+  .amodal{position:absolute;inset:0;background:rgba(30,42,56,.4);backdrop-filter:blur(3px);display:none;align-items:center;justify-content:center;z-index:34;padding:20px}
+  .amodal.show{display:flex;animation:pfade .25s ease}
+
+  /* gate */
+  .gate{display:grid;grid-template-columns:1.2fr 1fr;gap:28px;align-items:start;max-width:920px;margin:auto;width:100%}
+  .gate .gprev{display:flex;flex-direction:column;gap:12px}
+  .gnote{background:var(--panel);border:2px solid var(--ind);border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:8px}
+  .gnote .gt{font-family:var(--disp);font-weight:500;font-size:16px}
+  .gnote .gb{font-size:13px;color:var(--mut);white-space:pre-line;line-height:1.6}
+  .gnote .gg{font-size:11px;color:var(--blue)}
+  .gnote .gtime{font-size:11.5px;color:#443C96;background:var(--lav);border-radius:8px;padding:6px 10px}
+  .glocked{display:flex;gap:10px}
+  .glock{flex:1;background:var(--panel);border:1px dashed var(--line);border-radius:12px;padding:14px;color:var(--dim);font-size:11.5px;text-align:center}
+  .glock b{display:block;font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px;font-weight:500}
+  @media (max-width:820px){.gate{grid-template-columns:1fr}}
+
+  /* self */
+  .pexplain{font-size:12.5px;color:var(--mut);max-width:60ch;margin:-14px 0 22px}
+  .pshelf{display:grid;grid-template-columns:1.25fr 1fr 1fr;gap:20px;align-items:stretch;margin:auto 0}
+  .pself{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:26px;display:flex;flex-direction:column;gap:10px;box-shadow:0 10px 28px rgba(30,42,56,.08)}
+  .pself .pnm{font-family:var(--disp);font-weight:500;font-size:19px;color:var(--text)}
+  .pself .pvoice{font-size:13px;line-height:1.55;color:var(--mut);font-style:italic}
+  .pself .pst{font-size:11px;color:var(--dim);margin-top:auto;padding-top:12px}
+  .pself .prow{display:flex;gap:10px;margin-top:10px}
+  .pcreate{background:var(--panel);border:2px dashed #B9C6D6;border-radius:14px;padding:26px;display:none;flex-direction:column;gap:12px;align-items:flex-start;justify-content:center}
+  .pcreate .ct1{font-family:var(--disp);font-weight:500;font-size:17px}
+  .pcreate .ct2{font-size:12.5px;color:var(--mut);max-width:34ch}
+  .pavwrap{display:flex;align-items:flex-start;gap:12px}
+  .pavwrap>div{position:relative}
+  .pnamerow{display:flex;align-items:center;gap:8px}
+  .pnamein{font-family:var(--disp);font-weight:500;font-size:17px;color:var(--text);border:1px solid var(--ind);border-radius:8px;padding:2px 8px;width:140px;display:none}
+  .pnamein.show{display:block}
+  .pnamerow .pnm.hide{display:none}
+  .actrow{display:flex;gap:14px;margin-top:2px}
+  .lookpanel{position:absolute;top:calc(100% + 8px);left:0;z-index:24;border:1px solid var(--line);border-radius:10px;padding:12px;background:var(--panel);box-shadow:0 10px 28px rgba(30,42,56,.12);display:flex;flex-direction:column;gap:10px;width:240px}
+  .lookpanel[hidden]{display:none}
+  .lookpanel .lp1{font-size:11px;color:var(--mut)}
+  .pswatches{display:flex;gap:8px;margin-top:6px}
+  .pswatches button{background:none;border:2px solid transparent;border-radius:50%;padding:2px;cursor:pointer;line-height:0}
+  .pswatches button.on{border-color:var(--navy)}
+  .plock{border:1.5px dashed #B9C6D6;border-radius:14px;padding:26px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:10px;color:var(--mut);cursor:pointer;transition:border-color .15s ease;background:var(--panel)}
+  .plock:hover{border-color:var(--ind)}
+  .plock .plk{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;border:1px solid var(--line);border-radius:999px;padding:3px 12px;color:var(--dim)}
+  .plock .pl1{font-size:14.5px;color:var(--text)}
+  .plock .pl2{font-size:11.5px;line-height:1.5}
+  .precents{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px;display:flex;flex-direction:column;gap:10px}
+  .precents .noyet{font-size:12px;color:var(--dim);line-height:1.5}
+  .pself .pnm,.pself .orbav{cursor:pointer}
+
+  /* projects */
+  .projlist{display:flex;flex-direction:column;gap:10px;max-width:640px;margin:0 auto;width:100%}
+  .projrow{display:flex;align-items:center;gap:14px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 18px;cursor:pointer;text-align:left;font-family:var(--body);transition:border-color .15s ease;width:100%}
+  .projrow:hover{border-color:var(--ind)}
+  .projrow.newproj{border-style:dashed;color:var(--ind);justify-content:center;font-size:14px}
+  .projrow .pjname{font-family:var(--disp);font-weight:500;font-size:15px;color:var(--text);border-radius:6px;padding:1px 6px;margin:-1px -6px;min-width:60px}
+  .projrow .pjname:hover{background:var(--tint)}
+  .projrow .pjname:focus{background:var(--tint);outline:1.5px solid var(--ind)}
+  .projrow .pjmeta{font-size:11.5px;color:var(--dim);margin-left:auto;flex:none}
+  .projrow .pjopen{font-size:11.5px;color:var(--ind);text-decoration:underline;flex:none}
+  .precents .rh2{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim)}
+  .precents .ri2{background:var(--tint);border-radius:8px;padding:10px 13px;font-size:12px;line-height:1.4;text-align:left;width:100%;border:0;cursor:pointer;font-family:var(--body);color:var(--mut)}
+  .precents .ri2:hover{background:var(--tint2)}
+  @media (max-width:860px){.pshelf{grid-template-columns:1fr}}
+
+  /* shape */
+  .pbuild{display:grid;grid-template-columns:1.1fr 1fr 1.2fr;gap:20px;flex:1;min-height:0}
+  .pcol{display:flex;flex-direction:column;gap:8px;min-height:0}
+  .pcol .ph2{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim)}
+  .pseed{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px;flex:1;display:flex;flex-direction:column;gap:10px}
+  .pseedtabs{display:flex;gap:4px;background:var(--tint2);border-radius:8px;padding:3px}
+  .pseedtab{flex:1;border:0;background:transparent;border-radius:6px;padding:7px 4px;font-size:10.5px;color:var(--mut);cursor:pointer;font-family:var(--body);white-space:nowrap}
+  .pseedtab.on{background:var(--panel);color:var(--text);box-shadow:0 1px 3px rgba(30,42,56,.12)}
+  .pseedpane{font-size:12px;color:var(--mut);line-height:1.55;flex:1}
+  .pseedtext{width:100%;min-height:60px;border:1px solid var(--line);border-radius:8px;padding:9px 12px;font-size:12px;background:var(--panel);color:var(--text);font-family:var(--body);resize:vertical;margin-top:10px}
+  .donerow{display:flex;justify-content:flex-end;margin-top:6px}
+  .pupl{font-size:11px;border:1px dashed #B9C6D6;border-radius:7px;padding:4px 10px;color:var(--mut);background:none;cursor:pointer;font-family:var(--body);margin-top:8px;display:block;width:100%;text-align:center}
+  .pupl:hover{color:var(--ind);border-color:var(--ind)}
+  .seedchips{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+  .seedchip{font-size:10.5px;background:var(--tint);border:1px solid var(--line);border-radius:999px;padding:3px 10px;color:var(--mut);cursor:pointer;font-family:var(--body)}
+  .catlbl{font-size:11px;color:var(--text);margin:10px 0 4px;display:block}
+  .parchs{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+  .parch{font-size:11px;border:1px solid var(--line);border-radius:999px;padding:4px 12px;color:var(--mut);background:var(--panel);cursor:pointer;font-family:var(--body)}
+  .parch.on{background:var(--ind);color:#FFFFFF;border-color:var(--ind)}
+  .parch .rmx{margin-left:6px;opacity:.7}
+  .parch.addpill{border-style:dashed;color:var(--dim)}
+  .parch.addpill.editing{border-style:solid;border-color:var(--ind)}
+  .catin{border:0;outline:none;background:transparent;width:92px;font-size:11px;font-family:var(--body);color:var(--text);padding:0 2px}
+  .seedfoot{display:flex;justify-content:flex-end;margin-top:auto;padding-top:8px}
+  .pdials{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:22px;flex:1;display:flex;flex-direction:column;gap:16px;justify-content:center}
+  .pdial label{display:flex;justify-content:space-between;font-size:12px;color:var(--text);margin-bottom:4px}
+  .pdial input[type=range]{width:100%;accent-color:var(--ind)}
+  .pdial .ends{display:flex;justify-content:space-between;font-size:10.5px;color:var(--dim)}
+  .pline{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--text);font-family:var(--body);width:auto;flex:1;min-width:0}
+  .ctrait,.idrow{display:flex;gap:6px;align-items:center}
+  .slbl{font-size:10.5px;color:var(--dim);margin-top:10px;display:block}
+  .sugg{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+  .sugg button{font-size:10.5px;border:1px solid var(--line);border-radius:999px;padding:3px 10px;color:var(--mut);background:var(--panel);cursor:pointer;font-family:var(--body)}
+  .sugg button:hover{border-color:var(--ind);color:var(--ind)}
+  .phear{background:var(--lav);border:1px solid #CBC5EE;border-radius:12px;padding:20px;flex:1;display:flex;flex-direction:column;gap:14px}
+  .phear .hb2{font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:#443C96;display:flex;align-items:center;gap:6px}
+  .phear .hb2 i{width:7px;height:7px;border-radius:50%;background:#5D54C0;animation:pulse 2s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+  .exrow{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .exbadge{font-size:10.5px;background:var(--lav);border:1px solid #CBC5EE;color:#443C96;border-radius:999px;padding:3px 10px}
+  .ppreview{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px;flex:1;display:flex;flex-direction:column;gap:8px;transition:opacity .2s ease}
+  .ppreview.updating{opacity:.5}
+  .ppreview .pvt{font-size:15px;font-weight:500;color:var(--text);line-height:1.35;transition:opacity .2s ease}
+  .ppreview .pvb{font-size:12.5px;line-height:1.6;color:var(--mut);white-space:pre-line;transition:opacity .2s ease}
+  .ppreview .pvg{font-size:11px;color:var(--blue);margin-top:auto}
+  .psavebar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+  .psavebar>span{font-size:11px;color:var(--mut)}
+  .shapefoot{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-top:20px;flex-wrap:wrap}
+  .shapefoot .sfcap{font-size:12px;color:var(--dim);max-width:46ch}
+  .shapefoot .pbtn{padding:13px 34px;font-size:14.5px}
+  @media (max-width:900px){.pbuild{grid-template-columns:1fr}}
+
+  /* compose */
+  .pcompose{display:flex;flex-direction:column;gap:16px;max-width:720px;margin:auto;width:100%}
+  .pchip{display:flex;align-items:center;gap:9px;align-self:flex-start;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:7px 16px 7px 8px;cursor:pointer;font-family:var(--body)}
+  .pchip:hover{border-color:var(--ind)}
+  .pchip span{font-size:13px;color:var(--text)}
+  .pchip em{font-style:normal;font-size:11px;color:var(--dim);border-left:1px solid var(--line);padding-left:9px}
+  .pq{font-family:var(--disp);font-weight:500;font-size:22px;color:var(--text)}
+  .pomni{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:4px;box-shadow:0 10px 28px rgba(30,42,56,.08)}
+  .pomni textarea{width:100%;min-height:130px;border:0;background:transparent;padding:16px 18px 8px;font-size:14.5px;line-height:1.6;color:var(--text);resize:vertical;font-family:var(--body)}
+  .pomni .pfoot{display:flex;justify-content:space-between;align-items:center;padding:8px 12px 12px 18px;flex-wrap:wrap;gap:10px}
+  .attachbtn{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:7px 15px;font-size:12px;color:var(--mut);cursor:pointer;font-family:var(--body);transition:border-color .15s ease,color .15s ease}
+  .attachbtn:hover{border-color:var(--ind);color:var(--ind)}
+  .attachbtn svg{width:14px;height:14px;flex:none}
+  .attchips{display:flex;gap:6px;flex-wrap:wrap;padding:0 18px 10px}
+  .attchips:empty{display:none}
+  .attchip{display:inline-flex;align-items:center;gap:5px;font-size:10.5px;background:var(--tint);border:1px solid var(--line);border-radius:999px;padding:3px 10px;color:var(--mut)}
+  .attchip.done{border-color:#BCD3C2;background:#E7F0E9;color:#1F5230}
+  .attchip.err{border-color:#D9C2C2;color:#7C3A3A}
+  .clangrow{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .clangrow .cl1{font-size:12px;color:var(--mut)}
+  .clseg{display:flex;background:var(--tint2);border-radius:999px;padding:3px;gap:3px}
+  .clseg button{border:0;background:transparent;border-radius:999px;padding:6px 14px;font-size:12px;color:var(--mut);cursor:pointer;font-family:var(--body)}
+  .clseg button.on{background:var(--panel);color:var(--ind);box-shadow:0 1px 3px rgba(30,42,56,.12)}
+  .pstarts{display:flex;gap:8px;flex-wrap:wrap}
+  .pstart{font-size:12px;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:6px 14px;color:var(--mut);cursor:pointer;font-family:var(--body)}
+  .pstart:hover{border-color:var(--ind);color:var(--text)}
+  .pstart b{color:var(--ind);font-weight:500}
+
+  /* studio */
+  .pstudio{display:grid;grid-template-columns:.85fr 2.3fr;gap:22px;flex:1;min-height:0}
+  .pfeed{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:10px;max-height:none;height:0;min-height:100%;overflow:hidden}
+  .pfeed .fh2{font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim)}
+  .pfeedbar{display:flex;align-items:center;gap:8px}
+  .pboxbtn{margin-left:auto;background:var(--panel);border:1px solid var(--line);border-radius:8px;width:26px;height:26px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--mut)}
+  .pboxbtn:hover{color:var(--ind);border-color:var(--ind)}
+  .pboxbtn svg{width:13px;height:13px}
+  #p-feedhost{display:flex;flex-direction:column;flex:1 1 0;overflow:auto;min-height:0}
+  #p-feedhost .rncov{aspect-ratio:3/3.3}
+  #p-feedhost .rntitle[contenteditable]:hover{background:var(--tint)}
+  #p-feedhost .rntitle[contenteditable]:focus{background:var(--tint);outline:1.5px solid var(--ind)}
+  .pgridwrap{display:grid;grid-template-columns:repeat(2,minmax(0,210px));gap:7px;align-content:start;align-items:stretch;justify-content:start}
+  .pgridwrap .rncell{height:100%}
+  .pgridwrap .rntxt{flex:1}
+  .pgridwrap .rnrow{margin-top:auto}
+  .pfeedshot{position:relative;border-radius:8px;overflow:hidden;flex:none;min-height:0}
+  .pfeedshot img{width:100%;height:auto;display:block}
+  .pfeedshot .overcells{position:absolute;top:8px;left:8px;right:8px;display:grid;grid-template-columns:repeat(2,minmax(0,160px));gap:7px}
+  .rncell{background:var(--panel);border:2px solid var(--line);border-radius:8px;overflow:hidden;display:flex;flex-direction:column}
+  .rncell.cur{border-color:var(--ind)}
+  .rncell.selq{border-color:var(--ind)}
+  .rncell[draggable="true"]{cursor:grab}
+  .rncell.dragging{opacity:.45}
+  .rncell.drop-before{box-shadow:-4px 0 0 0 var(--ind)}
+  .rncell.drop-after{box-shadow:4px 0 0 0 var(--ind)}
+  .rncov{aspect-ratio:3/4;background:#DCE4EC;position:relative;background-size:cover;background-position:center}
+  .rncov.t2{background:#D3DCE6}
+  .rntxt{padding:6px 7px;display:flex;flex-direction:column;gap:4px}
+  .rntitle{font-size:8.5px;font-weight:500;color:var(--text);line-height:1.3}
+  .skel{background:var(--tint2);border-radius:3px;height:.7em}
+  .rnrow{display:flex;align-items:center;gap:4px;font-size:7px;color:var(--dim)}
+  .rnrow .rnav{width:10px;height:10px;flex:none}
+  .rnrow .heart{width:8px;height:8px;margin-left:auto;color:#B9C6D6}
+  .rncell .curtag{position:absolute;top:5px;left:5px;font-size:7px;background:var(--ind);color:#fff;border-radius:999px;padding:1px 6px}
+  .rncell .simtag{position:absolute;top:5px;left:5px;font-size:7px;background:var(--navy);color:#fff;border-radius:999px;padding:1px 6px;opacity:.85}
+  .rncell .selbadge{position:absolute;top:6px;right:6px;width:18px;height:18px;border-radius:50%;background:var(--panel);border:1.5px solid var(--line);display:flex;align-items:center;justify-content:center;z-index:2}
+  .rncell.selq .selbadge{background:var(--ind);border-color:var(--ind)}
+  .rncell.selq .selbadge::after{content:"";width:8px;height:4px;border-left:1.5px solid #fff;border-bottom:1.5px solid #fff;transform:rotate(-45deg);margin-top:-2px}
+  .prail{display:flex;flex-direction:column;gap:14px;min-height:0}
+  .pdrafts{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;flex:1;min-height:0}
+  .pdraft{background:var(--panel);border-radius:12px;padding:15px;display:flex;flex-direction:column;gap:8px;cursor:pointer;position:relative;min-height:0;transition:box-shadow .15s ease;border:2px solid var(--line)}
+  .pdraft:hover{box-shadow:0 10px 26px rgba(30,42,56,.12)}
+  .pdraft.sel{border-color:var(--ind)}
+  .pdraft.discarded{opacity:.45}
+  .pdraft .preg{font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim)}
+  .pdraft .pcov{position:relative;border-radius:7px;background:var(--tint2);border:1.5px dashed #B9CBDD;overflow:hidden;background-size:cover;background-position:center;display:flex;align-items:center;justify-content:center;cursor:pointer;aspect-ratio:4/3;max-height:150px;min-height:90px}
+  .pdraft .pcov.hasimg{border-style:solid}
+  .pdraft .pcov u{color:var(--ind);font-size:10px}
+  .pdraft .pconcept{font-size:9.5px;color:var(--blue);line-height:1.4}
+  .pdraft .pdt{font-size:13px;font-weight:500;line-height:1.35;color:var(--text);border-radius:6px;padding:2px 4px;margin:-2px -4px}
+  .pdraft .pdb{font-size:11px;line-height:1.55;color:var(--mut);white-space:pre-line;border-radius:6px;padding:2px 4px;margin:-2px -4px}
+  .pdraft .pdg{font-size:10px;color:var(--blue);margin-top:auto;padding-top:6px;border-radius:6px;padding-left:4px;padding-right:4px;margin-left:-4px;margin-right:-4px}
+  .pdraft [contenteditable]:hover{background:var(--tint)}
+  .pdraft [contenteditable]:focus{background:var(--tint);outline:1.5px solid var(--ind)}
+  .edithint{font-size:10.5px;color:var(--dim)}
+  .pdraft .ptri{display:flex;gap:6px;align-items:center}
+  .pdraft .ptri button{font-size:10.5px;border-radius:999px;padding:3px 11px;cursor:pointer;font-family:var(--body)}
+  .pdraft .pk{background:#E7F0E9;color:#1F5230;border:1px solid #BCD3C2}
+  .pdraft .pk.on{background:#1F5230;color:#FFFFFF;border-color:#1F5230}
+  .pdraft .px{background:var(--panel);color:#7C3A3A;border:1px solid #D9C2C2}
+  .pdraft .pp{background:var(--ind-soft);color:var(--ind);border:1px solid #C7D4EA}
+  .pdraft .pp.on{background:var(--ind);color:#FFFFFF;border-color:var(--ind)}
+  .rncell .regtag{position:absolute;bottom:5px;left:5px;font-size:7px;background:rgba(36,49,94,.85);color:#fff;border-radius:999px;padding:1px 6px;text-transform:uppercase;letter-spacing:.05em}
+  .peditbar{background:var(--tint2);border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;align-items:stretch;gap:10px}
+  .erow{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .erow .el{font-size:12px;color:var(--text)}
+  .pechip{font-size:11.5px;border-radius:999px;padding:5px 13px;background:var(--panel);color:var(--mut);border:1px solid var(--line);cursor:pointer;font-family:var(--body)}
+  .pechip:hover{color:var(--text);border-color:var(--ind)}
+  .pechip:disabled{opacity:.45;cursor:wait}
+  .refrow{display:flex;gap:8px;flex:1;min-width:220px}
+  .refrow input{flex:1;border:1px solid var(--line);border-radius:999px;padding:6px 14px;font-size:11.5px;background:var(--panel);color:var(--text);font-family:var(--body)}
+  .pteach{margin-left:auto;display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--ind);cursor:pointer;user-select:none}
+  .pteach .rn{color:var(--navy)}
+  .ptog{width:34px;height:19px;border-radius:999px;background:#C2CDD9;position:relative;transition:background .15s ease;flex:none}
+  .ptog::after{content:"";position:absolute;left:2.5px;top:2.5px;width:14px;height:14px;border-radius:50%;background:#FFFFFF;transition:transform .15s ease;box-shadow:0 1px 2px rgba(0,0,0,.2)}
+  .pteach.on .ptog{background:var(--ind)}
+  .pteach.on .ptog::after{transform:translateX(15px)}
+  .pbottom{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+  .pbottom .endrow{display:flex;align-items:center;gap:16px;margin-left:auto}
+  .precipe{display:flex;align-items:center;gap:9px;border:1px solid #CBC5EE;background:var(--lav);border-radius:10px;padding:8px 14px;font-size:12px;color:#443C96}
+  .precipe b{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;font-weight:500;margin-right:2px}
+  @media (max-width:900px){.pstudio{grid-template-columns:1fr}.pdrafts{grid-template-columns:1fr}.pfeed{height:auto;min-height:0}#p-feedhost{flex:none;max-height:360px}}
+
+  /* tray, modal, load, toast */
+  .ptray{position:absolute;inset:0;background:rgba(30,42,56,.35);display:none;align-items:center;justify-content:center;z-index:28;padding:16px}
+  .ptray.show{display:flex;animation:pfade .2s ease}
+  .ptraycard{background:var(--panel);border-radius:14px;padding:24px;width:min(460px,96%);box-shadow:0 24px 60px rgba(30,42,56,.25);display:flex;flex-direction:column;gap:10px}
+  .ptraycard h6{font-family:var(--disp);font-weight:500;font-size:15px;color:var(--text)}
+  .ptraycard .tsub{font-size:11.5px;color:var(--mut);margin-bottom:4px}
+  .traygrid{display:grid;grid-template-columns:repeat(2,minmax(0,210px));gap:10px;justify-content:center;max-height:420px;overflow:auto;padding:2px}
+  .pmodal{position:absolute;inset:0;background:rgba(30,42,56,.4);backdrop-filter:blur(3px);display:none;align-items:center;justify-content:center;z-index:30;padding:16px}
+  .pmodal.show{display:flex;animation:pfade .25s ease}
+  .pmcard{background:var(--panel);border-radius:16px;padding:34px 38px;max-width:420px;text-align:center;display:none;flex-direction:column;gap:12px;align-items:center;box-shadow:0 24px 60px rgba(30,42,56,.25)}
+  .pmcard.on{display:flex}
+  .pmcard h5{font-family:var(--disp);font-weight:500;font-size:19px;color:var(--text)}
+  .pmcard p{font-size:13.5px;line-height:1.6;color:var(--mut)}
+  .pmcard .pwl{color:var(--ind);font-size:14px;text-decoration:underline;cursor:pointer;background:none;border:0;font-family:var(--body)}
+  .pmcard .pcl{font-size:12px;color:var(--dim);background:none;border:0;cursor:pointer;margin-top:4px;font-family:var(--body)}
+  .pmcard .ain{text-align:center}
+  .pload{position:absolute;inset:0;background:rgba(255,255,255,.94);display:none;align-items:center;justify-content:center;z-index:35;flex-direction:column;gap:14px}
+  .pload.show{display:flex}
+  .pload span{font-size:13px;color:var(--ind);font-family:var(--mono);letter-spacing:.05em}
+  .ptoast{position:absolute;left:50%;bottom:26px;transform:translate(-50%,20px);background:var(--navy);color:#FFFFFF;font-size:13px;border-radius:999px;padding:10px 22px;opacity:0;pointer-events:none;transition:opacity .25s ease,transform .25s ease;box-shadow:0 10px 30px rgba(30,42,56,.3);z-index:40;max-width:90%}
+  .ptoast.show{opacity:1;transform:translate(-50%,0)}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="orb" viewBox="0 0 131.431 131.431" fill="none">
+    <circle cx="65.7153" cy="65.7152" fill="#302C9A" r="47.6974" transform="rotate(103.897 65.7153 65.7152)"/>
+    <circle cx="65.7153" cy="65.7153" fill="url(#orbg0)" fill-opacity="0.8" r="47.6974" transform="rotate(-148.038 65.7153 65.7153)"/>
+    <path d="M64.8849 60.9492C66.5777 34.6611 41.3506 16.4918 67.6387 18.1846C93.9268 19.8774 109.923 37.5462 108.231 63.8342C106.538 90.1223 87.7966 115.075 61.5085 113.382C35.2204 111.689 63.1921 87.2373 64.8849 60.9492Z" fill="url(#orbg1)" fill-opacity="0.08"/>
+    <path d="M88.8462 56.8681C90.539 30.58 42.4668 16.3541 68.7549 18.0469C95.043 19.7397 114.981 42.4227 113.289 68.7108C111.596 94.9989 88.9128 114.937 62.6247 113.244C36.3366 111.552 87.1534 83.1562 88.8462 56.8681Z" fill="url(#orbg2)" fill-opacity="0.6" opacity="0.76"/>
+    <defs>
+      <linearGradient id="orbg0" gradientUnits="userSpaceOnUse" x1="65.7153" x2="65.8175" y1="18.0179" y2="101.99"><stop stop-color="#00D0FF"/><stop offset="1" stop-color="white"/></linearGradient>
+      <linearGradient id="orbg1" gradientUnits="userSpaceOnUse" x1="57.2685" x2="162.58" y1="61.1496" y2="123.788"><stop offset="0.177885" stop-color="#6CBACC"/><stop offset="1" stop-color="white"/></linearGradient>
+      <linearGradient id="orbg2" gradientUnits="userSpaceOnUse" x1="62.6247" x2="68.7549" y1="113.244" y2="18.0469"><stop offset="1" stop-color="white"/></linearGradient>
+    </defs>
+  </symbol>
+</svg>
+
+<div class="wrap">
+  <div class="proto" id="proto">
+    <div class="pchrome">
+      <div class="dots3"><i></i><i></i><i></i></div>
+      <div class="pttl">nomi</div>
+      <button class="chromeshelf" id="chrome-shelf" data-i="myShelf">My shelf</button>
+      <div class="psteps">
+        <button class="pstep" data-go="p-self">01 <span data-i="stepSelf">self</span></button>
+        <button class="pstep" data-go="p-shape">02 <span data-i="stepShape">shape</span></button>
+        <button class="pstep" data-go="p-compose">03 <span data-i="stepCompose">compose</span></button>
+        <button class="pstep" data-go="p-projects">04 <span data-i="stepProjects">projects</span></button>
+      </div>
+      <div class="langtog" role="group" aria-label="Interface language">
+        <button id="lang-zh">简</button>
+        <button id="lang-en" class="on">EN</button>
+      </div>
+    </div>
+    <div class="pstage">
+
+      <!-- WELCOME -->
+      <div class="pscr on" id="w-welcome">
+        <div class="wl">
+          <div class="weyebrow" data-i="wEyebrow">Welcome to Nomi</div>
+          <h2 data-i="wHead">Create through the version of you you want to share.</h2>
+          <div class="wsupport" data-i="wSupport">Shape a reusable social-self and turn your ideas into RedNote-ready content in Chinese or English.</div>
+          <div class="wasp" data-i="wAsp">Build a recognizable creator presence, one post at a time.</div>
+          <div class="wchoices">
+            <button class="wchoice" data-exp="new">
+              <div class="wt" data-i="wC1t">I'm new to RedNote</div>
+              <div class="wd" data-i="wC1d">Learn how the platform works and create your first note.</div>
+            </button>
+            <button class="wchoice" data-exp="experienced">
+              <div class="wt" data-i="wC2t">I already create on RedNote</div>
+              <div class="wd" data-i="wC2d">Create more consistently through a reusable social-self.</div>
+            </button>
+          </div>
+          <div class="wsignin">
+            <span><span data-i="wRet">Returning to Nomi?</span> <button class="plink" id="w-signin" data-i="wSignin">Sign in</button></span>
+            <span><span data-i="wNew">New here?</span> <button class="plink" id="w-register" data-i="wRegister">Create an account</button></span>
+          </div>
+          <div class="wdisc" data-i="wDisc">Nomi is an independent creator tool and is not affiliated with or endorsed by RedNote or Xiaohongshu.</div>
+        </div>
+      </div>
+
+      <!-- 01 SELF -->
+      <div class="pscr" id="p-self">
+        <div class="phead"><h4 data-i="selfHead">Your shelf</h4>
+          <div class="headright"><button class="plink" id="p-signout" data-i="signOut" style="display:none">Sign out</button></div>
+        </div>
+        <p class="pexplain" data-i="selfExplain">A social-self is your saved RedNote voice. It remembers how you sound, so every note starts from you. Nomi holds one; Nyla will hold as many as you need.</p>
+        <div class="pshelf">
+          <div class="pcreate" id="self-empty">
+            <svg class="orbi" style="width:40px;height:40px;opacity:.35"><use href="#orb"/></svg>
+            <div class="ct1" data-i="emptyTitle">No social-self yet</div>
+            <div class="ct2" data-i="emptyCopy">Shape your first social-self. It will live here, ready to write with and reuse for every note.</div>
+            <button class="pbtn sm" id="self-create" data-i="emptyCTA">Shape my social-self</button>
+          </div>
+          <div class="pself" id="self-full" style="display:none">
+            <div class="pavwrap">
+              <svg class="orbi orbav" style="width:48px;height:48px" role="img" aria-label="Social-self avatar"><use href="#orb"/></svg>
+              <div>
+                <div class="pnamerow">
+                  <div class="pnm rn">Rain</div>
+                  <input class="pnamein" id="p-namein" aria-label="Social-self name" maxlength="18">
+                </div>
+                <div class="actrow">
+                  <button class="peditlook" id="p-rename" data-i="rename">rename</button>
+                  <button class="peditlook" id="p-look" data-i="editlook">edit look</button>
+                </div>
+                <div class="lookpanel" id="p-swatches" hidden>
+                  <div class="lp1" data-i="lookTitle">Choose a look for this social-self</div>
+                  <div class="pswatches">
+                    <button class="on" data-hue="0" aria-label="Look 1"><svg class="orbi" style="width:22px;height:22px"><use href="#orb"/></svg></button>
+                    <button data-hue="1" aria-label="Look 2"><svg class="orbi" style="width:22px;height:22px;filter:hue-rotate(60deg)"><use href="#orb"/></svg></button>
+                    <button data-hue="2" aria-label="Look 3"><svg class="orbi" style="width:22px;height:22px;filter:hue-rotate(130deg)"><use href="#orb"/></svg></button>
+                    <button data-hue="3" aria-label="Look 4"><svg class="orbi" style="width:22px;height:22px;filter:hue-rotate(200deg)"><use href="#orb"/></svg></button>
+                    <button data-hue="4" aria-label="Look 5"><svg class="orbi" style="width:22px;height:22px;filter:hue-rotate(280deg)"><use href="#orb"/></svg></button>
+                  </div>
+                  <div style="display:flex;gap:8px;justify-content:flex-end">
+                    <button class="pbtn sm ghost" id="p-lookcancel" data-i="cancel">Cancel</button>
+                    <button class="pbtn sm" id="p-lookok" data-i="confirm">Confirm</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="pvoice">"Uji at first light, warm mochi in hand. everything since has been an audition."</div>
+            <div class="pst"><span data-i="selfStat2pre">Every note you keep teaches</span> <span class="rn">Rain</span> <span data-i="selfStat2post">more of you.</span></div>
+            <div class="prow">
+              <button class="pbtn sm" id="p-writebtn"><span data-i="writeWith">Write with</span> <span class="rn">Rain</span></button>
+              <button class="pbtn sm ghost" id="p-reshape" data-i="reshape">Reshape</button>
+            </div>
+          </div>
+          <div class="plock" id="plock" role="button" tabindex="0" aria-label="New social-self, locked, opens the Nyla waitlist">
+            <div class="plk" data-i="locked">locked</div>
+            <div class="pl1" data-i="newSelf">New social-self</div>
+            <div class="pl2" data-i="lockCopy">Nomi is a one-social-self experience. Nyla will support multiple social-selves.</div>
+            <div style="font-size:9px;color:var(--ind);text-decoration:underline" data-i="joinWl">join the Nyla waitlist</div>
+          </div>
+          <div class="precents" id="p-recents">
+            <div class="rh2" data-i="recent">Recent notes</div>
+            <div id="p-recentlist" style="display:flex;flex-direction:column;gap:8px"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PROJECTS -->
+      <div class="pscr" id="p-projects">
+        <div class="phead">
+          <button class="pback" data-go="p-self">&larr; <span data-i="backShelf">My shelf</span></button>
+          <h4 data-i="projHead">All projects</h4>
+          <span class="psub" data-i="projSub">every generation is a project · open one to keep editing in Studio</span>
+        </div>
+        <div class="projlist" id="p-projlist"></div>
+      </div>
+
+      <!-- 02 SHAPE -->
+      <div class="pscr" id="p-shape">
+        <div class="phead">
+          <button class="pback" data-go="p-self">&larr; <span data-i="backShelf">My shelf</span></button>
+          <h4><span data-i="shapeHead">Shape your social-self</span></h4><span class="psub" data-i="shapeSub">reshape any time · about 90 seconds</span>
+          <div class="headright"><button class="plink" id="undo-shape" data-i="undo">Undo</button></div>
+        </div>
+        <div class="pbuild">
+          <div class="pcol"><div class="ph2" data-i="seed">Seed</div>
+            <div class="pseed">
+              <div class="pseedtabs">
+                <button class="pseedtab on" data-seed="own" data-i="tabWhereIAm">Where I am</button>
+                <button class="pseedtab" data-seed="adm" data-i="tabWhereIWant">Where I want to be</button>
+              </div>
+              <div class="pseedpane" id="pseed-own"><span data-i="ownDesc">The voice you have today. RedNote posts work best, but anything you have written counts.</span>
+                <textarea class="pseedtext" id="p-seedtext" data-ip="ownPh" placeholder="paste anything you have written" aria-label="Paste your writing"></textarea>
+                <button class="pupl" data-shots="own" data-i="ownUpl">upload images or screenshots of your posts</button>
+                <div class="seedchips" id="p-ownshots"></div>
+                <span class="catlbl" data-i="catNow">What you share today</span>
+                <div class="parchs" id="p-catsnow"><button class="parch on" data-cat="food">food</button><button class="parch" data-cat="travel">travel</button><button class="parch" data-cat="beauty">beauty</button><button class="parch" data-cat="fashion">fashion</button><button class="parch" data-cat="home">home</button><button class="parch" data-cat="career">career</button><button class="parch" data-cat="wellness">wellness</button><button class="parch" data-cat="tech">tech</button><button class="parch addpill" data-addcat data-i="addOwn">add your own</button></div></div>
+              <div class="pseedpane" id="pseed-adm" hidden><span data-i="admDesc">Inspirations. Anything that pulls you forward: writing you admire, screenshots, moodboards. Your social-self borrows the register, never the identity.</span>
+                <textarea class="pseedtext" id="p-admtext" data-ip="admPh" placeholder="paste writing that inspires you" aria-label="Paste inspirations"></textarea>
+                <button class="pupl" data-shots="adm" data-i="admUpl">upload anything that inspires you</button>
+                <div class="seedchips" id="p-admshots"></div>
+                <span class="catlbl" data-i="catGoal">Where you are heading</span>
+                <div class="parchs" id="p-catsgoal"><button class="parch on" data-cat="slow living">slow living</button><button class="parch" data-cat="food guides">food guides</button><button class="parch" data-cat="city travel">city travel</button><button class="parch" data-cat="honest reviews">honest reviews</button><button class="parch" data-cat="diary">diary</button><button class="parch" data-cat="tutorials">tutorials</button><button class="parch" data-cat="style">style</button><button class="parch addpill" data-addcat data-i="addOwn">add your own</button></div></div>
+              <div class="seedfoot"><button class="pbtn sm ghost" id="p-seedsave" data-i="saveSeed">Save seed</button></div>
+            </div>
+          </div>
+          <div class="pcol"><div class="ph2" data-i="tune">Tune</div>
+            <div class="pdials">
+              <div class="pdial"><label><span data-i="energy">Energy</span></label><input type="range" id="p-e" min="0" max="100" step="1" value="72" aria-label="Energy"><div class="ends"><span data-i="quiet">quiet</span><span data-i="highkey">high energy</span></div></div>
+              <div class="pdial"><label><span data-i="closeness">Closeness</span></label><input type="range" id="p-i" min="0" max="100" step="1" value="68" aria-label="Closeness"><div class="ends"><span data-i="useful">useful for readers</span><span data-i="diaryClose">diary close</span></div></div>
+              <div class="pdial"><label><span data-i="structure">Structure</span></label><input type="range" id="p-p" min="0" max="100" step="1" value="28" aria-label="Structure"><div class="ends"><span data-i="offcuff">off the cuff</span><span data-i="structured">structured</span></div></div>
+              <div>
+                <label for="p-trait" style="font-size:12px;color:var(--text);display:block;margin-bottom:2px" data-i="ownWords">Your own words</label>
+                <span style="font-size:10.5px;color:var(--dim);display:block;margin-bottom:6px" data-i="ownWordsSub">traits the sliders cannot say, folded into the voice</span>
+                <div class="ctrait"><input class="pline" id="p-trait" data-ip="traitPh" placeholder="a trait, like candid or picky" aria-label="Custom trait"><button class="pbtn sm ghost" id="p-traitb" data-i="feed">Feed</button></div>
+                <span class="slbl" data-i="suggLbl">suggestions, tap to fill the box</span>
+                <div class="sugg" id="p-sugg">
+                  <button>candid</button><button>picky</button><button>playful</button><button>dry</button><button>poetic</button><button>direct</button><button>minimal</button><button>tender</button>
+                </div>
+              </div>
+              <div>
+                <label for="p-idline" style="font-size:12px;color:var(--text);display:block;margin-bottom:2px" data-i="elseLbl">Anything else that defines you</label>
+                <span style="font-size:10.5px;color:var(--dim);display:block;margin-bottom:6px" data-i="elseSub">your own words, fed straight to the voice</span>
+                <div class="idrow"><input class="pline" type="text" id="p-idline" data-ip="elsePh" placeholder="whatever the options above did not cover" aria-label="Anything else that defines you"><button class="pbtn sm ghost" id="p-idset" data-i="feed">Feed</button></div>
+              </div>
+            </div>
+          </div>
+          <div class="pcol"><div class="ph2" data-i="hearIt">Hear it</div>
+            <div class="phear">
+              <div class="hb2"><i></i><span id="p-vclabel" data-i="voiceCheck">voice check · an example, not your content</span></div>
+              <div class="exrow"><span class="exbadge"><span data-i="exTopic">Example topic:</span> <span data-i="exName">a bakery find</span></span></div>
+              <div class="ppreview" id="p-preview">
+                <div class="pvt" id="p-pvt">drop everything, new bakery</div>
+                <div class="pvb" id="p-pvb">this bakery broke me a little
+warm bread at 8am and the owner remembered my order
+this is my whole personality now</div>
+                <div class="pvg" id="p-pvg">#bakery #morningfind</div>
+              </div>
+              <div class="psavebar"><span data-i="exCap">a sample topic, so you can judge the voice before it touches your notes</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="shapefoot">
+          <span class="sfcap" data-i="shapeCap">Nothing changes until you confirm. Your social-self shapes how every note is written.</span>
+          <button class="pbtn" id="p-save"><span id="p-savelabel">Use this social-self</span></button>
+        </div>
+      </div>
+
+      <!-- 03 COMPOSE -->
+      <div class="pscr" id="p-compose">
+        <div class="phead">
+          <button class="pback" data-go="p-self">&larr; <span data-i="backShelf">My shelf</span></button>
+          <h4 data-i="composeHead">New note</h4>
+          <div class="headright"><button class="plink" id="undo-compose" data-i="undo">Undo</button></div>
+        </div>
+        <div class="pcompose">
+          <button class="pchip" data-go="p-shape" aria-label="Your social-self. Tap to reshape."><svg class="orbi orbav" style="width:24px;height:24px"><use href="#orb"/></svg><span class="rn">Rain</span><em id="p-chipdesc">warm · honest · high energy</em><em data-i="tapReshape">tap to reshape</em></button>
+          <div class="pq" data-i="composeQ">What is the note about today?</div>
+          <div class="pomni">
+            <textarea id="p-idea" aria-label="Note idea" data-ip="ideaPh" placeholder="Type it, paste it, or drop it: an idea, a link, a photo set, a transcript."></textarea>
+            <div class="pfoot">
+              <button class="attachbtn" id="p-attach"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"><path d="M13.2 7.2 8.3 12a3.1 3.1 0 0 1-4.4-4.4l5.2-5.1a2.1 2.1 0 0 1 3 3L7 10.6a1.1 1.1 0 0 1-1.6-1.6l4.6-4.5"/></svg><span data-i="attach">add images or files</span></button>
+              <div class="clangrow">
+                <span class="cl1" data-i="contentLang">Content language</span>
+                <div class="clseg" id="p-clang">
+                  <button data-cl="zh">简体中文</button>
+                  <button data-cl="en" class="on">English</button>
+                  <button data-cl="bilingual" data-i="bilingual">双语</button>
+                </div>
+              </div>
+              <button class="pbtn" id="p-gen" data-i="generate">Generate 3 notes</button>
+            </div>
+            <div class="attchips" id="p-attchips"></div>
+          </div>
+          <input type="file" id="p-attfile" multiple accept="image/*,.txt,.md,.csv,text/plain" hidden aria-label="Attach images or files to your idea">
+          <div class="pstarts">
+            <button class="pstart" data-fill="continuing my Japan matcha series, part 2, the Tokyo stores" data-i="warm1">continue: Japan matcha series, part 2</button>
+            <button class="pstart" data-fill="a Kyoto autumn note: the tea houses worth the queue when the leaves turn"><b data-i="recipeWord">recipe</b> <span data-i="warm2">· trending: Kyoto autumn</span></button>
+            <button class="pstart" data-fill="finish my saved draft from Tuesday about quiet mornings" data-i="warm3">resume: saved draft from Tuesday</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- REGISTRATION GATE -->
+      <div class="pscr" id="r-gate">
+        <div class="phead"><button class="pback" data-go="p-compose">&larr; <span data-i="backCompose">Compose</span></button><h4 data-i="gateHead">Save your social-self and continue in Studio</h4></div>
+        <div class="gate">
+          <div class="gprev">
+            <span style="font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim)" data-i="gatePrevLbl">one of your three generated notes</span>
+            <div class="gnote" id="g-note"></div>
+            <div class="glocked">
+              <div class="glock"><b data-i="gLock1t">review</b><span data-i="gLockD">unlocks after you register</span></div>
+              <div class="glock"><b data-i="gLock2t">diary</b><span data-i="gLockD2">unlocks after you register</span></div>
+            </div>
+          </div>
+          <div class="authbox">
+            <h5 data-i="gateHead2">Create a free account</h5>
+            <div class="asub" data-i="gateSub">Create a free account to save this social-self, explore all three content directions, and return to your work later.</div>
+            <div id="g-auth"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 04 STUDIO -->
+      <div class="pscr" id="p-studio">
+        <div class="phead">
+          <button class="pback" data-go="p-projects">&larr; <span data-i="backProjects">All projects</span></button>
+          <h4><svg class="orbi orbav" style="width:22px;height:22px" role="img" aria-label="Social-self avatar"><use href="#orb"/></svg><span class="rn">Rain</span> · <span data-i="drafts3">3 drafts</span></h4>
+          <span class="psub" data-i="studioSub">three registers of the same idea</span>
+          <div class="headright"><span class="edithint" data-i="editHint">tap any title, body, or tags to edit</span><button class="plink" id="save-studio" data-i="saveNow">Save</button><button class="plink" id="undo-studio" data-i="undo">Undo</button></div>
+        </div>
+        <div class="pstudio">
+          <div class="pfeed">
+            <div class="pfeedbar"><div class="fh2" data-i="pagePrev">Your RedNote page preview</div>
+              <button class="pboxbtn" id="p-box" aria-label="Open the drafts box"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><path d="M2.5 5.5h11M3.2 5.5V13h9.6V5.5M2 2.8h12v2.7H2zM6.3 8.2h3.4"/></svg></button>
+            </div>
+            <div style="font-size:10px;color:var(--dim)" data-i="pagePrevSub">your RedNote page, with this note placed in it</div>
+            <div id="p-feedhost" style="display:flex;flex-direction:column"></div>
+            <button class="pupl" id="p-shotbtn" style="margin-top:4px;flex:none" data-i="shotBtn">add a screenshot of your RedNote page to simulate it</button>
+          </div>
+          <div class="prail">
+            <div class="pdrafts" id="p-drafts"></div>
+            <div class="peditbar">
+              <div class="erow">
+                <span class="el" data-i="refine">Refine:</span>
+                <button class="pechip" data-v="tone" data-i="tone">tone</button>
+                <button class="pechip" data-v="word" data-i="wordchoice">word choice</button>
+                <button class="pechip" data-v="att" data-i="attitude">attitude</button>
+                <button class="pechip" data-v="short" data-i="shorter">shorter</button>
+              </div>
+              <div class="erow">
+                <div class="refrow"><input id="p-refin" aria-label="Custom refine" data-ip="refPh" placeholder="or tell it what to change, like add prices"><button class="pbtn sm ghost" id="p-refb" data-i="apply">Apply</button></div>
+                <span class="pteach" id="p-teach" role="switch" aria-checked="false" tabindex="0"><span class="ptog"></span><span data-i="teachPre">teach</span> <span class="rn">Rain</span> <span data-i="teachPost">from my edits</span></span>
+              </div>
+            </div>
+            <div class="pbottom">
+              <div class="precipe"><span><b data-i="recipeWord2">recipe</b> <span id="p-besttime" data-i="bestTimeDefault">best posting window appears here after generation</span></span></div>
+              <div class="endrow">
+                <button class="plink" id="p-dl" data-i="download">Download</button>
+                <button class="pbtn" id="p-copy" data-i="copyClip">Copy to clipboard</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <input type="file" id="p-file" accept="image/*" hidden aria-label="Upload cover image">
+        <input type="file" id="p-pageshot" accept="image/*" hidden aria-label="Upload page screenshot">
+        <input type="file" id="p-simfile" accept="image/*" hidden aria-label="Replace an extracted page image">
+      </div>
+
+      <!-- overlays -->
+      <div class="ptray" id="p-tray" role="dialog" aria-label="Drafts box">
+        <div class="ptraycard">
+          <h6 data-i="boxTitle">Drafts box</h6>
+          <div class="tsub" id="p-traysub"></div>
+          <div id="p-trayitems" class="traygrid"></div>
+          <div style="display:flex;justify-content:flex-end"><button class="pbtn sm" id="p-trayclose"></button></div>
+        </div>
+      </div>
+      <div class="pmodal" id="pmodal" role="dialog" aria-label="Nyla waitlist">
+        <div class="pmcard on" id="wl-ask">
+          <svg class="orbi orbav" style="width:40px;height:40px"><use href="#orb"/></svg>
+          <h5 data-i="nylaTitle">Nomi is a one-social-self experience</h5>
+          <p data-i="nylaCopy">This social-self is yours to keep shaping. When you are ready for more than one, a work voice, a diary voice, a review voice, that is Nyla: every social-self you need, managed in one place.</p>
+          <input class="ain" id="wl-email" type="email" data-ip="wlEmailPh" placeholder="you@example.com" style="display:none" aria-label="Email for the waitlist">
+          <button class="pbtn sm" id="p-waitlist" data-i="nylaJoin">Join the Nyla waitlist</button>
+          <button class="pcl" id="p-close" data-i="notYet">not yet</button>
+        </div>
+        <div class="pmcard" id="wl-done">
+          <svg class="orbi orbav" style="width:40px;height:40px"><use href="#orb"/></svg>
+          <h5 data-i="wlDoneTitle">Congratulations — you are on the Nyla waitlist</h5>
+          <p data-i="wlDoneCopy">Nyla is what comes after Nomi: every social-self you need — a work voice, a diary voice, a review voice — managed in one place. We will email you when it opens. Unsubscribe anytime via email.</p>
+          <button class="pbtn sm" id="wl-ok" data-i="wlOk">Done</button>
+        </div>
+      </div>
+      <div class="amodal" id="a-modal" role="dialog" aria-label="Sign in">
+        <div class="authbox">
+          <h5 id="a-title" data-i="signinTitle">Sign in to Nomi</h5>
+          <div class="asub" id="a-sub" data-i="signinSub">Pick up your saved social-self and drafts.</div>
+          <div id="a-host"></div>
+          <button class="pcl plink" id="a-cancel" data-i="cancel" style="align-self:center">Cancel</button>
+        </div>
+      </div>
+      <div class="pload" id="pload"><svg class="orbi orbav" style="width:38px;height:38px;animation:pulse 1.2s infinite"><use href="#orb"/></svg><span id="p-loadmsg" data-i="writing">writing as your social-self</span></div>
+      <div class="ptoast" id="ptoast">…</div>
+    </div>
+  </div>
+  <p style="font-size:12px;color:var(--dim);margin-top:14px" data-i="footNote">Nomi beta · an independent creator tool. Interface language and content language are independent.</p>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var API = location.protocol.indexOf("http")===0 ? "" : "http://localhost:8787";
+
+  /* ---------------- i18n ---------------- */
+  var I18N = {
+    en: {
+      stepSelf:"self", stepShape:"shape", stepCompose:"compose", stepProjects:"projects", myShelf:"My shelf",
+      projHead:"All projects", projSub:"every generation is a project · open one to keep editing in Studio",
+      projNew:"+ Create new", projOpen:"open", projDraftsMeta:"3 drafts", backProjects:"All projects",
+      noNotesYet:"You don't have notes yet. Your projects will appear here once you generate.",
+      aCodeSentReal:"Code sent to your email — check your inbox.",
+      aCodeBeta:"Beta mode: your verification code is",
+      tProjRenamed:"project renamed", simEditHint:"tap an extracted title to edit it, tap its image to replace it",
+      attach:"add images or files", saveNow:"Save", tSaved:"saved to your account",
+      tSaveFail:"save failed - check your connection and try again",
+      addPrev:"add to page", removePrev:"on page ✓",
+      tAttReading:"reading your files…", tAttImg:"image content added to your idea",
+      tAttNoText:"no readable text in that image", tAttFile:"file content added to your idea",
+      wEyebrow:"Welcome to Nomi", wHead:"Create through the version of you you want to share.",
+      wSupport:"Shape a reusable social-self and turn your ideas into RedNote-ready content in Chinese or English.",
+      wAsp:"Build a recognizable creator presence, one post at a time.",
+      wC1t:"I'm new to RedNote", wC1d:"Learn how the platform works and create your first note.",
+      wC2t:"I already create on RedNote", wC2d:"Create more consistently through a reusable social-self.",
+      wRet:"Returning to Nomi?", wSignin:"Sign in", wNew:"New here?", wRegister:"Create an account",
+      wDisc:"Nomi is an independent creator tool and is not affiliated with or endorsed by RedNote or Xiaohongshu.",
+      selfHead:"Your shelf", signOut:"Sign out",
+      selfExplain:"A social-self is your saved RedNote voice. It remembers how you sound, so every note starts from you. Nomi holds one; Nyla will hold as many as you need.",
+      emptyTitle:"No social-self yet",
+      emptyCopy:"Shape your first social-self. It will live here, ready to write with and reuse for every note.",
+      emptyCTA:"Shape my social-self",
+      rename:"rename", editlook:"edit look", lookTitle:"Choose a look for this social-self",
+      cancel:"Cancel", confirm:"Confirm",
+      selfStat2pre:"Every note you keep teaches", selfStat2post:"more of you.",
+      writeWith:"Write with", reshape:"Reshape",
+      locked:"locked", newSelf:"New social-self",
+      lockCopy:"Nomi is a one-social-self experience. Nyla will support multiple social-selves.",
+      joinWl:"join the Nyla waitlist",
+      recent:"Recent notes",
+      shapeHead:"Shape your social-self", shapeSub:"reshape any time · about 90 seconds",
+      backShelf:"My shelf", backCompose:"Compose", undo:"Undo",
+      seed:"Seed", tabWhereIAm:"Where I am", tabWhereIWant:"Where I want to be",
+      ownDesc:"The voice you have today. RedNote posts work best, but anything you have written counts.",
+      ownPh:"paste anything you have written", ownUpl:"upload images or screenshots of your posts",
+      admPh:"paste writing that inspires you",
+      catNow:"What you share today", addOwn:"add your own", doneBtn:"Done", saveSeed:"Save seed",
+      admDesc:"Inspirations. Anything that pulls you forward: writing you admire, screenshots, moodboards. Your social-self borrows the register, never the identity.",
+      admUpl:"upload anything that inspires you", catGoal:"Where you are heading",
+      tune:"Tune", energy:"Energy", quiet:"quiet", highkey:"high energy",
+      closeness:"Closeness", useful:"useful for readers", diaryClose:"diary close",
+      structure:"Structure", offcuff:"off the cuff", structured:"structured",
+      ownWords:"Your own words", ownWordsSub:"traits the sliders cannot say, folded into the voice",
+      traitPh:"a trait, like candid or picky", feed:"Feed", suggLbl:"suggestions, tap to fill the box",
+      elseLbl:"Anything else that defines you", elseSub:"your own words, fed straight to the voice",
+      elsePh:"whatever the options above did not cover",
+      hearIt:"Hear it", voiceCheck:"voice check · an example, not your content",
+      voiceCheckLive:"live voice check · tuned to you",
+      exTopic:"Example topic:", exName:"a bakery find",
+      exCap:"a sample topic, so you can judge the voice before it touches your notes",
+      shapeCap:"Nothing changes until you confirm. Your social-self shapes how every note is written.",
+      useSelf:"Use this social-self", saveChanges:"Save changes",
+      composeHead:"New note", tapReshape:"tap to reshape",
+      composeQ:"What is the note about today?",
+      ideaPh:"Type it, paste it, or drop it: an idea, a link, a photo set, a transcript.",
+      contentLang:"Content language", bilingual:"双语", generate:"Generate 3 notes",
+      warm1:"continue: Japan matcha series, part 2", recipeWord:"recipe", warm2:"· trending: Kyoto autumn", warm3:"resume: saved draft from Tuesday",
+      gateHead:"Save your social-self and continue in Studio",
+      gatePrevLbl:"one of your three generated notes",
+      gLock1t:"review", gLock2t:"diary", gLockD:"unlocks after you register", gLockD2:"unlocks after you register",
+      gateHead2:"Create a free account",
+      gateSub:"Create a free account to save this social-self, explore all three content directions, and return to your work later.",
+      drafts3:"3 drafts", studioSub:"three registers of the same idea",
+      editHint:"tap any title, body, or tags to edit",
+      pagePrev:"Your RedNote page preview", pagePrevSub:"your RedNote page, with this note placed in it",
+      shotBtn:"add a screenshot of your RedNote page to simulate it",
+      refine:"Refine:", tone:"tone", wordchoice:"word choice", attitude:"attitude", shorter:"shorter",
+      refPh:"or tell it what to change, like add prices", apply:"Apply",
+      teachPre:"teach", teachPost:"from my edits",
+      recipeWord2:"recipe", bestTimeDefault:"best posting window appears here after generation",
+      download:"Download", copyClip:"Copy to clipboard",
+      boxTitle:"Drafts box",
+      trayStudio:"Every unposted note in Nomi, shown the way your RedNote page will show them. Tap a card to place it in the preview or take it out. Drag placed cards to set the order. The current draft is highlighted.",
+      trayBrowse:"Every unposted note in Nomi, shown the way your RedNote page will show them. This is a preview of your drafts; open the studio to place them.",
+      trayAdd:"Add notes to preview", trayClose:"Close",
+      nylaTitle:"Nomi is a one-social-self experience",
+      nylaCopy:"This social-self is yours to keep shaping. When you are ready for more than one, a work voice, a diary voice, a review voice, that is Nyla: every social-self you need, managed in one place.",
+      nylaJoin:"Join the Nyla waitlist", notYet:"not yet",
+      wlDoneTitle:"Congratulations — you are on the Nyla waitlist",
+      wlDoneCopy:"Nyla is what comes after Nomi: every social-self you need — a work voice, a diary voice, a review voice — managed in one place. We will email you when it opens. Unsubscribe anytime via email.",
+      wlOk:"Done", wlEmailPh:"you@example.com",
+      signinTitle:"Sign in to Nomi", signinSub:"Pick up your saved social-self and drafts.",
+      registerTitle:"Create your Nomi account", registerSub:"Your social-self and drafts will be saved to it.",
+      writing:"writing as your social-self",
+      footNote:"Nomi beta · an independent creator tool. Interface language and content language are independent.",
+      aGoogle:"Continue with Google", aApple:"Continue with Apple", aEmail:"Continue with email",
+      aEmailPh:"you@example.com", aSend:"Send code", aCodePh:"6-digit code", aVerify:"Verify and continue",
+      aCodeSent:"Code sent. For this beta it also appears in the server console.",
+      tRenamed:"renamed to", tLook:"look saved · final colors to come",
+      tFedTrait:"fed to the voice:", tFedElse:"fed to the system:", tCat:"category added:",
+      tShots:"reading your screenshots…", tShotText:"text extracted and folded into the seed", tShotNoText:"screenshot added (no readable text found)",
+      tSeedSaved:"seed saved", tDone:"saved to the seed",
+      tSelfSaved:"social-self saved", tShelfSaved:"now lives on your shelf",
+      tKept:"kept: a choice, not training data", tCover:"cover added, check your page preview",
+      tCopied:"copied to clipboard, paste into RedNote", tCopyFail:"clipboard blocked here, select the draft text manually",
+      tDl:"downloaded nomi-note.txt", tDlFail:"download blocked here, use copy instead",
+      tShotSim:"reading your page layout…", tShotSimDone:"your page layout is simulated below", tShotSimFail:"could not read the layout, showing the screenshot overlay instead",
+      tOffline:"connection hiccup - showing a sample. Check your network and try again.",
+      tRefining:"refining this draft…", tRefined:"draft refined", tNeedGen:"write your idea first, then Generate 3 notes",
+      tEdited:"edit saved", tTaught:"learned: your next drafts will reflect this",
+      tSignedIn:"signed in", tRegistered:"account created. Your social-self, idea, and drafts came with you.",
+      tSignedOut:"signed out",
+      tAuthErr:"could not verify, check the code", tUndo:"undone", tNothingUndo:"nothing to undo",
+      loadGen:"writing three notes as your social-self", loadAuth:"one moment",
+      gTimePre:"recipe · post this",
+    },
+    zh: {
+      stepSelf:"自我", stepShape:"塑造", stepCompose:"创作", stepProjects:"项目", myShelf:"我的书架",
+      projHead:"全部项目", projSub:"每次生成都是一个项目 · 打开任意项目继续在工作室编辑",
+      projNew:"+ 新建项目", projOpen:"打开", projDraftsMeta:"3 篇草稿", backProjects:"全部项目",
+      noNotesYet:"你还没有笔记。生成内容后，你的项目会出现在这里。",
+      aCodeSentReal:"验证码已发送到你的邮箱，请查收。",
+      aCodeBeta:"测试模式：你的验证码是",
+      tProjRenamed:"项目已重命名", simEditHint:"点击提取的标题可编辑，点击图片可替换",
+      attach:"上传图片或文件", saveNow:"保存", tSaved:"已保存到你的账户",
+      tSaveFail:"保存失败，请检查网络后重试",
+      addPrev:"加入主页预览", removePrev:"已在主页 ✓",
+      tAttReading:"正在读取文件…", tAttImg:"图片内容已加入想法",
+      tAttNoText:"图片中没有可识别的文字", tAttFile:"文件内容已加入想法",
+      wEyebrow:"欢迎来到 Nomi", wHead:"塑造你的 social-self，让每一篇内容都更像你。",
+      wSupport:"选择你想呈现的自己，把想法转化为适合小红书的中文、英文或双语内容。",
+      wAsp:"从一个 social-self 开始，逐步建立有辨识度的创作者表达。",
+      wC1t:"我是小红书新手", wC1d:"了解平台的内容表达方式，完成你的第一篇笔记。",
+      wC2t:"我已经在小红书创作", wC2d:"用可复用的 social-self，更稳定地持续创作。",
+      wRet:"欢迎回来，", wSignin:"登录 Nomi", wNew:"第一次来？", wRegister:"创建账户",
+      wDisc:"Nomi 是独立创作者工具，与小红书或 RedNote 无官方关联，也未获得其官方背书。",
+      selfHead:"我的书架", signOut:"退出登录",
+      selfExplain:"social-self 是你保存下来的小红书声音。它记得你的表达方式，让每篇笔记都从你出发。Nomi 保存一个；Nyla 将保存你需要的每一个。",
+      emptyTitle:"还没有 social-self",
+      emptyCopy:"塑造你的第一个 social-self。它会住在这里，随时陪你写每一篇笔记。",
+      emptyCTA:"塑造我的 social-self",
+      rename:"重命名", editlook:"更换形象", lookTitle:"为这个 social-self 选择形象",
+      cancel:"取消", confirm:"确认",
+      selfStat2pre:"你保留的每篇笔记都让", selfStat2post:"更懂你。",
+      writeWith:"和它一起写：", reshape:"重新塑造",
+      locked:"未解锁", newSelf:"新的 social-self",
+      lockCopy:"Nomi 目前支持一个 social-self。Nyla 将支持多个 social-self。",
+      joinWl:"加入 Nyla 等候名单",
+      recent:"最近的笔记",
+      shapeHead:"塑造你的 social-self", shapeSub:"随时可以重塑 · 大约 90 秒",
+      backShelf:"我的书架", backCompose:"返回创作", undo:"撤销",
+      seed:"种子", tabWhereIAm:"我现在的样子", tabWhereIWant:"我想成为的样子",
+      ownDesc:"你现在的声音。小红书笔记最好，但任何你写过的内容都算。",
+      ownPh:"粘贴任何你写过的内容", ownUpl:"上传你笔记的图片或截图",
+      admPh:"粘贴激励你的文字",
+      catNow:"你现在分享的内容", addOwn:"自定义", doneBtn:"完成", saveSeed:"保存种子",
+      admDesc:"灵感。任何吸引你的内容：欣赏的文字、截图、灵感板。你的 social-self 只借鉴表达方式，不借用身份。",
+      admUpl:"上传任何激励你的内容", catGoal:"你想去的方向",
+      tune:"调整", energy:"能量", quiet:"安静", highkey:"高能量",
+      closeness:"亲近感", useful:"对读者有用", diaryClose:"日记般亲密",
+      structure:"结构", offcuff:"随性", structured:"有条理",
+      ownWords:"你自己的词", ownWordsSub:"滑杆说不出的特质，融入声音里",
+      traitPh:"一个特质，比如坦率或挑剔", feed:"喂入", suggLbl:"建议词，点击填入输入框",
+      elseLbl:"还有什么定义你", elseSub:"用你自己的话，直接喂给系统",
+      elsePh:"上面没有覆盖到的",
+      hearIt:"听听看", voiceCheck:"声音测试 · 示例内容，不是你的笔记",
+      voiceCheckLive:"实时声音测试 · 根据你的调整生成",
+      exTopic:"示例主题：", exName:"一家新面包店",
+      exCap:"用示例主题试听声音，不会碰你的笔记",
+      shapeCap:"确认之前不会有任何改变。social-self 决定每篇笔记的写法。",
+      useSelf:"使用这个 social-self", saveChanges:"保存修改",
+      composeHead:"新笔记", tapReshape:"点击重新塑造",
+      composeQ:"今天想写什么？",
+      ideaPh:"输入、粘贴或拖入：一个想法、链接、照片、文字记录。",
+      contentLang:"内容语言", bilingual:"双语", generate:"生成 3 篇笔记",
+      warm1:"继续：日本抹茶系列 第 2 篇", recipeWord:"配方", warm2:"· 热门：京都秋天", warm3:"继续周二存的草稿",
+      gateHead:"保存你的 social-self，继续进入 Studio",
+      gatePrevLbl:"你生成的三篇笔记之一",
+      gLock1t:"测评", gLock2t:"日记", gLockD:"注册后解锁", gLockD2:"注册后解锁",
+      gateHead2:"创建免费账户",
+      gateSub:"创建免费账户，保存这个 social-self，查看全部三个内容方向，并随时回来继续创作。",
+      drafts3:"3 篇草稿", studioSub:"同一个想法的三种写法",
+      editHint:"点击任意标题、正文或标签即可编辑",
+      pagePrev:"你的小红书主页预览", pagePrevSub:"你的小红书主页，这篇笔记已放入其中",
+      shotBtn:"上传你的小红书主页截图来模拟",
+      refine:"润色：", tone:"语气", wordchoice:"用词", attitude:"态度", shorter:"更短",
+      refPh:"或告诉它要改什么，比如加上价格", apply:"应用",
+      teachPre:"让", teachPost:"从我的修改中学习",
+      recipeWord2:"配方", bestTimeDefault:"生成后这里会显示最佳发布时间",
+      download:"下载", copyClip:"复制到剪贴板",
+      boxTitle:"草稿箱",
+      trayStudio:"Nomi 里所有未发布的笔记，按你的小红书主页的样子展示。点击卡片放入或移出预览，拖动已放入的卡片调整顺序。当前草稿已高亮。",
+      trayBrowse:"Nomi 里所有未发布的笔记，按你的小红书主页的样子展示。这里只是草稿预览；进入工作室来编排它们。",
+      trayAdd:"添加到主页预览", trayClose:"关闭",
+      nylaTitle:"Nomi 支持一个 social-self",
+      nylaCopy:"这个 social-self 由你持续塑造。当你需要更多，一个工作的声音、一个日记的声音、一个测评的声音，那就是 Nyla：你需要的每个 social-self，都在一个地方管理。",
+      nylaJoin:"加入 Nyla 等候名单", notYet:"暂时不用",
+      wlDoneTitle:"恭喜——你已加入 Nyla 等候名单",
+      wlDoneCopy:"Nyla 是 Nomi 之后的下一步：你需要的每个 social-self——工作的声音、日记的声音、测评的声音——都在一个地方管理。开放时我们会邮件通知你。随时可通过邮件退订。",
+      wlOk:"完成", wlEmailPh:"you@example.com",
+      signinTitle:"登录 Nomi", signinSub:"找回你保存的 social-self 和草稿。",
+      registerTitle:"创建 Nomi 账户", registerSub:"你的 social-self 和草稿都会保存在这里。",
+      writing:"正在以你的 social-self 写作",
+      footNote:"Nomi 测试版 · 独立创作者工具。界面语言与内容语言相互独立。",
+      aGoogle:"使用 Google 继续", aApple:"使用 Apple 继续", aEmail:"使用邮箱继续",
+      aEmailPh:"you@example.com", aSend:"发送验证码", aCodePh:"6 位验证码", aVerify:"验证并继续",
+      aCodeSent:"验证码已发送。测试版中也会显示在服务器控制台。",
+      tRenamed:"已重命名为", tLook:"形象已保存 · 最终配色待定",
+      tFedTrait:"已喂入声音：", tFedElse:"已喂给系统：", tCat:"已添加分类：",
+      tShots:"正在读取截图…", tShotText:"已提取文字并加入种子", tShotNoText:"截图已添加（未识别出文字）",
+      tSeedSaved:"种子已保存", tDone:"已保存到种子",
+      tSelfSaved:"social-self 已保存", tShelfSaved:"已放到你的书架上",
+      tKept:"已保留：这是选择，不是训练数据", tCover:"封面已添加，去主页预览看看",
+      tCopied:"已复制到剪贴板，去小红书粘贴吧", tCopyFail:"剪贴板被拦截，请手动选择文字复制",
+      tDl:"已下载 nomi-note.txt", tDlFail:"下载被拦截，请使用复制",
+      tShotSim:"正在读取你的主页布局…", tShotSimDone:"已在下方模拟你的主页布局", tShotSimFail:"无法读取布局，改用截图叠加模式",
+      tOffline:"网络连接不稳定，正在显示示例内容。请检查网络后重试。",
+      tRefining:"正在润色这篇草稿…", tRefined:"草稿已润色", tNeedGen:"先写下想法，再点生成 3 篇笔记",
+      tEdited:"修改已保存", tTaught:"已学习：之后的草稿会体现这一点",
+      tSignedIn:"登录成功", tRegistered:"账户已创建。你的 social-self、想法和草稿都保留了。",
+      tSignedOut:"已退出登录",
+      tAuthErr:"验证失败，请检查验证码", tUndo:"已撤销", tNothingUndo:"没有可撤销的操作",
+      loadGen:"正在以你的 social-self 写三篇笔记", loadAuth:"请稍候",
+      gTimePre:"配方 · 建议发布时间",
+    }
+  };
+  var S = {
+    lang:"en", contentLang:"en",
+    signedIn:false, token:null, identity:null, experience:null,
+    hasSelf:false, generated:false,
+    projects:[], cur:-1,
+    learned:[], ownShotText:"", admShotText:"",
+    pageSim:null, teach:false,
+    googleClientId:null, emailDelivery:"console",
+  };
+  // Category pills: canonical English values (sent to the backend), localized labels.
+  var CATL = {
+    "food":{en:"food",zh:"美食"},"travel":{en:"travel",zh:"旅行"},"beauty":{en:"beauty",zh:"美妆"},
+    "fashion":{en:"fashion",zh:"穿搭"},"home":{en:"home",zh:"家居"},"career":{en:"career",zh:"职场"},
+    "wellness":{en:"wellness",zh:"健康"},"tech":{en:"tech",zh:"数码"},
+    "slow living":{en:"slow living",zh:"慢生活"},"food guides":{en:"food guides",zh:"美食攻略"},
+    "city travel":{en:"city travel",zh:"城市旅行"},"honest reviews":{en:"honest reviews",zh:"真实测评"},
+    "diary":{en:"diary",zh:"日记"},"tutorials":{en:"tutorials",zh:"教程"},"style":{en:"style",zh:"风格穿搭"},
+  };
+  function catLabel(key){ var m=CATL[key]; return m ? (m[S.lang]||m.en) : key; }
+  function t(k){ return (I18N[S.lang] && I18N[S.lang][k]) || I18N.en[k] || k; }
+  function applyLang(){
+    document.querySelectorAll("[data-i]").forEach(function(el){ el.textContent = t(el.dataset.i); });
+    document.querySelectorAll("[data-ip]").forEach(function(el){ el.placeholder = t(el.dataset.ip); });
+    document.getElementById("lang-zh").classList.toggle("on", S.lang==="zh");
+    document.getElementById("lang-en").classList.toggle("on", S.lang==="en");
+    document.documentElement.lang = S.lang==="zh" ? "zh-CN" : "en";
+    document.querySelectorAll(".parch[data-cat]").forEach(function(b){ b.textContent=catLabel(b.dataset.cat); });
+    renderAuthBoxes();
+    trayButtons();
+    updateSaveLabel();
+    setName(currentName());
+    pLast="";pRenderLocal();
+  }
+  document.getElementById("lang-zh").addEventListener("click",function(){S.lang="zh";applyLang();});
+  document.getElementById("lang-en").addEventListener("click",function(){S.lang="en";applyLang();});
+
+  /* ---------------- toast / load / nav ---------------- */
+  var toastT=null;
+  function toast(msg){
+    var el=document.getElementById("ptoast");
+    el.textContent=msg; el.classList.add("show");
+    clearTimeout(toastT); toastT=setTimeout(function(){el.classList.remove("show")},2600);
+  }
+  function loading(on,msgKey){
+    var l=document.getElementById("pload");
+    document.getElementById("p-loadmsg").textContent=t(msgKey||"writing");
+    l.classList.toggle("show",!!on);
+  }
+  // Downscale big uploads client-side so every image fits the API body limits
+  // while staying visually sharp.
+  function shrink(dataUrl,maxW,cb){
+    var img=new Image();
+    img.onload=function(){
+      var w=img.naturalWidth,h=img.naturalHeight;
+      if(w<=maxW){cb(dataUrl);return;}
+      var s=maxW/w,cv=document.createElement("canvas");
+      cv.width=Math.round(w*s);cv.height=Math.round(h*s);
+      cv.getContext("2d").drawImage(img,0,0,cv.width,cv.height);
+      cb(cv.toDataURL("image/jpeg",0.85));
+    };
+    img.onerror=function(){cb(dataUrl)};
+    img.src=dataUrl;
+  }
+  function pGoDirect(id){
+    document.querySelectorAll(".pscr").forEach(function(s){s.classList.remove("on")});
+    document.getElementById(id).classList.add("on");
+    var hi = id==="p-studio" ? "p-projects" : id;
+    document.querySelectorAll(".pstep").forEach(function(s){s.classList.toggle("on",s.dataset.go===hi)});
+    if(id==="p-self") renderSelf();
+    if(id==="p-projects") renderProjects();
+  }
+  function pGo(id){
+    if(id==="p-studio" && !S.signedIn){
+      if(S.generated){ renderGate(); id="r-gate"; } else { toast(t("tNeedGen")); id="p-compose"; }
+    }
+    pGoDirect(id);
+  }
+  document.querySelectorAll("[data-go]").forEach(function(b){
+    b.addEventListener("click",function(){pGo(b.dataset.go)});
+  });
+  document.getElementById("chrome-shelf").addEventListener("click",function(){pGoDirect("p-self")});
+
+  /* ---------------- welcome ---------------- */
+  document.querySelectorAll(".wchoice").forEach(function(c){
+    c.addEventListener("click",function(){
+      S.experience=c.dataset.exp;
+      pGoDirect("p-self");
+    });
+  });
+  document.getElementById("w-signin").addEventListener("click",function(){ openAuth("signin"); });
+  document.getElementById("w-register").addEventListener("click",function(){ openAuth("register"); });
+
+  /* ---------------- auth ---------------- */
+  var authMode="signin";
+  function authBoxHTML(ctx){
+    return '<div style="display:flex;flex-direction:column;gap:10px">' +
+      '<button class="abtn" data-oauth="google" data-ctx="'+ctx+'">'+t("aGoogle")+'</button>' +
+      '<div class="adiv">'+t("aEmail")+'</div>' +
+      '<input class="ain" type="email" id="'+ctx+'-email" placeholder="'+t("aEmailPh")+'" aria-label="Email">' +
+      '<button class="abtn" data-sendcode="'+ctx+'">'+t("aSend")+'</button>' +
+      '<div id="'+ctx+'-codewrap" style="display:none;flex-direction:column;gap:10px">' +
+        '<input class="ain" id="'+ctx+'-code" inputmode="numeric" placeholder="'+t("aCodePh")+'" aria-label="Verification code">' +
+        '<button class="pbtn" data-verify="'+ctx+'">'+t("aVerify")+'</button>' +
+      '</div>' +
+      '<div class="amsg" id="'+ctx+'-msg"></div>' +
+    '</div>';
+  }
+  function renderAuthBoxes(){
+    document.getElementById("a-host").innerHTML=authBoxHTML("m");
+    document.getElementById("g-auth").innerHTML=authBoxHTML("g");
+    wireAuth();
+  }
+  function guestState(){
+    syncProject();
+    return {
+      self: collectSelf(),
+      contentLang: S.contentLang,
+      redNoteExperience: S.experience,
+      projects: S.projects,
+      pageSim: { cells: S.pageSim ? S.pageSim.cells : null },
+    };
+  }
+  function finishAuth(ctx, session){
+    S.signedIn=true; S.token=session.token; S.identity=session.identity;
+    try{localStorage.setItem("nomiToken",session.token);localStorage.setItem("nomiIdentity",session.identity||"");}catch(e){}
+    document.getElementById("a-modal").classList.remove("show");
+    if(ctx==="g"){
+      S.hasSelf=true;
+      toast(t("tRegistered")); drawDrafts(); pGoDirect("p-studio");
+      saveState();
+    } else {
+      loadState().then(function(){
+        toast(authMode==="register"?t("tRegistered"):t("tSignedIn"));
+        pGoDirect("p-self");
+      });
+    }
+    updateSaveLabel();
+  }
+  function loadState(){
+    return fetch(API+"/api/state",{headers:{Authorization:"Bearer "+S.token}})
+      .then(function(r){return r.json()})
+      .then(function(d){
+        if(!d.ok) return;
+        if(d.state && d.state.self){
+          S.hasSelf=true;
+          applySelfToControls(d.state.self);
+          if(d.state.contentLang) setContentLang(d.state.contentLang);
+        }
+        // Compose is always a fresh start for a returning user.
+        document.getElementById("p-idea").value="";
+        if(Array.isArray(d.projects) && d.projects.length){
+          S.projects=d.projects; S.generated=true;
+          S.cur=0; loadProject(0);
+        }
+        if(d.state && d.state.pageSim && d.state.pageSim.cells && d.state.pageSim.cells.length){
+          S.pageSim={cells:d.state.pageSim.cells};
+          feedRender();
+        }
+      }).catch(function(){});
+  }
+  function applySelfToControls(self){
+    if(!self) return;
+    if(self.name) setName(self.name);
+    if(typeof self.look==="number" && HUES[self.look]!==undefined){
+      appliedHue=self.look; pendingHue=self.look;
+      curHueF=HUES[appliedHue]==="none"?"":HUES[appliedHue];
+      markSwatch(appliedHue); applyOrbPreview(appliedHue);
+    }
+    if(typeof self.energy==="number") pe.value=self.energy;
+    if(typeof self.closeness==="number") pi.value=self.closeness;
+    if(typeof self.structure==="number") pp.value=self.structure;
+    if(Array.isArray(self.traits)&&self.traits.length) customs=self.traits.slice();
+    if(Array.isArray(self.freeform)) freeform=self.freeform.slice();
+    if(Array.isArray(self.learned)) S.learned=self.learned.slice();
+    if(self.seedText) document.getElementById("p-seedtext").value=String(self.seedText).slice(0,1500);
+    if(self.inspirationText) document.getElementById("p-admtext").value=String(self.inspirationText).slice(0,1200);
+    chipDesc(); pLast=""; pRenderLocal();
+  }
+  var saveTimer=null;
+  // Serverless request bodies cap at ~4.5MB; covers are dataURLs and can blow
+  // past it. Slim a COPY of the payload progressively (never the live state)
+  // until it fits, and treat non-2xx responses as failures.
+  function slimPayload(payload){
+    var s=JSON.stringify(payload);
+    if(s.length<3800000) return s;
+    var p=JSON.parse(s);
+    (p.projects||[]).forEach(function(pr,ix){ if(ix>0&&pr.covers) pr.covers=pr.covers.map(function(){return null}); });
+    s=JSON.stringify(p);
+    if(s.length<3800000) return s;
+    (p.projects||[]).forEach(function(pr){ if(pr.covers) pr.covers=pr.covers.map(function(){return null}); });
+    s=JSON.stringify(p);
+    if(s.length<3800000) return s;
+    if(p.pageSim&&p.pageSim.cells) p.pageSim.cells=p.pageSim.cells.map(function(c){return {title:c.title,img:null}});
+    return JSON.stringify(p);
+  }
+  function doSaveNow(){
+    if(!S.signedIn) return Promise.resolve(false);
+    clearTimeout(saveTimer);
+    return fetch(API+"/api/state/save",{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+S.token},
+      body:slimPayload(guestState()),keepalive:true})
+      .then(function(r){return !!r.ok})
+      .catch(function(){return false});
+  }
+  function saveState(){
+    if(!S.signedIn) return;
+    clearTimeout(saveTimer);
+    saveTimer=setTimeout(doSaveNow,800);
+  }
+  // Flush any pending save when the tab is closed or backgrounded so nothing
+  // typed in the last moments is lost.
+  window.addEventListener("pagehide",function(){ doSaveNow(); });
+  document.addEventListener("visibilitychange",function(){ if(document.visibilityState==="hidden") doSaveNow(); });
+  // Sign-in restores the account's saved state; only registration (the gate,
+  // or "create an account") migrates the guest's work. Sending guest state on
+  // a plain sign-in would overwrite the saved self with a blank one.
+  function migrationState(ctx){
+    return (ctx==="g"||authMode==="register") ? guestState() : undefined;
+  }
+  // Real Google OAuth: the button opens Google's account chooser in a popup;
+  // the server-side callback posts the session back and the popup closes.
+  // Guest work is migrated right after via the normal state-save path.
+  window.addEventListener("message",function(e){
+    if(e.origin!==location.origin || !e.data) return;
+    if(e.data.type==="nomi-gauth" && e.data.token){
+      finishAuth(e.data.ctx==="g"?"g":"m",{token:e.data.token,identity:e.data.identity});
+    } else if(e.data.type==="nomi-gauth-error"){
+      toast(t("tAuthErr")+" ("+(e.data.error||"google")+")");
+    }
+  });
+  function wireAuth(){
+    document.querySelectorAll("[data-oauth]").forEach(function(b){
+      b.onclick=function(){
+        var ctx=b.dataset.ctx;
+        var startUrl=API+"/auth/google/start?ctx="+ctx;
+        var pop=window.open(startUrl,"nomiGoogle","width=480,height=640,menubar=no,toolbar=no");
+        if(!pop){ location.href=startUrl; } // popup blocked: full-page fallback
+      };
+    });
+    document.querySelectorAll("[data-sendcode]").forEach(function(b){
+      b.onclick=function(){
+        var ctx=b.dataset.sendcode;
+        var email=document.getElementById(ctx+"-email").value.trim();
+        if(!email) return;
+        fetch(API+"/api/auth/email/start",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:email})})
+          .then(function(r){return r.json()})
+          .then(function(d){
+            if(d.ok){
+              document.getElementById(ctx+"-codewrap").style.display="flex";
+              var msg=document.getElementById(ctx+"-msg");
+              if(d.delivered){ msg.textContent=t("aCodeSentReal"); }
+              else if(d.devCode){ msg.innerHTML=""; msg.appendChild(document.createTextNode(t("aCodeBeta")+" ")); var b2=document.createElement("b"); b2.style.fontSize="15px"; b2.textContent=d.devCode; msg.appendChild(b2); }
+              else { msg.textContent=t("aCodeSent"); }
+            } else toast(t("tAuthErr"));
+          })
+          .catch(function(){ toast(t("tOffline")); });
+      };
+    });
+    document.querySelectorAll("[data-verify]").forEach(function(b){
+      b.onclick=function(){
+        var ctx=b.dataset.verify;
+        var email=document.getElementById(ctx+"-email").value.trim();
+        var code=document.getElementById(ctx+"-code").value.trim();
+        loading(true,"loadAuth");
+        fetch(API+"/api/auth/email/verify",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:email,code:code,guestState:migrationState(ctx)})})
+          .then(function(r){return r.json()})
+          .then(function(d){ loading(false); if(d.ok) finishAuth(ctx,d.session); else toast(t("tAuthErr")); })
+          .catch(function(){ loading(false); toast(t("tOffline")); });
+      };
+    });
+  }
+  function openAuth(mode){
+    authMode=mode;
+    document.getElementById("a-title").textContent=t(mode==="register"?"registerTitle":"signinTitle");
+    document.getElementById("a-sub").textContent=t(mode==="register"?"registerSub":"signinSub");
+    document.getElementById("a-modal").classList.add("show");
+  }
+  document.getElementById("a-cancel").addEventListener("click",function(){document.getElementById("a-modal").classList.remove("show")});
+  document.getElementById("a-modal").addEventListener("click",function(e){if(e.target===this)this.classList.remove("show")});
+  document.getElementById("p-signout").addEventListener("click",function(){
+    // Clear ALL account-scoped state so the next user of this browser starts
+    // clean and nothing migrates across accounts.
+    if(S.token)fetch(API+"/api/auth/signout",{method:"POST",headers:{Authorization:"Bearer "+S.token}}).catch(function(){});
+    try{localStorage.removeItem("nomiToken");localStorage.removeItem("nomiIdentity");}catch(e){}
+    S.signedIn=false;S.token=null;S.identity=null;
+    S.projects=[];S.cur=-1;S.pageSim=null;pageShot=null;
+    S.hasSelf=false;S.generated=false;S.learned=[];
+    S.ownShotText="";S.admShotText="";
+    pstate=[];ordList=[0];psel=0;
+    undoStudioStack.length=0;undoComposeStack.length=0;
+    document.getElementById("p-idea").value="";
+    updateSaveLabel();
+    toast(t("tSignedOut"));
+    pGoDirect("w-welcome");
+    document.querySelectorAll(".pstep").forEach(function(s){s.classList.remove("on")});
+  });
+
+  /* ---------------- self screen + projects ---------------- */
+  function currentName(){ return nameEl.textContent; }
+  function renderSelf(){
+    document.getElementById("self-empty").style.display = S.hasSelf ? "none" : "flex";
+    document.getElementById("self-full").style.display = S.hasSelf ? "flex" : "none";
+    document.getElementById("p-signout").style.display = S.signedIn ? "" : "none";
+    var host=document.getElementById("p-recentlist");
+    host.innerHTML="";
+    if(S.projects.length){
+      S.projects.slice(0,4).forEach(function(p,ix){
+        var b=document.createElement("button");
+        b.className="ri2";b.textContent=p.name||("project "+(ix+1));
+        b.addEventListener("click",function(){openProject(ix)});
+        host.appendChild(b);
+      });
+    } else {
+      var d=document.createElement("div");
+      d.className="noyet";d.textContent=t("noNotesYet");
+      host.appendChild(d);
+    }
+  }
+  document.getElementById("self-create").addEventListener("click",function(){pGoDirect("p-shape")});
+
+  function renderProjects(){
+    var host=document.getElementById("p-projlist");
+    host.innerHTML="";
+    var nw=document.createElement("button");
+    nw.className="projrow newproj";nw.textContent=t("projNew");
+    nw.addEventListener("click",function(){
+      document.getElementById("p-idea").value="";
+      pGoDirect("p-compose");
+    });
+    host.appendChild(nw);
+    S.projects.forEach(function(p,ix){
+      var row=document.createElement("div");
+      row.className="projrow";
+      row.setAttribute("role","button");row.tabIndex=0;
+      var nm=document.createElement("span");
+      nm.className="pjname";nm.textContent=p.name||("project "+(ix+1));
+      nm.contentEditable="true";nm.spellcheck=false;
+      nm.setAttribute("aria-label","Project name, editable");
+      nm.addEventListener("click",function(e){e.stopPropagation()});
+      nm.addEventListener("keydown",function(e){e.stopPropagation();if(e.key==="Enter"){e.preventDefault();nm.blur();}});
+      nm.addEventListener("blur",function(){
+        var v=nm.innerText.replace(/\n+/g," ").trim().slice(0,60);
+        if(v && v!==p.name){ p.name=v; toast(t("tProjRenamed")); renderSelf(); saveState(); }
+        nm.innerText=p.name||"";
+      });
+      var meta=document.createElement("span");
+      meta.className="pjmeta";
+      meta.textContent=t("projDraftsMeta")+(p.createdAt?(" · "+String(p.createdAt).slice(0,10)):"");
+      var open=document.createElement("span");
+      open.className="pjopen";open.textContent=t("projOpen");
+      row.appendChild(nm);row.appendChild(meta);row.appendChild(open);
+      function go(){openProject(ix)}
+      row.addEventListener("click",go);
+      row.addEventListener("keydown",function(e){if(e.key==="Enter"&&!e.target.isContentEditable)go()});
+      host.appendChild(row);
+    });
+  }
+  function openProject(ix){
+    if(!S.projects[ix])return;
+    S.cur=ix;
+    loadProject(ix);
+    pGo("p-studio");
+  }
+  var nameIn=document.getElementById("p-namein"),nameEl=document.querySelector(".pnamerow .pnm");
+  // Tapping the social-self's picture or name opens the project list.
+  document.querySelector("#self-full .pavwrap .orbav").addEventListener("click",function(){pGoDirect("p-projects")});
+  nameEl.addEventListener("click",function(){ if(!nameIn.classList.contains("show")) pGoDirect("p-projects"); });
+  function setName(n){document.querySelectorAll(".rn").forEach(function(el){el.textContent=n})}
+  document.getElementById("p-rename").addEventListener("click",function(){
+    if(nameIn.classList.contains("show")){commitName();return;}
+    nameIn.value=nameEl.textContent;
+    nameEl.classList.add("hide");nameIn.classList.add("show");
+    try{nameIn.focus({preventScroll:true})}catch(e){nameIn.focus()}
+    this.textContent=t("confirm");
+  });
+  function commitName(){
+    var v=nameIn.value.trim()||nameEl.textContent;
+    nameIn.classList.remove("show");nameEl.classList.remove("hide");
+    document.getElementById("p-rename").textContent=t("rename");
+    setName(v);toast(t("tRenamed")+" "+v);saveState();
+  }
+  nameIn.addEventListener("keydown",function(e){if(e.key==="Enter")commitName()});
+  nameIn.addEventListener("blur",commitName);
+
+  var HUES=["none","hue-rotate(60deg)","hue-rotate(130deg)","hue-rotate(200deg)","hue-rotate(280deg)"];
+  var appliedHue=0,pendingHue=0,curHueF="";
+  var lookPanel=document.getElementById("p-swatches");
+  function markSwatch(n){document.querySelectorAll("#p-swatches .pswatches button").forEach(function(o,ix){o.classList.toggle("on",ix===n)})}
+  function applyOrbPreview(n){var f=HUES[n]==="none"?"":HUES[n];document.querySelectorAll(".orbav").forEach(function(el){el.style.filter=f})}
+  document.getElementById("p-look").addEventListener("click",function(){
+    if(lookPanel.hidden){pendingHue=appliedHue;markSwatch(pendingHue);lookPanel.hidden=false;}
+    else{applyOrbPreview(appliedHue);lookPanel.hidden=true;}
+  });
+  document.querySelectorAll("#p-swatches .pswatches button").forEach(function(bt){
+    bt.addEventListener("click",function(){pendingHue=+bt.dataset.hue;markSwatch(pendingHue);applyOrbPreview(pendingHue);});
+  });
+  document.getElementById("p-lookcancel").addEventListener("click",function(){applyOrbPreview(appliedHue);lookPanel.hidden=true;});
+  document.getElementById("p-lookok").addEventListener("click",function(){
+    appliedHue=pendingHue;curHueF=HUES[appliedHue]==="none"?"":HUES[appliedHue];
+    applyOrbPreview(appliedHue);feedRender();lookPanel.hidden=true;toast(t("tLook"));saveState();
+  });
+  document.getElementById("p-writebtn").addEventListener("click",function(){
+    document.getElementById("p-idea").value="";
+    pGoDirect("p-compose");
+  });
+  document.getElementById("p-reshape").addEventListener("click",function(){pGoDirect("p-shape")});
+
+  /* ---------------- Nyla waitlist ---------------- */
+  var modal=document.getElementById("pmodal");
+  var lock=document.getElementById("plock");
+  function openModal(){
+    document.getElementById("wl-ask").classList.add("on");
+    document.getElementById("wl-done").classList.remove("on");
+    document.getElementById("wl-email").style.display="none";
+    modal.classList.add("show");
+  }
+  lock.addEventListener("click",openModal);
+  lock.addEventListener("keydown",function(e){if(e.key==="Enter"||e.key===" "){e.preventDefault();openModal()}});
+  document.getElementById("p-close").addEventListener("click",function(){modal.classList.remove("show")});
+  function submitWaitlist(){
+    var emailInput=document.getElementById("wl-email");
+    var email=S.signedIn && /@/.test(S.identity||"") ? S.identity : emailInput.value.trim();
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)){
+      emailInput.style.display="block";
+      try{emailInput.focus({preventScroll:true})}catch(e){emailInput.focus()}
+      return;
+    }
+    fetch(API+"/api/waitlist",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:email,source:"nomi-mvp"})})
+      .then(function(r){return r.json()})
+      .then(function(d){
+        if(d.ok){
+          document.getElementById("wl-ask").classList.remove("on");
+          document.getElementById("wl-done").classList.add("on");
+        } else toast(t("tAuthErr"));
+      })
+      .catch(function(){toast(t("tOffline"))});
+  }
+  document.getElementById("p-waitlist").addEventListener("click",submitWaitlist);
+  document.getElementById("wl-email").addEventListener("keydown",function(e){if(e.key==="Enter")submitWaitlist()});
+  document.getElementById("wl-ok").addEventListener("click",function(){modal.classList.remove("show")});
+  modal.addEventListener("click",function(e){if(e.target===modal)modal.classList.remove("show")});
+
+  /* ---------------- shape ---------------- */
+  document.querySelectorAll(".pseedtab").forEach(function(tb){
+    tb.addEventListener("click",function(){
+      document.querySelectorAll(".pseedtab").forEach(function(o){o.classList.remove("on")});
+      tb.classList.add("on");
+      ["own","adm"].forEach(function(k){document.getElementById("pseed-"+k).hidden=(k!==tb.dataset.seed)});
+    });
+  });
+  function wireCatPill(a,removable){
+    a.setAttribute("aria-pressed",a.classList.contains("on")?"true":"false");
+    a.addEventListener("click",function(){
+      pushShapeUndo();
+      var on=a.classList.toggle("on");
+      a.setAttribute("aria-pressed",on?"true":"false");
+      voicecheckLive();
+    });
+    if(removable){
+      var x=document.createElement("span");x.className="rmx";x.textContent="×";
+      x.setAttribute("aria-label","Remove category");
+      x.addEventListener("click",function(e){e.stopPropagation();pushShapeUndo();a.remove();});
+      a.appendChild(x);
+    }
+  }
+  document.querySelectorAll(".parch:not(.addpill)").forEach(function(a){wireCatPill(a,false)});
+  document.querySelectorAll("[data-addcat]").forEach(function(ap){
+    ap.addEventListener("click",function(){
+      if(ap.querySelector("input"))return;
+      var lbl=ap.textContent;ap.textContent="";ap.classList.add("editing");
+      var inp=document.createElement("input");
+      inp.className="catin";inp.placeholder="…";inp.setAttribute("aria-label","New category");
+      ap.appendChild(inp);
+      try{inp.focus({preventScroll:true})}catch(e){inp.focus()}
+      var done=false;
+      function commit(){
+        if(done)return;done=true;
+        var v=inp.value.trim();
+        ap.textContent=lbl;ap.classList.remove("editing");
+        if(v){
+          pushShapeUndo();
+          var nb=document.createElement("button");
+          nb.className="parch on";nb.textContent=v;
+          ap.parentNode.insertBefore(nb,ap);
+          wireCatPill(nb,true);
+          toast(t("tCat")+" "+v);
+          voicecheckLive();
+        }
+      }
+      inp.addEventListener("keydown",function(e){
+        e.stopPropagation();
+        if(e.key==="Enter"){e.preventDefault();commit();}
+        if(e.key==="Escape"){done=true;ap.textContent=lbl;ap.classList.remove("editing");}
+      });
+      inp.addEventListener("blur",commit);
+      inp.addEventListener("click",function(e){e.stopPropagation()});
+    });
+  });
+  document.getElementById("p-seedsave").addEventListener("click",function(){toast(t("tSeedSaved"));saveState();voicecheckLive();});
+  ["p-seedtext","p-admtext"].forEach(function(id){
+    document.getElementById(id).addEventListener("blur",function(){voicecheckLive()});
+  });
+
+  var customs=["warm","honest"];
+  var freeform=[];
+  var pe=document.getElementById("p-e"),pi=document.getElementById("p-i"),pp=document.getElementById("p-p");
+  function bk(x){return +x.value>=50?"1":"0"}
+  function chipDesc(){
+    var base=[bk(pe)==="1"?"high energy":"quiet",bk(pi)==="1"?"diary close":"useful",bk(pp)==="1"?"structured":"off the cuff"];
+    var d=customs.concat(base).slice(0,3).join(" · ");
+    var el=document.getElementById("p-chipdesc");
+    if(el)el.textContent=d;
+  }
+  document.querySelectorAll("#p-sugg button").forEach(function(s){
+    s.addEventListener("click",function(){
+      var inp=document.getElementById("p-trait");
+      inp.value=s.textContent;
+      try{inp.focus({preventScroll:true})}catch(e){inp.focus()}
+    });
+  });
+  document.getElementById("p-traitb").addEventListener("click",function(){
+    var inp=document.getElementById("p-trait"),v=inp.value.trim();
+    if(!v)return;
+    pushShapeUndo();
+    if(customs.indexOf(v)<0)customs.push(v);
+    inp.value="";chipDesc();
+    toast(t("tFedTrait")+" "+v);
+    voicecheckLive();
+  });
+  document.getElementById("p-idset").addEventListener("click",function(){
+    var inp=document.getElementById("p-idline"),v=inp.value.trim();
+    if(!v)return;
+    pushShapeUndo();
+    freeform.push(v);
+    toast(t("tFedElse")+" "+v.slice(0,40));
+    inp.value="";
+    voicecheckLive();
+  });
+  document.getElementById("p-idline").addEventListener("keydown",function(e){if(e.key==="Enter")document.getElementById("p-idset").click()});
+
+  var shotCount={own:0,adm:0},shotTarget="own";
+  var seedFile=document.createElement("input");
+  seedFile.type="file";seedFile.accept="image/*";seedFile.multiple=true;seedFile.hidden=true;
+  document.body.appendChild(seedFile);
+  document.querySelectorAll("[data-shots]").forEach(function(bt){
+    bt.addEventListener("click",function(){shotTarget=bt.dataset.shots;seedFile.click()});
+  });
+  seedFile.addEventListener("change",function(e){
+    var files=Array.prototype.slice.call(e.target.files||[]);
+    if(!files.length)return;
+    toast(t("tShots"));
+    files.slice(0,4).forEach(function(f){
+      shotCount[shotTarget]++;
+      var label=(shotTarget==="own"?"screenshot ":"inspiration ")+shotCount[shotTarget];
+      var c=document.createElement("span");c.className="seedchip";c.textContent=label;
+      c.addEventListener("click",function(){c.remove()});
+      document.getElementById(shotTarget==="own"?"p-ownshots":"p-admshots").appendChild(c);
+      var target=shotTarget;
+      var r=new FileReader();
+      r.onload=function(){ shrink(r.result,1800,function(smImg){
+        fetch(API+"/api/vision/text",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({image:smImg})})
+          .then(function(x){return x.json()})
+          .then(function(d){
+            if(d.text){
+              if(target==="own") S.ownShotText+="\n"+d.text; else S.admShotText+="\n"+d.text;
+              c.textContent=label+" ✓";
+              toast(t("tShotText"));
+              voicecheckLive();
+            } else { toast(t("tShotNoText")); }
+          })
+          .catch(function(){});
+      }); };
+      r.readAsDataURL(f);
+    });
+    e.target.value="";
+  });
+
+  var EXAMPLES={
+    en:{
+      titles:{"00":"a quiet bakery note","01":"the bakery list, kept short","10":"drop everything, new bakery","11":"3 things to order at this bakery"},
+      bodies:{
+        "000":"found a small bakery on a side street.\nthe morning loaf, still warm. the coffee, honest.\nkeeping this one for slow days.",
+        "001":"the short version:\n1. go before 9\n2. order the morning loaf\n3. skip the pastry case, take the plain one\nsave for your next slow morning.",
+        "010":"wandered in by accident and stayed an hour.\nwarm bread, a corner seat, nowhere to be.\nthe kind of morning I keep trying to build.",
+        "011":"my bakery morning, in order:\n8am, first batch out\nthe corner seat by the window\nthe loaf that made me text three people\nworth planning a morning around.",
+        "100":"ok everyone needs to hear about this bakery\nthe loaf comes out at 8 and it does not survive till 9\nI am not exaggerating, run",
+        "101":"the verdict is in:\n1. morning loaf, perfect\n2. sesame roll, strong second\n3. the famous croissant, skip it\nfight me in the comments",
+        "110":"this bakery broke me a little\nwarm bread at 8am and the owner remembered my order\nthis is my whole personality now",
+        "111":"tested the full pastry case so you do not have to:\n1. morning loaf, a ten\n2. sesame roll, a nine\n3. croissant, overhyped\nfull notes below, save this"},
+      tags:"#bakery #morningfind"
+    },
+    zh:{
+      titles:{"00":"记一家安静的面包店","01":"面包店清单，只说重点","10":"放下手机，新面包店","11":"这家面包店必点的3样"},
+      bodies:{
+        "000":"在小巷里发现一家面包店。\n早晨的吐司还是温的，咖啡也很实在。\n留给慢下来的日子。",
+        "001":"简短版：\n1. 9点前到\n2. 点晨间吐司\n3. 跳过甜品柜，选原味\n收藏起来，下个慢早晨用。",
+        "010":"偶然走进去，坐了一个小时。\n温热的面包，靠窗的角落，哪里都不用去。\n这就是我一直想要的早晨。",
+        "011":"我的面包店早晨，按顺序：\n8点，第一炉出炉\n靠窗的角落位\n让我发给三个朋友的那款吐司\n值得为它安排一个早晨。",
+        "100":"所有人都得知道这家面包店\n8点出炉的吐司撑不到9点\n真没夸张，快去",
+        "101":"结论来了：\n1. 晨间吐司，满分\n2. 芝麻卷，第二名\n3. 网红可颂，跳过\n不服评论区见",
+        "110":"这家面包店让我有点破防\n早上8点的热面包，老板还记得我常点的\n这就是我现在的全部人格",
+        "111":"替你们试完了整个甜品柜：\n1. 晨间吐司，10分\n2. 芝麻卷，9分\n3. 可颂，名不副实\n完整笔记在下面，先收藏"},
+      tags:"#面包店 #早晨的发现"
+    }
+  };
+  var pvt=document.getElementById("p-pvt"),pvb=document.getElementById("p-pvb");
+  var pLast="";
+  function pRenderLocal(){
+    var key=bk(pe)+bk(pi)+bk(pp);
+    chipDesc();
+    if(key===pLast)return;
+    pLast=key;
+    var EX=EXAMPLES[S.lang==="zh"?"zh":"en"];
+    pvt.style.opacity=0;pvb.style.opacity=0;
+    setTimeout(function(){
+      pvt.textContent=EX.titles[bk(pe)+bk(pp)];
+      pvb.textContent=EX.bodies[key];
+      document.getElementById("p-pvg").textContent=EX.tags;
+      document.getElementById("p-vclabel").textContent=t("voiceCheck");
+      pvt.style.opacity=1;pvb.style.opacity=1;
+    },140);
+  }
+  // Live voice check: the sliders give an instant local approximation, then the
+  // backend rewrites the example in the actual tuned voice so fed traits,
+  // freeform lines, and seed text audibly land.
+  var vcTimer=null,vcSeq=0;
+  function voicecheckLive(){
+    clearTimeout(vcTimer);
+    vcTimer=setTimeout(function(){
+      var seq=++vcSeq;
+      var prev=document.getElementById("p-preview");
+      prev.classList.add("updating");
+      fetch(API+"/api/voicecheck",{method:"POST",headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({self:collectSelf(),contentLang:S.lang==="zh"?"zh":S.contentLang})})
+        .then(function(r){return r.json()})
+        .then(function(d){
+          if(seq!==vcSeq)return;
+          prev.classList.remove("updating");
+          if(d.title||d.body){
+            pvt.textContent=d.title;
+            pvb.textContent=d.body;
+            if(d.tags&&d.tags.length)document.getElementById("p-pvg").textContent=d.tags.join(" ");
+            document.getElementById("p-vclabel").textContent=t("voiceCheckLive");
+          }
+        })
+        .catch(function(){ if(seq===vcSeq) prev.classList.remove("updating"); });
+    },700);
+  }
+  [pe,pi,pp].forEach(function(x){
+    x.addEventListener("input",pRenderLocal);
+    x.addEventListener("change",function(){pushShapeUndo();voicecheckLive();});
+  });
+
+  function selectedCats(id){
+    return Array.prototype.map.call(document.querySelectorAll("#"+id+" .parch.on:not(.addpill)"),function(b){
+      return b.dataset.cat || b.textContent.replace(/×$/,"").trim();
+    });
+  }
+  function collectSelf(){
+    return {
+      name:currentName(),
+      look:appliedHue,
+      energy:+pe.value, closeness:+pi.value, structure:+pp.value,
+      traits:customs.slice(),
+      freeform:freeform.slice(),
+      learned:S.learned.slice(),
+      categoriesNow:selectedCats("p-catsnow"),
+      categoriesGoal:selectedCats("p-catsgoal"),
+      seedText:(document.getElementById("p-seedtext").value+"\n"+S.ownShotText).trim().slice(0,2000),
+      inspirationText:(document.getElementById("p-admtext").value+"\n"+S.admShotText).trim().slice(0,1200),
+    };
+  }
+  function updateSaveLabel(){
+    document.getElementById("p-savelabel").textContent=(S.signedIn&&S.hasSelf)?t("saveChanges"):t("useSelf");
+  }
+  document.getElementById("p-save").addEventListener("click",function(){
+    var first=!S.hasSelf;
+    S.hasSelf=true;
+    saveState();
+    toast(first?(currentName()+" "+t("tShelfSaved")):t("tSelfSaved"));
+    pGoDirect("p-self");
+    updateSaveLabel();
+  });
+
+  /* ---------------- undo ---------------- */
+  var undoShapeStack=[],undoStudioStack=[],undoComposeStack=[];
+  function pushShapeUndo(){
+    undoShapeStack.push({e:pe.value,i:pi.value,p:pp.value,customs:customs.slice(),freeform:freeform.slice(),
+      own:document.getElementById("p-seedtext").value,adm:document.getElementById("p-admtext").value,
+      catsNow:selectedCats("p-catsnow"),catsGoal:selectedCats("p-catsgoal")});
+    if(undoShapeStack.length>25)undoShapeStack.shift();
+  }
+  function restoreCats(id,list){
+    document.querySelectorAll("#"+id+" .parch:not(.addpill)").forEach(function(b){
+      var name=b.dataset.cat || b.textContent.replace(/×$/,"").trim();
+      b.classList.toggle("on",list.indexOf(name)>=0);
+      b.setAttribute("aria-pressed",b.classList.contains("on")?"true":"false");
+    });
+  }
+  document.getElementById("undo-shape").addEventListener("click",function(){
+    var s=undoShapeStack.pop();
+    if(!s){toast(t("tNothingUndo"));return;}
+    pe.value=s.e;pi.value=s.i;pp.value=s.p;
+    customs=s.customs;freeform=s.freeform;
+    document.getElementById("p-seedtext").value=s.own;
+    document.getElementById("p-admtext").value=s.adm;
+    restoreCats("p-catsnow",s.catsNow);restoreCats("p-catsgoal",s.catsGoal);
+    pLast="";pRenderLocal();toast(t("tUndo"));
+  });
+  function pushStudioUndo(){
+    undoStudioStack.push({
+      drafts:JSON.parse(JSON.stringify(drafts())),
+      pstate:pstate.map(function(x){return{kept:x.kept,discarded:x.discarded,cover:x.cover}}),
+      ordList:ordList.slice(),psel:psel
+    });
+    if(undoStudioStack.length>25)undoStudioStack.shift();
+  }
+  document.getElementById("undo-studio").addEventListener("click",function(){
+    var s=undoStudioStack.pop();
+    if(!s){toast(t("tNothingUndo"));return;}
+    var p=curProject();
+    if(p)p.drafts=s.drafts;
+    pstate=s.pstate;ordList=s.ordList;psel=s.psel;
+    syncProject();
+    drawDrafts();toast(t("tUndo"));
+  });
+  document.getElementById("undo-compose").addEventListener("click",function(){
+    var s=undoComposeStack.pop();
+    if(s===undefined){toast(t("tNothingUndo"));return;}
+    document.getElementById("p-idea").value=s;toast(t("tUndo"));
+  });
+
+  /* ---------------- compose + generate ---------------- */
+  function setContentLang(cl){
+    S.contentLang=cl;
+    document.querySelectorAll("#p-clang button").forEach(function(o){o.classList.toggle("on",o.dataset.cl===cl)});
+  }
+  document.querySelectorAll("#p-clang button").forEach(function(b){
+    b.addEventListener("click",function(){setContentLang(b.dataset.cl)});
+  });
+  document.querySelectorAll(".pstart").forEach(function(s){
+    s.addEventListener("click",function(){
+      undoComposeStack.push(document.getElementById("p-idea").value);
+      document.getElementById("p-idea").value=s.dataset.fill;
+    });
+  });
+
+  // Attach images or files to the idea: images run through vision to extract
+  // their text; plain-text files are read directly. Everything lands in the
+  // idea box so it feeds the generation.
+  function appendIdea(txt){
+    var ta=document.getElementById("p-idea");
+    undoComposeStack.push(ta.value);
+    ta.value=(ta.value.trim()?ta.value.replace(/\s+$/,"")+"\n\n":"")+txt;
+  }
+  document.getElementById("p-attach").addEventListener("click",function(){document.getElementById("p-attfile").click()});
+  document.getElementById("p-attfile").addEventListener("change",function(e){
+    var files=Array.prototype.slice.call(e.target.files||[]).slice(0,5);
+    if(!files.length)return;
+    files.forEach(function(f){
+      var chip=document.createElement("span");
+      chip.className="attchip";chip.textContent="⏳ "+f.name.slice(0,26);
+      document.getElementById("p-attchips").appendChild(chip);
+      function chipOk(){chip.className="attchip done";chip.textContent="✓ "+f.name.slice(0,26);}
+      function chipErr(){chip.className="attchip err";chip.textContent="✕ "+f.name.slice(0,26);}
+      if(/^image\//.test(f.type)){
+        var r=new FileReader();
+        r.onload=function(){ shrink(r.result,1600,function(sm){
+          fetch(API+"/api/vision/text",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({image:sm})})
+            .then(function(x){return x.json()})
+            .then(function(d){
+              if(d.text){ appendIdea("["+f.name+"]\n"+d.text); chipOk(); toast(t("tAttImg")); }
+              else { chipErr(); toast(t("tAttNoText")); }
+            })
+            .catch(function(){ chipErr(); toast(t("tOffline")); });
+        }); };
+        r.readAsDataURL(f);
+      } else {
+        var r2=new FileReader();
+        r2.onload=function(){
+          appendIdea("["+f.name+"]\n"+String(r2.result).slice(0,4000));
+          chipOk();
+          toast(t("tAttFile"));
+        };
+        r2.onerror=chipErr;
+        r2.readAsText(f);
+      }
+    });
+    e.target.value="";
+  });
+
+  var FALLBACK=[
+    {register:"guide",title:"5 matcha stores in Japan worth the flight",body:"I planned a whole trip around matcha and regret nothing.\n1. Nakamura Tokichi, Uji. the fresh mochi arrives still warm\n2. Ippodo, Kyoto. buy the koicha, thank me later\n3. Suzukien, Tokyo. gelato in seven intensities, take level six\nqueue times and what to order first are in the last image.\nsave this before your Japan trip disappears into a screenshot folder.",tags:["#japantravel","#matcha","#kyotofood","#美食探店"],coverConcept:"tasting flight on a wooden tray, Uji storefront",firstComment:"",bestTime:{label:"Sat, Sun, 10am-12pm PT",reason:"weekend planning mode converts saves to action"}},
+    {register:"review",title:"I tried 12 matcha desserts in Kyoto",body:"the criteria: grind, sweetness honesty, texture, price. I queued so you can skip.\nnumber 4 will start fights in the comments.\nfull scores below.",tags:["#kyotofood","#matchareview","#日本旅行"],coverConcept:"twelve desserts in a scored flat lay",firstComment:"",bestTime:{label:"Sun to Thu, 7-10pm PT",reason:"evening browse is decision mode"}},
+    {register:"diary",title:"a slow morning in Uji before the crowds",body:"no list today. one street in Uji before the shops opened, one warm mochi, and the small routine I brought home with me.",tags:["#slowtravel","#diary","#日记"],coverConcept:"empty street, first light, one cup",firstComment:"",bestTime:{label:"Sun to Thu, 7-10pm PT",reason:"wind-down reading hours"}},
+  ];
+
+  function currentCategory(){
+    var c=selectedCats("p-catsnow");
+    return c.length?c[0]:"lifestyle";
+  }
+  function doGenerate(){
+    var idea=document.getElementById("p-idea").value.trim();
+    if(!idea){toast(t("tNeedGen"));pGoDirect("p-compose");return;}
+    undoComposeStack.push(idea);
+    loading(true,"loadGen");
+    fetch(API+"/api/generate",{
+      method:"POST",
+      headers:Object.assign({"Content-Type":"application/json"},S.token?{Authorization:"Bearer "+S.token}:{}),
+      body:JSON.stringify({idea:idea,self:collectSelf(),contentLang:S.contentLang,category:currentCategory()})
+    })
+    .then(function(r){return r.json()})
+    .then(function(d){
+      loading(false);
+      if(d && Array.isArray(d.drafts) && d.drafts.length===3){
+        newProject(idea,d.drafts,d.projectName,d.projectId);
+      } else {
+        newProject(idea,JSON.parse(JSON.stringify(FALLBACK)),idea.slice(0,40),null);
+        toast(t("tOffline"));
+      }
+      afterGenerate();
+    })
+    .catch(function(){
+      loading(false);
+      newProject(idea,JSON.parse(JSON.stringify(FALLBACK)),idea.slice(0,40),null);
+      toast(t("tOffline"));
+      afterGenerate();
+    });
+  }
+  function newProject(idea,drafts3,name,id){
+    S.projects.unshift({
+      id:id||("p_"+Date.now().toString(36)+Math.random().toString(36).slice(2,7)),
+      name:(name||idea.slice(0,40)).slice(0,60),
+      idea:idea, contentLang:S.contentLang, category:currentCategory(),
+      drafts:drafts3, covers:[null,null,null], ordList:[0,1,2],
+      createdAt:new Date().toISOString(),
+    });
+    S.cur=0;
+    loadProject(0);
+  }
+  function afterGenerate(){
+    S.generated=true;
+    if(S.signedIn){
+      saveState();
+      pGoDirect("p-studio");
+    }
+    else { renderGate(); pGoDirect("r-gate"); }
+  }
+  document.getElementById("p-gen").addEventListener("click",doGenerate);
+
+  /* ---------------- gate ---------------- */
+  function renderGate(){
+    var d=drafts()[0]||FALLBACK[0];
+    var g=document.getElementById("g-note");
+    g.innerHTML="";
+    var reg=document.createElement("div");reg.style.cssText="font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim)";reg.textContent=d.register;
+    var tt=document.createElement("div");tt.className="gt";tt.textContent=d.title;
+    var bd=document.createElement("div");bd.className="gb";bd.textContent=d.body;
+    var tg=document.createElement("div");tg.className="gg";tg.textContent=(d.tags||[]).join(" ");
+    g.appendChild(reg);g.appendChild(tt);g.appendChild(bd);g.appendChild(tg);
+    if(d.bestTime){
+      var bt=document.createElement("div");bt.className="gtime";
+      bt.textContent=t("gTimePre")+": "+(d.bestTime.label||"");
+      g.appendChild(bt);
+    }
+  }
+
+  /* ---------------- studio ---------------- */
+  var pstate=[],psel=0,ordList=[0],pageShot=null,trayDragId=null,dragId=null,trayMode="studio";
+  var KEPT=[{title:"5 hidden tea rooms in Kyoto"},{title:"what my tea budget really looks like"}];
+  var LIKES=["1.2k","864","3.4k","921","640","512","208","96","1.1k","77"];
+  function curProject(){return S.projects[S.cur]||null}
+  function drafts(){var p=curProject();return (p&&p.drafts)||FALLBACK}
+  function selfName(){return nameEl.textContent}
+  function trayTitle(id){return id<3?drafts()[id].title:KEPT[id-3].title}
+  // View state (pstate, ordList) is loaded from the current project and written
+  // back through syncProject() so every project keeps its own covers and order.
+  function loadProject(ix){
+    var p=S.projects[ix];
+    if(!p)return;
+    S.cur=ix;
+    if(!Array.isArray(p.covers)||p.covers.length<p.drafts.length)p.covers=p.drafts.map(function(){return null});
+    if(!Array.isArray(p.ordList)||!p.ordList.length)p.ordList=[0,1,2];
+    pstate=p.drafts.map(function(d,i){return {kept:false,discarded:false,cover:p.covers[i]||null}});
+    ordList=p.ordList.slice();
+    psel=0;
+    drawDrafts();
+  }
+  function syncProject(){
+    var p=curProject();
+    if(!p)return;
+    p.ordList=ordList.slice();
+    p.covers=pstate.map(function(x){return x.cover||null});
+  }
+  function renderStudio(){
+    pstate=drafts().map(function(d,ix){return pstate[ix]||{kept:false,discarded:false,cover:null}});
+    if(psel>=drafts().length)psel=0;
+    if(!ordList.length)ordList=[psel];
+    drawDrafts();
+  }
+  function moveOrdRel(src,target,before){
+    var a=ordList.indexOf(src);if(a<0)return;
+    pushStudioUndo();
+    ordList.splice(a,1);
+    var b=target==null?-1:ordList.indexOf(target);
+    if(b<0)b=ordList.length;else if(!before)b=b+1;
+    ordList.splice(b,0,src);
+    syncProject();feedRender();saveState();
+  }
+  function nudgeOrd(id,dir){
+    var a=ordList.indexOf(id),b=a+dir;
+    if(a<0||b<0||b>=ordList.length)return;
+    pushStudioUndo();
+    ordList.splice(a,1);ordList.splice(b,0,id);
+    syncProject();feedRender();saveState();
+    var el=document.querySelector('#p-feedhost [data-did="'+id+'"]');
+    if(el)el.focus();
+  }
+  function clearDropMarks(){document.querySelectorAll(".drop-before,.drop-after").forEach(function(el){el.classList.remove("drop-before","drop-after")})}
+  function authorRow(likes){
+    return '<svg class="orbi rnav"'+(curHueF?' style="filter:'+curHueF+'"':'')+'><use href="#orb"/></svg><span>'+selfName()+'</span><svg class="heart" viewBox="0 0 16 16"><path d="M8 13S2.5 9.7 2.5 6.2C2.5 4.4 4 3 5.7 3c1 0 1.9.5 2.3 1.2C8.4 3.5 9.3 3 10.3 3 12 3 13.5 4.4 13.5 6.2 13.5 9.7 8 13 8 13z" fill="currentColor"/></svg><span>'+likes+'</span>';
+  }
+  function youCell(id){
+    var cell=document.createElement("div");
+    cell.className="rncell"+(id===psel?" cur":"");
+    cell.draggable=true;cell.dataset.did=id;cell.tabIndex=0;
+    cell.setAttribute("role","listitem");
+    cell.setAttribute("aria-label",trayTitle(id)+". Drag, or use arrow keys, to reorder.");
+    cell.addEventListener("dragstart",function(e){dragId=id;cell.classList.add("dragging");e.dataTransfer.effectAllowed="move"});
+    cell.addEventListener("dragend",function(){dragId=null;cell.classList.remove("dragging");clearDropMarks()});
+    cell.addEventListener("dragover",function(e){
+      e.preventDefault();
+      if(dragId==null||dragId===id)return;
+      var r=cell.getBoundingClientRect(),before=e.clientX<r.left+r.width/2;
+      cell.classList.toggle("drop-before",before);
+      cell.classList.toggle("drop-after",!before);
+    });
+    cell.addEventListener("dragleave",function(e){
+      if(e.relatedTarget&&cell.contains(e.relatedTarget))return;
+      cell.classList.remove("drop-before","drop-after");
+    });
+    cell.addEventListener("drop",function(e){
+      e.preventDefault();
+      var r=cell.getBoundingClientRect(),before=e.clientX<r.left+r.width/2;
+      clearDropMarks();
+      if(dragId!=null&&dragId!==id)moveOrdRel(dragId,id,before);
+    });
+    cell.addEventListener("keydown",function(e){
+      if(e.key==="ArrowLeft"||e.key==="ArrowUp"){e.preventDefault();nudgeOrd(id,-1)}
+      if(e.key==="ArrowRight"||e.key==="ArrowDown"){e.preventDefault();nudgeOrd(id,1)}
+    });
+    var cov=document.createElement("div");
+    cov.className="rncov"+(id%2?" t2":"");
+    if(id<3&&pstate[id]&&pstate[id].cover)cov.style.backgroundImage="url("+pstate[id].cover+")";
+    if(id===psel){var tg=document.createElement("span");tg.className="curtag";tg.textContent="current";cov.appendChild(tg);}
+    if(id<3){var rg=document.createElement("span");rg.className="regtag";rg.textContent=(drafts()[id]||{}).register||"";cov.appendChild(rg);}
+    var txt=document.createElement("div");txt.className="rntxt";
+    var tt=document.createElement("div");tt.className="rntitle";tt.textContent=trayTitle(id);
+    var row=document.createElement("div");row.className="rnrow";
+    row.innerHTML=authorRow(LIKES[id]||"96");
+    txt.appendChild(tt);txt.appendChild(row);
+    cell.appendChild(cov);cell.appendChild(txt);
+    return cell;
+  }
+  // Extracted page cells are editable: tap the title to correct it, tap the
+  // image to replace it with your own upload.
+  var simEditIx=-1;
+  function simCell(c,ci,ix){
+    var cell=document.createElement("div");cell.className="rncell";
+    var cov=document.createElement("div");cov.className="rncov"+(ix%2?" t2":"");
+    if(c.img)cov.style.backgroundImage="url("+c.img+")";
+    cov.style.cursor="pointer";
+    cov.setAttribute("role","button");
+    cov.setAttribute("aria-label","Replace this extracted image");
+    cov.addEventListener("click",function(){
+      simEditIx=ci;
+      document.getElementById("p-simfile").click();
+    });
+    var tg=document.createElement("span");tg.className="simtag";tg.textContent="your page";cov.appendChild(tg);
+    var txt=document.createElement("div");txt.className="rntxt";
+    var tt=document.createElement("div");tt.className="rntitle";tt.textContent=c.title||"";
+    tt.contentEditable="true";tt.spellcheck=false;
+    tt.setAttribute("aria-label","Extracted note title, editable");
+    tt.addEventListener("keydown",function(e){e.stopPropagation();if(e.key==="Enter"){e.preventDefault();tt.blur();}});
+    tt.addEventListener("blur",function(){
+      var v=tt.innerText.replace(/\n+/g," ").trim().slice(0,80);
+      if(S.pageSim&&S.pageSim.cells[ci]&&v!==S.pageSim.cells[ci].title){
+        S.pageSim.cells[ci].title=v;
+        toast(t("tEdited"));saveState();
+      }
+    });
+    txt.appendChild(tt);
+    cell.appendChild(cov);cell.appendChild(txt);
+    return cell;
+  }
+  document.getElementById("p-simfile").addEventListener("change",function(e){
+    var f=e.target.files&&e.target.files[0];
+    if(!f||simEditIx<0||!S.pageSim)return;
+    var target=simEditIx;
+    simEditIx=-1;
+    var r=new FileReader();
+    r.onload=function(){
+      shrink(r.result,1000,function(sm){
+        if(S.pageSim&&S.pageSim.cells[target]){
+          S.pageSim.cells[target].img=sm;
+          feedRender();toast(t("tCover"));saveState();
+        }
+      });
+    };
+    r.readAsDataURL(f);
+    e.target.value="";
+  });
+  function decoyCell(i){
+    var cell=document.createElement("div");cell.className="rncell";
+    var cov=document.createElement("div");cov.className="rncov"+(i%2?" t2":"");
+    var txt=document.createElement("div");txt.className="rntxt";
+    var s1=document.createElement("div");s1.className="skel";s1.style.width="90%";
+    var s2=document.createElement("div");s2.className="skel";s2.style.width="55%";
+    var s3=document.createElement("div");s3.className="skel";s3.style.width="40%";s3.style.marginTop="auto";
+    txt.appendChild(s1);txt.appendChild(s2);txt.appendChild(s3);
+    cell.appendChild(cov);cell.appendChild(txt);
+    return cell;
+  }
+  function feedRender(){
+    // Placement is EXPLICIT: selection never adds, removes, or reorders cells.
+    ordList=ordList.filter(function(x){return x>=0&&x<3+KEPT.length});
+    var host=document.getElementById("p-feedhost");
+    host.innerHTML="";
+    if(S.pageSim && S.pageSim.cells && S.pageSim.cells.length){
+      // Simulated page: the user's drafts placed first (a fresh post leads the
+      // grid), then the extracted cells of their real page in original order.
+      var grid=document.createElement("div");grid.className="pgridwrap";
+      ordList.forEach(function(id){grid.appendChild(youCell(id))});
+      S.pageSim.cells.forEach(function(c,ci){grid.appendChild(simCell(c,ci,ordList.length+ci))});
+      host.appendChild(grid);
+    }else if(pageShot){
+      var wrap=document.createElement("div");wrap.className="pfeedshot";
+      var img=document.createElement("img");img.src=pageShot;img.alt="Your RedNote page screenshot";
+      var over=document.createElement("div");over.className="overcells";
+      ordList.forEach(function(id){over.appendChild(youCell(id))});
+      wrap.appendChild(img);wrap.appendChild(over);
+      host.appendChild(wrap);
+    }else{
+      var grid2=document.createElement("div");grid2.className="pgridwrap";
+      grid2.addEventListener("dragover",function(e){e.preventDefault()});
+      grid2.addEventListener("drop",function(e){
+        if(e.target===grid2&&dragId!=null){e.preventDefault();clearDropMarks();moveOrdRel(dragId,null,false);}
+      });
+      ordList.forEach(function(id){grid2.appendChild(youCell(id))});
+      for(var i=ordList.length;i<6;i++)grid2.appendChild(decoyCell(i));
+      host.appendChild(grid2);
+    }
+  }
+  var tray=document.getElementById("p-tray");
+  function trayToggle(id){
+    pushStudioUndo();
+    if(ordList.indexOf(id)>=0)ordList=ordList.filter(function(x){return x!==id});
+    else ordList.push(id);
+    syncProject();feedRender();trayRender();saveState();
+  }
+  function trayButtons(){
+    document.getElementById("p-trayclose").textContent=(trayMode==="browse")?t("trayClose"):t("trayAdd");
+    document.getElementById("p-traysub").textContent=(trayMode==="browse")?t("trayBrowse"):t("trayStudio");
+  }
+  function trayRender(){
+    var host=document.getElementById("p-trayitems");
+    host.innerHTML="";
+    var shown=ordList.slice();
+    for(var i=0;i<3+KEPT.length;i++)if(shown.indexOf(i)<0)shown.push(i);
+    var browse=(trayMode==="browse");
+    shown.forEach(function(id,ix){
+      var sel=!browse&&ordList.indexOf(id)>=0;
+      var cell=document.createElement("div");
+      cell.className="rncell"+(sel?" selq":"")+(!browse&&id===psel?" cur":"");
+      if(browse){cell.setAttribute("role","listitem");cell.setAttribute("aria-label",trayTitle(id));}
+      else{
+        cell.tabIndex=0;cell.setAttribute("role","button");
+        cell.setAttribute("aria-pressed",sel?"true":"false");
+        cell.setAttribute("aria-label",trayTitle(id));
+      }
+      var cov=document.createElement("div");cov.className="rncov"+(ix%2?" t2":"");
+      if(id<3&&pstate[id]&&pstate[id].cover)cov.style.backgroundImage="url("+pstate[id].cover+")";
+      if(!browse&&id===psel){var tg=document.createElement("span");tg.className="curtag";tg.textContent="current";cov.appendChild(tg);}
+      if(!browse){var bd=document.createElement("span");bd.className="selbadge";cov.appendChild(bd);}
+      var txt=document.createElement("div");txt.className="rntxt";
+      var tt=document.createElement("div");tt.className="rntitle";tt.textContent=trayTitle(id);
+      var row=document.createElement("div");row.className="rnrow";
+      row.innerHTML=authorRow(LIKES[id]||"96");
+      txt.appendChild(tt);txt.appendChild(row);
+      cell.appendChild(cov);cell.appendChild(txt);
+      if(!browse){
+        cell.addEventListener("click",function(){trayToggle(id)});
+        cell.addEventListener("keydown",function(e){
+          if(e.key==="Enter"||e.key===" "){e.preventDefault();trayToggle(id)}
+          if(sel&&(e.key==="ArrowLeft"||e.key==="ArrowUp")){e.preventDefault();nudgeOrd(id,-1);trayRender()}
+          if(sel&&(e.key==="ArrowRight"||e.key==="ArrowDown")){e.preventDefault();nudgeOrd(id,1);trayRender()}
+        });
+        cell.draggable=sel;
+        cell.addEventListener("dragstart",function(e){trayDragId=id;cell.classList.add("dragging");e.dataTransfer.effectAllowed="move"});
+        cell.addEventListener("dragend",function(){trayDragId=null;cell.classList.remove("dragging");clearDropMarks()});
+        cell.addEventListener("dragover",function(e){
+          e.preventDefault();
+          if(trayDragId==null||trayDragId===id)return;
+          if(ordList.indexOf(id)<0){cell.classList.add("drop-after");return;}
+          var r=cell.getBoundingClientRect(),before=e.clientX<r.left+r.width/2;
+          cell.classList.toggle("drop-before",before);
+          cell.classList.toggle("drop-after",!before);
+        });
+        cell.addEventListener("dragleave",function(e){
+          if(e.relatedTarget&&cell.contains(e.relatedTarget))return;
+          cell.classList.remove("drop-before","drop-after");
+        });
+        cell.addEventListener("drop",function(e){
+          e.preventDefault();
+          var r=cell.getBoundingClientRect(),before=e.clientX<r.left+r.width/2;
+          clearDropMarks();
+          if(trayDragId==null||trayDragId===id)return;
+          if(ordList.indexOf(id)>=0){moveOrdRel(trayDragId,id,before);}
+          else{moveOrdRel(trayDragId,null,false);}
+          trayRender();
+        });
+      }
+      host.appendChild(cell);
+    });
+  }
+  function openTray(mode){
+    trayMode=mode;trayRender();trayButtons();
+    tray.classList.add("show");
+  }
+  document.getElementById("p-box").addEventListener("click",function(){openTray("studio")});
+  document.getElementById("p-trayclose").addEventListener("click",function(){tray.classList.remove("show")});
+  tray.addEventListener("click",function(e){if(e.target===tray)tray.classList.remove("show")});
+
+  // Page simulation: screenshot -> vision extracts each note card (title + box)
+  // -> canvas crops the real cells -> the grid is rebuilt as their actual page.
+  // Crop the COVER-PHOTO region of each extracted card (ix/iy/iw/ih from the
+  // vision pass), not the whole card, so the simulated cell shows the actual
+  // image without the baked-in title strip.
+  function cropCells(dataUrl,cells,cb){
+    var img=new Image();
+    img.onload=function(){
+      var out=[];
+      cells.forEach(function(c){
+        try{
+          var useImg=(c.iw>0.03&&c.ih>0.03);
+          var bx=useImg?c.ix:c.x, by=useImg?c.iy:c.y;
+          var bw=useImg?c.iw:c.w, bh=useImg?c.ih:(c.h*0.8);
+          var sw=Math.max(1,Math.round(bw*img.naturalWidth)),sh=Math.max(1,Math.round(bh*img.naturalHeight));
+          var sx=Math.round(bx*img.naturalWidth),sy=Math.round(by*img.naturalHeight);
+          // The photo sits at the top of a RedNote card; if the box is taller
+          // than a cover photo can be, trim the bottom (the baked-in title strip).
+          if(sh>sw*1.15)sh=Math.round(sw*1.15);
+          var scale=Math.min(1,360/sw);
+          var cv=document.createElement("canvas");
+          cv.width=Math.round(sw*scale);cv.height=Math.round(sh*scale);
+          cv.getContext("2d").drawImage(img,sx,sy,sw,sh,0,0,cv.width,cv.height);
+          out.push({title:c.title,img:cv.toDataURL("image/jpeg",0.78)});
+        }catch(err){out.push({title:c.title,img:null});}
+      });
+      cb(out);
+    };
+    img.onerror=function(){cb(cells.map(function(c){return{title:c.title,img:null}}))};
+    img.src=dataUrl;
+  }
+  document.getElementById("p-shotbtn").addEventListener("click",function(){document.getElementById("p-pageshot").click()});
+  document.getElementById("p-pageshot").addEventListener("change",function(e){
+    var f=e.target.files&&e.target.files[0];
+    if(!f)return;
+    var r=new FileReader();
+    r.onload=function(){ shrink(r.result,2000,function(smallShot){
+      pageShot=smallShot;
+      S.pageSim=null;
+      feedRender();
+      toast(t("tShotSim"));
+      fetch(API+"/api/vision/page",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({image:pageShot})})
+        .then(function(x){return x.json()})
+        .then(function(d){
+          if(d.cells && d.cells.length){
+            cropCells(pageShot,d.cells,function(out){
+              S.pageSim={cells:out};
+              feedRender();
+              toast(t("tShotSimDone"));
+              saveState();
+            });
+          } else { toast(t("tShotSimFail")); }
+        })
+        .catch(function(){ toast(t("tShotSimFail")); });
+    }); };
+    r.readAsDataURL(f);
+    e.target.value="";
+  });
+
+  function updateSelMarks(){
+    var cards=document.querySelectorAll("#p-drafts .pdraft");
+    cards.forEach(function(c,ix){c.classList.toggle("sel",ix===psel)});
+    feedRender();
+    var bt=drafts()[psel]&&drafts()[psel].bestTime;
+    if(bt)document.getElementById("p-besttime").textContent=bt.label+(bt.reason?(" · "+bt.reason):"");
+  }
+  function recordLearn(entry){
+    if(!S.teach)return;
+    S.learned.push(entry);
+    if(S.learned.length>20)S.learned.shift();
+    toast(t("tTaught"));
+    saveState();
+  }
+  function mkEditable(el,ix,field){
+    el.contentEditable="true";
+    el.spellcheck=false;
+    el.addEventListener("mousedown",function(e){e.stopPropagation()});
+    el.addEventListener("keydown",function(e){
+      e.stopPropagation();
+      if(field!=="body"&&e.key==="Enter"){e.preventDefault();el.blur();}
+    });
+    el.addEventListener("focus",function(){ el.dataset.before=el.innerText; });
+    el.addEventListener("blur",function(){
+      var v=el.innerText;
+      if(v===el.dataset.before)return;
+      pushStudioUndo();
+      ensureProject();
+      var d=curProject().drafts[ix];
+      if(field==="title"){ d.title=v.replace(/\n+/g," ").trim().slice(0,120); el.innerText=d.title; }
+      else if(field==="body"){ d.body=v.trim().slice(0,4000); }
+      else if(field==="tags"){
+        d.tags=v.split(/[\s·,，]+/).filter(Boolean).map(function(x){return x[0]==="#"?x:"#"+x}).slice(0,8);
+        el.innerText=d.tags.join(" · ");
+      }
+      toast(t("tEdited"));
+      recordLearn("edited the "+field+" of the "+d.register+" draft themselves; prefer their phrasing: \""+String(field==="tags"?d.tags.join(" "):(field==="title"?d.title:d.body)).slice(0,120)+"\"");
+      feedRender();
+      if(!S.signedIn)renderGate();
+      saveState();
+    });
+  }
+  function drawDrafts(){
+    var host=document.getElementById("p-drafts");
+    host.innerHTML="";
+    drafts().forEach(function(d,ix){
+      var st=pstate[ix]||{kept:false,discarded:false,cover:null};
+      var card=document.createElement("div");
+      card.className="pdraft"+(ix===psel?" sel":"")+(st.discarded?" discarded":"");
+      card.setAttribute("role","button");card.tabIndex=0;
+      var cv=document.createElement("div");cv.className="pcov"+(st.cover?" hasimg":"");
+      cv.setAttribute("role","button");cv.tabIndex=0;
+      cv.setAttribute("aria-label","Upload a cover image for this draft");
+      if(st.cover){cv.style.backgroundImage="url("+st.cover+")";}
+      else{cv.innerHTML="<u>upload cover</u>";}
+      var cc=document.createElement("div");cc.className="pconcept";cc.textContent="cover concept: "+(d.coverConcept||"");
+      var reg=document.createElement("div");reg.className="preg";reg.textContent=d.register;
+      var tt=document.createElement("div");tt.className="pdt";tt.textContent=d.title;
+      var bd=document.createElement("div");bd.className="pdb";bd.textContent=d.body;
+      var tg=document.createElement("div");tg.className="pdg";tg.textContent=(d.tags||[]).join(" · ");
+      mkEditable(tt,ix,"title");mkEditable(bd,ix,"body");mkEditable(tg,ix,"tags");
+      var tri=document.createElement("div");tri.className="ptri";
+      var pk=document.createElement("button");pk.className="pk"+(st.kept?" on":"");pk.textContent=st.kept?"kept":"keep";
+      var px=document.createElement("button");px.className="px";px.textContent=st.discarded?"restore":"discard";
+      var placed=ordList.indexOf(ix)>=0;
+      var pp=document.createElement("button");pp.className="pp"+(placed?" on":"");pp.textContent=t(placed?"removePrev":"addPrev");
+      pp.addEventListener("click",function(e){e.stopPropagation();trayToggle(ix);drawDrafts();});
+      tri.appendChild(pk);tri.appendChild(px);tri.appendChild(pp);
+      card.appendChild(reg);card.appendChild(cv);card.appendChild(cc);card.appendChild(tt);card.appendChild(bd);card.appendChild(tg);card.appendChild(tri);
+      card.addEventListener("click",function(e){
+        if(e.target.isContentEditable||e.target.closest("[contenteditable=true]")){
+          if(psel!==ix){psel=ix;updateSelMarks();}
+          return;
+        }
+        psel=ix;drawDrafts();
+      });
+      card.addEventListener("keydown",function(e){
+        if(e.key==="Enter"&&!e.target.isContentEditable){psel=ix;drawDrafts();}
+      });
+      cv.addEventListener("click",function(e){e.stopPropagation();psel=ix;document.getElementById("p-file").click();});
+      cv.addEventListener("keydown",function(e){if(e.key==="Enter"||e.key===" "){e.preventDefault();e.stopPropagation();psel=ix;document.getElementById("p-file").click();}});
+      pk.addEventListener("click",function(e){e.stopPropagation();pushStudioUndo();st.kept=!st.kept;st.discarded=false;drawDrafts();if(st.kept)toast(t("tKept"));});
+      px.addEventListener("click",function(e){e.stopPropagation();pushStudioUndo();st.discarded=!st.discarded;if(st.discarded)st.kept=false;drawDrafts();});
+      host.appendChild(card);
+    });
+    feedRender();
+    var bt=drafts()[psel]&&drafts()[psel].bestTime;
+    if(bt)document.getElementById("p-besttime").textContent=bt.label+(bt.reason?(" · "+bt.reason):"");
+  }
+  document.getElementById("p-file").addEventListener("change",function(e){
+    var f=e.target.files&&e.target.files[0];
+    if(!f)return;
+    // Bind to the card that OPENED the picker; psel may change while the
+    // image is being read/shrunk, which used to land covers on the wrong card.
+    var target=psel;
+    var r=new FileReader();
+    r.onload=function(){
+      shrink(r.result,1200,function(sm){
+        pushStudioUndo();
+        if(pstate[target])pstate[target].cover=sm;
+        syncProject();drawDrafts();toast(t("tCover"));saveState();
+      });
+    };
+    r.readAsDataURL(f);
+    e.target.value="";
+  });
+
+  // Refine acts on the SELECTED draft only, through /api/refine, so "shorter"
+  // visibly shortens this draft instead of regenerating all three.
+  // A refine or edit before any generation operates on the sample project.
+  function ensureProject(){
+    if(!curProject()){
+      newProject("sample",JSON.parse(JSON.stringify(FALLBACK)),"Sample project",null);
+    }
+  }
+  var refining=false;
+  function refineSelected(instruction){
+    if(refining)return;
+    refining=true;
+    document.querySelectorAll(".pechip").forEach(function(c){c.disabled=true});
+    toast(t("tRefining"));
+    ensureProject();
+    pushStudioUndo();
+    var proj=curProject();
+    fetch(API+"/api/refine",{
+      method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({draft:proj.drafts[psel],instruction:instruction,self:collectSelf(),contentLang:proj.contentLang||S.contentLang,category:proj.category||currentCategory()})
+    })
+    .then(function(r){return r.json()})
+    .then(function(d){
+      refining=false;
+      document.querySelectorAll(".pechip").forEach(function(c){c.disabled=false});
+      if(d && d.draft){
+        proj.drafts[psel]=d.draft;
+        drawDrafts();
+        if(!S.signedIn)renderGate();
+        toast(t("tRefined"));
+        recordLearn("refine preference: "+instruction);
+        saveState();
+      } else { undoStudioStack.pop(); toast(t("tOffline")); }
+    })
+    .catch(function(){
+      refining=false;
+      document.querySelectorAll(".pechip").forEach(function(c){c.disabled=false});
+      undoStudioStack.pop();
+      toast(t("tOffline"));
+    });
+  }
+  document.querySelectorAll(".pechip").forEach(function(c){
+    c.addEventListener("click",function(){
+      var map={tone:"adjust the tone",word:"sharpen the word choice",att:"push the attitude further",short:"make it shorter"};
+      refineSelected(map[c.dataset.v]||c.textContent);
+    });
+  });
+  document.getElementById("p-refb").addEventListener("click",function(){
+    var v=document.getElementById("p-refin").value.trim();
+    if(!v)return;
+    document.getElementById("p-refin").value="";
+    refineSelected(v);
+  });
+  document.getElementById("p-refin").addEventListener("keydown",function(e){if(e.key==="Enter")document.getElementById("p-refb").click()});
+  var teach=document.getElementById("p-teach");
+  function flipTeach(){
+    S.teach=teach.classList.toggle("on");
+    teach.setAttribute("aria-checked",S.teach?"true":"false");
+  }
+  teach.addEventListener("click",flipTeach);
+  teach.addEventListener("keydown",function(e){if(e.key==="Enter"||e.key===" "){e.preventDefault();flipTeach()}});
+  function draftText(){
+    var d=drafts()[psel];
+    var out=d.title+"\n\n"+d.body+"\n\n"+(d.tags||[]).join(" ");
+    if(d.firstComment)out+="\n\n[first comment]\n"+d.firstComment;
+    return out;
+  }
+  // Save button + auto-save: copy and download both flush the account state
+  // immediately, so exported work is never newer than what is saved.
+  document.getElementById("save-studio").addEventListener("click",function(){
+    if(!S.signedIn){ openAuth("register"); return; }
+    syncProject();
+    doSaveNow().then(function(ok){ toast(t(ok?"tSaved":"tSaveFail")); });
+  });
+  document.getElementById("p-copy").addEventListener("click",function(){
+    navigator.clipboard.writeText(draftText()).then(function(){toast(t("tCopied"))})
+      .catch(function(){toast(t("tCopyFail"))});
+    syncProject();doSaveNow();
+  });
+  document.getElementById("p-dl").addEventListener("click",function(){
+    try{
+      var blob=new Blob([draftText()],{type:"text/plain"});
+      var a=document.createElement("a");
+      a.href=URL.createObjectURL(blob);
+      a.download="nomi-note.txt";
+      document.body.appendChild(a);a.click();a.remove();
+      setTimeout(function(){URL.revokeObjectURL(a.href)},2000);
+      toast(t("tDl"));
+    }catch(err){toast(t("tDlFail"))}
+    syncProject();doSaveNow();
+  });
+
+  /* ---------------- init ---------------- */
+  function init(){
+    renderAuthBoxes();
+    applyLang();
+    chipDesc();
+    pRenderLocal();
+    renderStudio();
+    updateSaveLabel();
+    renderSelf();
+    fetch(API+"/api/health").then(function(r){return r.json()}).then(function(d){
+      S.googleClientId=d.googleClientId||null;
+      S.emailDelivery=d.emailDelivery||"console";
+    }).catch(function(){});
+    // Session persistence: a full-page OAuth fallback lands with #gauth=…;
+    // otherwise restore the last session from localStorage so neither a page
+    // reload nor a server restart requires signing in again.
+    var mHash=location.hash.match(/gauth=([^&]+)(?:&gid=([^&]+))?/);
+    if(mHash){
+      history.replaceState(null,"",location.pathname);
+      finishAuth("m",{token:decodeURIComponent(mHash[1]),identity:decodeURIComponent(mHash[2]||"")});
+      return;
+    }
+    var saved=null,savedId="";
+    try{saved=localStorage.getItem("nomiToken");savedId=localStorage.getItem("nomiIdentity")||"";}catch(e){}
+    if(saved){
+      S.token=saved;
+      fetch(API+"/api/state",{headers:{Authorization:"Bearer "+saved}})
+        .then(function(r){return r.json()})
+        .then(function(d){
+          if(!d.ok){ try{localStorage.removeItem("nomiToken")}catch(e){} S.token=null; return; }
+          S.signedIn=true; S.identity=d.identity||savedId;
+          loadState().then(function(){
+            updateSaveLabel();
+            pGoDirect("p-self");
+          });
+        })
+        .catch(function(){ S.token=null; });
+    }
+  }
+  init();
+})();
+</script>
+</body>
+</html>

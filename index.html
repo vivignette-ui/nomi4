@@ -1421,10 +1421,7 @@ function hidePage() {
 }
 
 function showNomiStart() {
-  hidePage();
-  document.body.classList.remove('zenya-mode');
-  document.body.classList.add('nomi-mode');
-  go('s1');
+  window.location.href = '/nomi';
 }
 
 function showZenyaHome() {
