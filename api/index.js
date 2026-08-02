@@ -5,6 +5,7 @@
 // best-effort /tmp JSON file (per warm instance).
 import crypto from "crypto";
 import fs from "fs";
+import tls from "tls";
 import HIDDEN_PROMPT from "./_hiddenprompt.js";
 
 const OPENAI_URL = "https://api.openai.com/v1/chat/completions";
@@ -65,7 +66,7 @@ function tmpLoad() {
 }
 function tmpSave() { try { fs.writeFileSync(TMP_DB, JSON.stringify(memDb)); } catch {} }
 async function kvGet(key) {
-  const url = process.env.UPSTASH_REDIS_REST_URL, tok = process.env.UPSTASH_REDIS_REST_TOKEN;
+  const url = process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL, tok = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN;
   if (url && tok) {
     try {
       const r = await fetch(url + "/get/" + encodeURIComponent(key), { headers: { Authorization: "Bearer " + tok } });
@@ -77,7 +78,7 @@ async function kvGet(key) {
   return db[key] || null;
 }
 async function kvSet(key, val) {
-  const url = process.env.UPSTASH_REDIS_REST_URL, tok = process.env.UPSTASH_REDIS_REST_TOKEN;
+  const url = process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL, tok = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN;
   if (url && tok) {
     try {
       await fetch(url + "/set/" + encodeURIComponent(key), {
@@ -93,7 +94,55 @@ async function kvSet(key, val) {
 /* ---------- email delivery ---------- */
 function emailTransport() {
   if (process.env.RESEND_API_KEY) return "resend";
+  if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) return "smtp";
   return "console";
+}
+function sendViaSmtp(to, subject, text) {
+  const host = process.env.SMTP_HOST;
+  const port = Number(process.env.SMTP_PORT || 465);
+  const user = process.env.SMTP_USER;
+  const pass = process.env.SMTP_PASS;
+  const from = (process.env.EMAIL_FROM || user).replace(/^.*<|>.*$/g, "") || user;
+  const fromHeader = process.env.EMAIL_FROM || user;
+  const b64 = s => Buffer.from(s).toString("base64");
+  const msg = [
+    `From: ${fromHeader}`, `To: ${to}`, `Subject: ${subject}`,
+    `MIME-Version: 1.0`, `Content-Type: text/plain; charset=utf-8`, ``, text, ``,
+  ].join("\r\n");
+  const steps = [
+    { expect: /^220/, send: `EHLO nomi.zeyaai.com` },
+    { expect: /^250/, send: `AUTH LOGIN` },
+    { expect: /^334/, send: b64(user) },
+    { expect: /^334/, send: b64(pass) },
+    { expect: /^235/, send: `MAIL FROM:<${from}>` },
+    { expect: /^250/, send: `RCPT TO:<${to}>` },
+    { expect: /^250/, send: `DATA` },
+    { expect: /^354/, send: msg + "\r\n." },
+    { expect: /^250/, send: `QUIT` },
+    { expect: /^221/, send: null },
+  ];
+  return new Promise((resolve, reject) => {
+    let i = 0, buf = "";
+    const sock = tls.connect({ host, port, servername: host }, () => {});
+    const fail = err => { try { sock.destroy(); } catch {} reject(err); };
+    sock.setTimeout(15000, () => fail(new Error("smtp timeout")));
+    sock.on("error", fail);
+    sock.on("data", chunk => {
+      buf += chunk.toString();
+      if (!/\r\n$/.test(buf)) return;
+      const lines = buf.trim().split("\r\n");
+      const last = lines[lines.length - 1];
+      if (/^\d{3}-/.test(last)) return;
+      buf = "";
+      const step = steps[i];
+      if (!step) return;
+      if (!step.expect.test(last)) return fail(new Error(`smtp unexpected: ${last.slice(0, 120)}`));
+      i += 1;
+      if (step.send === null) { sock.end(); return resolve(); }
+      sock.write(step.send + "\r\n");
+      if (i >= steps.length) { sock.end(); resolve(); }
+    });
+  });
 }
 async function sendCodeEmail(to, code) {
   if (process.env.RESEND_API_KEY) {
@@ -107,6 +156,11 @@ async function sendCodeEmail(to, code) {
       }),
     });
     if (!r.ok) throw new Error("resend " + r.status);
+    return true;
+  }
+  if (emailTransport() === "smtp") {
+    await sendViaSmtp(to, "Your Nomi verification code",
+      `Your Nomi verification code is: ${code}\n\nIt expires in 10 minutes.`);
     return true;
   }
   console.log(`[nomi auth] code for ${to}: ${code}`);
@@ -470,7 +524,7 @@ export default async function handler(req, res) {
         hasKey: !!process.env.OPENAI_API_KEY,
         googleClientId: process.env.GOOGLE_CLIENT_ID || null,
         emailDelivery: emailTransport(),
-        storage: process.env.UPSTASH_REDIS_REST_URL ? "redis" : "ephemeral",
+        storage: (process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL) ? "redis" : "ephemeral",
       });
     }
 
