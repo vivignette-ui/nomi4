@@ -813,7 +813,7 @@ Signing you in… you can close this window.</body>`);
       const messages = [
         { role: "system", content: "You analyze screenshots of Xiaohongshu/RedNote profile pages. Return JSON only." },
         { role: "user", content: [
-          { type: "text", text: 'This is a screenshot of a RedNote profile page or feed grid. Identify each visible note card (a cover photo with a title under or on it), in reading order (left-to-right, top-to-bottom). For each card return: its title text (empty string if unreadable), the bounding box of the WHOLE card, and the bounding box of just the COVER PHOTO region (the image itself, excluding the title strip and any text area below it). All boxes in NORMALIZED coordinates relative to the full image: x, y = top-left corner (0-1), w, h = width and height (0-1). Include only actual note cards, not the profile header, tabs, or navigation. Return JSON exactly: {"cells":[{"title":"...","x":0.0,"y":0.0,"w":0.0,"h":0.0,"ix":0.0,"iy":0.0,"iw":0.0,"ih":0.0}]} where ix/iy/iw/ih is the cover-photo box.' },
+          { type: "text", text: 'This is a screenshot that SHOULD contain Xiaohongshu/RedNote note cards (a profile page, explore feed, search results, or any notes grid - possibly partial, cropped, or with UI chrome around it). Be GENEROUS: identify every visible note card, even partially cut-off ones (include them if at least half the cover is visible), even if the title is missing or unreadable (use an empty string). A note card = a cover photo, usually with title text and/or author info near it. For each card return: its title text, the bounding box of the WHOLE card, and the bounding box of just the COVER PHOTO region (excluding the title strip below). All boxes NORMALIZED to the full image: x, y = top-left (0-1), w, h = width/height (0-1). Exclude profile headers, tab bars, and navigation. ONLY if the image genuinely contains no note cards at all (e.g. a selfie, a chat screen, a random photo), return an empty list. Return JSON exactly: {"cells":[{"title":"...","x":0.0,"y":0.0,"w":0.0,"h":0.0,"ix":0.0,"iy":0.0,"iw":0.0,"ih":0.0}]} where ix/iy/iw/ih is the cover-photo box.' },
           { type: "image_url", image_url: { url: body.image, detail: "high" } },
         ]},
       ];
@@ -826,7 +826,7 @@ Signing you in… you can close this window.</body>`);
         };
         if (cell.iw < 0.03 || cell.ih < 0.03) { cell.ix = cell.x; cell.iy = cell.y; cell.iw = cell.w; cell.ih = cell.h * 0.8; }
         return cell;
-      }).filter(c => c.w > 0.05 && c.h > 0.05) : [];
+      }).filter(c => c.w > 0.04 && c.h > 0.03) : [];
       return res.status(200).json({ cells, usage });
     }
 

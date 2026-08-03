@@ -232,6 +232,8 @@
   .pboxbtn svg{width:13px;height:13px}
   #p-feedhost{display:flex;flex-direction:column;flex:1 1 0;overflow:auto;min-height:0}
   #p-feedhost .rncov:not(.nat){aspect-ratio:3/3.3}
+  .pfeedbar .langtog button{width:26px;padding:4px 0;text-align:center;font-size:10px;line-height:1.4}
+  .pfeedbar .fh2{flex:1;min-width:0}
   #p-feedhost .rntitle[contenteditable]:hover{background:var(--tint)}
   #p-feedhost .rntitle[contenteditable]:focus{background:var(--tint);outline:1.5px solid var(--ind)}
   .pgridwrap{column-gap:7px;max-width:430px}
@@ -250,8 +252,13 @@
   .rncell.drop-before{box-shadow:-4px 0 0 0 var(--ind)}
   .rncell.drop-after{box-shadow:4px 0 0 0 var(--ind)}
   .rncov{aspect-ratio:3/4;background:#DCE4EC;position:relative;background-size:cover;background-position:center}
-  .rncov.nat{aspect-ratio:auto;min-height:34px;background:none}
-  .rncov.nat img{width:100%;height:auto;display:block;max-height:340px;object-fit:cover;object-position:center}
+  /* XHS-spec covers: portrait fills its frame (clamped at 3:4); landscape
+     keeps a FIXED 4:3 frame letterboxed on white - the frame never adapts. */
+  .rncov.nat{aspect-ratio:auto;min-height:34px;background:none;position:relative;overflow:hidden}
+  .rncov.nat.portrait img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  .rncov.nat.landscape{aspect-ratio:4/3;background:#fff;border:1px solid var(--tint2)}
+  .rncov.nat.landscape img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
+  .rncov.nat.clickable{cursor:pointer}
   .rncov.t2{background:#D3DCE6}
   .rntxt{padding:6px 7px;display:flex;flex-direction:column;gap:4px}
   .rntitle{font-size:8.5px;font-weight:500;color:var(--text);line-height:1.3}
@@ -271,8 +278,11 @@
   .pdraft.sel{border-color:var(--ind)}
   .pdraft.discarded{opacity:.45}
   .pdraft .preg{font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim)}
-  .pdraft .pcov{position:relative;border-radius:7px;background:var(--tint2);border:1.5px dashed #B9CBDD;overflow:hidden;background-size:cover;background-position:center;display:flex;align-items:center;justify-content:center;cursor:pointer;aspect-ratio:4/3;max-height:150px;min-height:90px}
+  .pdraft .pcov{position:relative;border-radius:7px;background:var(--tint2);border:1.5px dashed #B9CBDD;overflow:hidden;display:flex;align-items:center;justify-content:center;cursor:pointer;aspect-ratio:4/3;max-height:190px;min-height:90px}
   .pdraft .pcov.hasimg{border-style:solid}
+  .pdraft .pcov.portrait img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  .pdraft .pcov.landscape{background:#fff}
+  .pdraft .pcov.landscape img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
   .pdraft .pcov u{color:var(--ind);font-size:10px}
   .pdraft .pconcept{font-size:9.5px;color:var(--blue);line-height:1.4}
   .pdraft .pdt{font-size:13px;font-weight:500;line-height:1.35;color:var(--text);border-radius:6px;padding:2px 4px;margin:-2px -4px}
@@ -704,6 +714,28 @@ this is my whole personality now</div>
           <button class="pbtn sm" id="wl-ok" data-i="wlOk">Done</button>
         </div>
       </div>
+      <div class="pmodal" id="shot-guide" role="dialog" aria-label="How to screenshot your RedNote page">
+        <div class="pmcard on" style="max-width:440px">
+          <svg viewBox="0 0 200 150" style="width:170px;height:auto" aria-hidden="true">
+            <rect x="60" y="4" width="80" height="142" rx="10" fill="#F1F6FB" stroke="#D8E0EA"/>
+            <rect x="68" y="14" width="64" height="16" rx="4" fill="#E6EDF4"/>
+            <circle cx="76" cy="22" r="5" fill="#C2CDD9"/>
+            <rect x="86" y="18" width="30" height="4" rx="2" fill="#C2CDD9"/>
+            <g stroke="#332FA6" stroke-width="2" fill="#EAF0FA">
+              <rect x="68" y="36" width="30" height="42" rx="4"/>
+              <rect x="102" y="36" width="30" height="34" rx="4"/>
+              <rect x="68" y="82" width="30" height="34" rx="4"/>
+              <rect x="102" y="74" width="30" height="42" rx="4"/>
+            </g>
+            <rect x="68" y="122" width="64" height="16" rx="4" fill="#E6EDF4"/>
+            <path d="M40 76 L58 76 M52 70 L58 76 L52 82" stroke="#332FA6" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+          </svg>
+          <h5 data-i="sgTitle">Screenshot your RedNote page like this</h5>
+          <p data-i="sgBody">Open your RedNote profile (or any notes grid), and screenshot the area where the note cards are visible - covers with titles, like the highlighted grid above. Nomi reads each note and adds its title and photo into your page preview automatically.</p>
+          <button class="pbtn sm" id="sg-ok" data-i="sgOk">Got it, try again</button>
+          <button class="pcl" id="sg-cancel" data-i="cancel">Cancel</button>
+        </div>
+      </div>
       <div class="amodal" id="a-modal" role="dialog" aria-label="Sign in">
         <div class="authbox">
           <h5 id="a-title" data-i="signinTitle">Sign in to Nomi</h5>
@@ -835,6 +867,9 @@ this is my whole personality now</div>
       tAuthErr:"could not verify, check the code", tUndo:"undone", tNothingUndo:"nothing to undo",
       tRedo:"redone", tNothingRedo:"nothing to redo",
       col1:"1", col2:"2",
+      sgTitle:"Screenshot your RedNote page like this",
+      sgBody:"Open your RedNote profile (or any notes grid) and screenshot the area where note cards are visible - covers with titles, like the highlighted grid above. Nomi reads each note and adds its title and photo into your page preview automatically.",
+      sgOk:"Got it, try again",
       loadGen:"writing three notes as your social-self", loadAuth:"one moment",
       gTimePre:"recipe · post this",
     },
@@ -947,6 +982,9 @@ this is my whole personality now</div>
       tAuthErr:"验证失败，请检查验证码", tUndo:"已撤销", tNothingUndo:"没有可撤销的操作",
       tRedo:"已重做", tNothingRedo:"没有可重做的操作",
       col1:"1列", col2:"2列",
+      sgTitle:"请这样截取你的小红书主页",
+      sgBody:"打开你的小红书主页（或任意笔记瀑布流），截取能看到笔记卡片的区域——像上图高亮的部分，封面和标题都在画面里。Nomi 会自动识别每篇笔记，把标题和图片同步到你的主页预览。",
+      sgOk:"明白了，重新上传",
       loadGen:"正在以你的 social-self 写三篇笔记", loadAuth:"请稍候",
       gTimePre:"配方 · 建议发布时间",
     }
@@ -2009,10 +2047,20 @@ this is my whole personality now</div>
   }
   // Cover renders at the image's OWN proportions (whole photo visible, frame
   // adapts) - never a fixed frame that crops to a corner of a large upload.
+  function applyRatio(cov,im){
+    var r=im.naturalHeight/Math.max(1,im.naturalWidth);
+    if(r<1){ cov.classList.add("landscape"); cov.style.aspectRatio=""; }
+    else { cov.classList.add("portrait"); cov.style.aspectRatio="1 / "+Math.min(r,1.334).toFixed(3); }
+  }
   function natCov(src,tint){
     var cov=document.createElement("div");
     cov.className="rncov"+(src?" nat":"")+(tint?" t2":"");
-    if(src){var im=document.createElement("img");im.src=src;im.alt="";cov.appendChild(im);}
+    if(src){
+      var im=document.createElement("img");im.alt="";
+      im.onload=function(){applyRatio(cov,im)};
+      im.src=src;
+      cov.appendChild(im);
+    }
     return cov;
   }
   function youCell(id){
@@ -2022,6 +2070,16 @@ this is my whole personality now</div>
     cell.setAttribute("role","listitem");
     cell.setAttribute("aria-label",trayTitle(id)+". Drag, or use arrow keys, to reorder.");
     var cov=natCov(id<3?covers()[id]:null,id%2);
+    if(id<3){
+      cov.classList.add("clickable");
+      cov.setAttribute("role","button");
+      cov.setAttribute("aria-label","Change this note's cover image");
+      cov.addEventListener("click",function(e){
+        e.stopPropagation();
+        psel=id;
+        document.getElementById("p-file").click();
+      });
+    }
     if(id===psel){var tg=document.createElement("span");tg.className="curtag";tg.textContent="current";cov.appendChild(tg);}
     var txt=document.createElement("div");txt.className="rntxt";
     var tt=document.createElement("div");tt.className="rntitle";tt.textContent=trayTitle(id);
@@ -2245,6 +2303,12 @@ this is my whole personality now</div>
     img.src=dataUrl;
   }
   document.getElementById("p-shotbtn").addEventListener("click",function(){document.getElementById("p-pageshot").click()});
+  document.getElementById("sg-ok").addEventListener("click",function(){
+    document.getElementById("shot-guide").classList.remove("show");
+    document.getElementById("p-pageshot").click();
+  });
+  document.getElementById("sg-cancel").addEventListener("click",function(){document.getElementById("shot-guide").classList.remove("show")});
+  document.getElementById("shot-guide").addEventListener("click",function(e){if(e.target===this)this.classList.remove("show")});
   document.getElementById("p-pageshot").addEventListener("change",function(e){
     var f=e.target.files&&e.target.files[0];
     if(!f)return;
@@ -2254,7 +2318,7 @@ this is my whole personality now</div>
       fetch(API+"/api/vision/page",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({image:shot})})
         .then(function(x){return x.json()})
         .then(function(d){
-          if(!(d.cells&&d.cells.length)){toast(t("tShotSimFail"));return;}
+          if(!(d.cells&&d.cells.length)){document.getElementById("shot-guide").classList.add("show");return;}
           cropCells(shot,d.cells,function(out){
             // Extracted titles + cropped photos fill EMPTY blocks first, then
             // append new blocks. The screenshot itself is never shown.
@@ -2338,8 +2402,13 @@ this is my whole personality now</div>
       card.setAttribute("role","button");card.tabIndex=0;
       var cv=document.createElement("div");cv.className="pcov"+(cvr?" hasimg":"");
       cv.setAttribute("role","button");cv.tabIndex=0;
-      cv.setAttribute("aria-label","Upload a cover image for this draft");
-      if(cvr){cv.style.backgroundImage="url("+cvr+")";}
+      cv.setAttribute("aria-label","Upload or change the cover image for this draft");
+      if(cvr){
+        var cim=document.createElement("img");cim.alt="";
+        cim.onload=function(){ if(cim.naturalHeight/Math.max(1,cim.naturalWidth)<1)cv.classList.add("landscape");else cv.classList.add("portrait"); };
+        cim.src=cvr;
+        cv.appendChild(cim);
+      }
       else{cv.innerHTML="<u>upload cover</u>";}
       var cc=document.createElement("div");cc.className="pconcept";cc.textContent="cover concept: "+(d.coverConcept||"");
       var reg=document.createElement("div");reg.className="preg";reg.textContent=d.register;
