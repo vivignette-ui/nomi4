@@ -256,6 +256,7 @@ const PRIORITY_PREAMBLE = [
   "3. THE CRAFT RULES BELOW - a finishing filter for platform fit, applied ONLY where they do not distort 1 or 2. If a title formula, a structure template, an emoji habit, or any other rule would force out the creator's substance or flatten their voice, DROP THE RULE and keep the substance. The rules are defaults, not requirements.",
   "NEVER fabricate concrete facts - prices, product names, version numbers, dates, statistics - that are not in the creator's material or the research brief. If information is missing, stay honestly general or write from the creator's first-person perspective.",
   "THINK DEEPLY BEFORE WRITING: What is the creator actually saying? What is genuinely interesting or new in THEIR material? What would a sharp reader remember afterward? Build each note around that core, then polish for the platform.",
+  "COMPREHEND THE REQUEST LIKE A TOP ASSISTANT: first decide what the note is ABOUT. If the creator asks to introduce, describe, review, or explain a SUBJECT (a building, a shop, a product, a place, a person, a concept), then the notes ARE that content - a real introduction of that building, a real review of that product, written with substantive knowledge of the subject. NEVER produce meta-content about how one could write it, tips for writing it, or advice about the topic of writing. The three registers are three VOICES delivering the SAME requested substance, never three different meta-interpretations.",
 ].join("\n");
 function systemPrompt() { return PRIORITY_PREAMBLE + "\n\n" + HIDDEN_PROMPT; }
 
@@ -348,11 +349,12 @@ function buildMessages({ idea, self, contentLang, category, brief }) {
     `PRIMARY CATEGORY: ${category || "lifestyle"}`,
     `CONTENT LANGUAGE: ${lang}`,
     ``,
-    `Produce exactly three complete RedNote note drafts from this idea, one per register:`,
-    `1. "guide" - the save-bait utility register (numbered list, concrete specifics, save CTA)`,
-    `2. "review" - the honest personal-test register (criteria, verdicts, comment bait)`,
-    `3. "diary" - the intimate narrative register (small moments, feeling-forward, soft close)`,
-    `All three must be recognizably the same person - the social-self above - saying the same idea three ways.`,
+    `FIRST, comprehend the request: decide what the notes are ABOUT (the subject and substance the creator wants delivered). Write THAT content itself - never advice about how to create such content.`,
+    `Produce exactly three complete RedNote note drafts delivering that same substance, one per register (three voices, same subject):`,
+    `1. "guide" - the useful structured voice: the substance organized as numbered, concrete, saveable points ABOUT THE SUBJECT`,
+    `2. "review" - the honest first-person voice: the substance told through personal judgment, criteria, and verdicts ABOUT THE SUBJECT`,
+    `3. "diary" - the intimate narrative voice: the substance told through lived moments and feeling ABOUT THE SUBJECT`,
+    `All three must be recognizably the same person - the social-self above - delivering the same requested content three ways.`,
     ``,
     `Return JSON only, exactly this shape:`,
     `{"projectName":"...","drafts":[{"register":"guide","title":"...","body":"...","tags":["#...","#..."],"coverConcept":"...","firstComment":"..."},{"register":"review",...},{"register":"diary",...}]}`,
@@ -514,11 +516,30 @@ function originOf(req) {
 }
 
 /* ---------- per-user state ---------- */
+// Any inline dataURL image in an incoming payload is moved into its own
+// Redis entry and replaced by a stable /api/image URL, so state stays small.
+async function externalizeImages(userId, obj) {
+  async function store(v) {
+    if (typeof v !== "string" || !v.startsWith("data:image") || v.length < 50000) return v;
+    if (v.length > 1400000) return null;
+    const hash = crypto.createHash("sha1").update(v).digest("hex").slice(0, 20);
+    const id = userId + ":" + hash;
+    await kvSet("img:" + id, v);
+    return "/api/image?id=" + id;
+  }
+  for (const p of (obj.projects || [])) {
+    if (Array.isArray(p.covers)) for (let i = 0; i < p.covers.length; i++) p.covers[i] = await store(p.covers[i]);
+  }
+  const ps = obj.pageSim;
+  if (ps && Array.isArray(ps.blocks)) for (const b of ps.blocks) if (b) b.img = await store(b.img);
+  if (ps && Array.isArray(ps.cells)) for (const c of ps.cells) if (c) c.img = await store(c.img);
+}
 async function migrateGuestState(userId, guestState) {
   if (!guestState || typeof guestState !== "object") return;
+  await externalizeImages(userId, guestState);
   const cur = (await kvGet("state:" + userId)) || {};
   const ps = guestState.pageSim;
-  const psHasContent = ps && Array.isArray(ps.cells) && ps.cells.length;
+  const psHasContent = ps && ((Array.isArray(ps.cells) && ps.cells.length) || (Array.isArray(ps.blocks) && ps.blocks.some(b => b && (b.title || b.img))) || (Array.isArray(ps.pageOrder) && ps.pageOrder.length));
   const next = {
     ...cur,
     self: guestState.self || cur.self || null,
@@ -662,6 +683,31 @@ export default async function handler(req, res) {
 })();
 </script>
 Signing you in… you can close this window.</body>`);
+    }
+
+    // Images are stored as individual Redis entries so account saves stay
+    // small and photos always persist. GET serves raw bytes for <img src>.
+    if (req.method === "POST" && p === "/api/image") {
+      const sess = sessionFromToken(tokenFrom(req));
+      if (!sess) return res.status(401).json({ error: "auth_required" });
+      const img = String(body.img || "");
+      if (!img.startsWith("data:image") || img.length > 1400000) return res.status(400).json({ error: "bad_image" });
+      const hash = crypto.createHash("sha1").update(img).digest("hex").slice(0, 20);
+      const id = sess.userId + ":" + hash;
+      await kvSet("img:" + id, img);
+      return res.status(200).json({ id });
+    }
+
+    if (req.method === "GET" && p === "/api/image") {
+      const id = String(q.get("id") || "");
+      if (!/^u_[0-9a-f]{16}:[0-9a-f]{20}$/.test(id)) return res.status(400).json({ error: "bad_id" });
+      const img = await kvGet("img:" + id);
+      if (!img) return res.status(404).json({ error: "not_found" });
+      const m = String(img).match(/^data:(image\/[\w.+-]+);base64,(.*)$/s);
+      if (!m) return res.status(500).json({ error: "bad_stored_image" });
+      res.setHeader("Content-Type", m[1]);
+      res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+      return res.status(200).end(Buffer.from(m[2], "base64"));
     }
 
     if (req.method === "POST" && p === "/api/track") {

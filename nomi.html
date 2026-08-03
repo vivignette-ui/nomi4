@@ -231,13 +231,12 @@
   .pboxbtn:hover{color:var(--ind);border-color:var(--ind)}
   .pboxbtn svg{width:13px;height:13px}
   #p-feedhost{display:flex;flex-direction:column;flex:1 1 0;overflow:auto;min-height:0}
-  #p-feedhost .rncov{aspect-ratio:3/3.3}
+  #p-feedhost .rncov:not(.nat){aspect-ratio:3/3.3}
   #p-feedhost .rntitle[contenteditable]:hover{background:var(--tint)}
   #p-feedhost .rntitle[contenteditable]:focus{background:var(--tint);outline:1.5px solid var(--ind)}
-  .pgridwrap{display:grid;grid-template-columns:repeat(2,minmax(0,210px));gap:7px;align-content:start;align-items:stretch;justify-content:start}
-  .pgridwrap .rncell{height:100%}
-  .pgridwrap .rntxt{flex:1}
-  .pgridwrap .rnrow{margin-top:auto}
+  .pgridwrap{columns:2 150px;column-gap:7px;max-width:430px}
+  .pgridwrap .rncell{break-inside:avoid;margin-bottom:7px;display:flex}
+  .pgridwrap .rntxt{flex:none}
   .pfeedshot{position:relative;border-radius:8px;overflow:hidden;flex:none;min-height:0}
   .pfeedshot img{width:100%;height:auto;display:block}
   .pfeedshot .overcells{position:absolute;top:8px;left:8px;right:8px;display:grid;grid-template-columns:repeat(2,minmax(0,160px));gap:7px}
@@ -249,6 +248,8 @@
   .rncell.drop-before{box-shadow:-4px 0 0 0 var(--ind)}
   .rncell.drop-after{box-shadow:4px 0 0 0 var(--ind)}
   .rncov{aspect-ratio:3/4;background:#DCE4EC;position:relative;background-size:cover;background-position:center}
+  .rncov.nat{aspect-ratio:auto;min-height:34px;background:none}
+  .rncov.nat img{width:100%;height:auto;display:block;max-height:340px;object-fit:cover;object-position:center}
   .rncov.t2{background:#D3DCE6}
   .rntxt{padding:6px 7px;display:flex;flex-direction:column;gap:4px}
   .rntitle{font-size:8.5px;font-weight:500;color:var(--text);line-height:1.3}
@@ -787,7 +788,7 @@ this is my whole personality now</div>
       drafts3:"3 drafts", studioSub:"three registers of the same idea",
       editHint:"tap any title, body, or tags to edit",
       pagePrev:"Your RedNote page preview", pagePrevSub:"your RedNote page, with this note placed in it",
-      shotBtn:"add a screenshot of your RedNote page to simulate it",
+      shotBtn:"upload a RedNote page screenshot - titles and photos are extracted into the blocks",
       refine:"Refine:", tone:"tone", wordchoice:"word choice", attitude:"attitude", shorter:"shorter",
       refPh:"or tell it what to change, like add prices", apply:"Apply",
       teachPre:"teach", teachPost:"from my edits",
@@ -818,13 +819,14 @@ this is my whole personality now</div>
       tKept:"kept: a choice, not training data", tCover:"cover added, check your page preview",
       tCopied:"copied to clipboard, paste into RedNote", tCopyFail:"clipboard blocked here, select the draft text manually",
       tDl:"downloaded nomi-note.txt", tDlFail:"download blocked here, use copy instead",
-      tShotSim:"reading your page layout…", tShotSimDone:"your page layout is simulated below", tShotSimFail:"could not read the layout, showing the screenshot overlay instead",
+      tShotSim:"reading your page layout…", tShotSimDone:"extracted into the blocks below - titles and images are editable", tShotSimFail:"could not read notes from that screenshot - try a clearer one",
       tOffline:"connection hiccup - showing a sample. Check your network and try again.",
       tRefining:"refining this draft…", tRefined:"draft refined", tNeedGen:"write your idea first, then Generate 3 notes",
       tEdited:"edit saved", tTaught:"learned: your next drafts will reflect this",
       tSignedIn:"signed in", tRegistered:"account created. Your social-self, idea, and drafts came with you.",
       tSignedOut:"signed out",
       tAuthErr:"could not verify, check the code", tUndo:"undone", tNothingUndo:"nothing to undo",
+      tRedo:"redone", tNothingRedo:"nothing to redo",
       loadGen:"writing three notes as your social-self", loadAuth:"one moment",
       gTimePre:"recipe · post this",
     },
@@ -897,7 +899,7 @@ this is my whole personality now</div>
       drafts3:"3 篇草稿", studioSub:"同一个想法的三种写法",
       editHint:"点击任意标题、正文或标签即可编辑",
       pagePrev:"你的小红书主页预览", pagePrevSub:"你的小红书主页，这篇笔记已放入其中",
-      shotBtn:"上传你的小红书主页截图来模拟",
+      shotBtn:"上传小红书主页截图，自动提取笔记标题和图片到格子里",
       refine:"润色：", tone:"语气", wordchoice:"用词", attitude:"态度", shorter:"更短",
       refPh:"或告诉它要改什么，比如加上价格", apply:"应用",
       teachPre:"让", teachPost:"从我的修改中学习",
@@ -928,13 +930,14 @@ this is my whole personality now</div>
       tKept:"已保留：这是选择，不是训练数据", tCover:"封面已添加，去主页预览看看",
       tCopied:"已复制到剪贴板，去小红书粘贴吧", tCopyFail:"剪贴板被拦截，请手动选择文字复制",
       tDl:"已下载 nomi-note.txt", tDlFail:"下载被拦截，请使用复制",
-      tShotSim:"正在读取你的主页布局…", tShotSimDone:"已在下方模拟你的主页布局", tShotSimFail:"无法读取布局，改用截图叠加模式",
+      tShotSim:"正在读取你的主页布局…", tShotSimDone:"已提取到下方格子，标题和图片都可编辑", tShotSimFail:"未能从截图中识别出笔记，请换一张更清晰的",
       tOffline:"网络连接不稳定，正在显示示例内容。请检查网络后重试。",
       tRefining:"正在润色这篇草稿…", tRefined:"草稿已润色", tNeedGen:"先写下想法，再点生成 3 篇笔记",
       tEdited:"修改已保存", tTaught:"已学习：之后的草稿会体现这一点",
       tSignedIn:"登录成功", tRegistered:"账户已创建。你的 social-self、想法和草稿都保留了。",
       tSignedOut:"已退出登录",
       tAuthErr:"验证失败，请检查验证码", tUndo:"已撤销", tNothingUndo:"没有可撤销的操作",
+      tRedo:"已重做", tNothingRedo:"没有可重做的操作",
       loadGen:"正在以你的 social-self 写三篇笔记", loadAuth:"请稍候",
       gTimePre:"配方 · 建议发布时间",
     }
@@ -945,7 +948,7 @@ this is my whole personality now</div>
     hasSelf:false, generated:false,
     projects:[], cur:-1,
     learned:[], ownShotText:"", admShotText:"",
-    pageSim:null, teach:false,
+    pageOrder:null, teach:false,
     googleClientId:null, emailDelivery:"console",
   };
   // Category pills: canonical English values (sent to the backend), localized labels.
@@ -1007,6 +1010,15 @@ this is my whole personality now</div>
     var el=document.getElementById("ptoast");
     el.textContent=msg; el.classList.add("show");
     clearTimeout(toastT); toastT=setTimeout(function(){el.classList.remove("show")},2600);
+  }
+  // Signed-in users' images are stored server-side (each as its own record)
+  // and referenced by URL, so account saves never hit size limits.
+  function storeImage(dataUrl,cb){
+    if(!S.signedIn||!dataUrl||dataUrl.indexOf("data:")!==0||dataUrl.length<50000){cb(dataUrl);return;}
+    fetch(API+"/api/image",{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+S.token},body:JSON.stringify({img:dataUrl})})
+      .then(function(r){return r.json()})
+      .then(function(d){ cb(d&&d.id?(API+"/api/image?id="+encodeURIComponent(d.id)):dataUrl); })
+      .catch(function(){cb(dataUrl)});
   }
   function loading(on,msgKey){
     var l=document.getElementById("pload");
@@ -1085,7 +1097,7 @@ this is my whole personality now</div>
       contentLang: S.contentLang,
       redNoteExperience: S.experience,
       projects: S.projects,
-      pageSim: { cells: S.pageSim ? S.pageSim.cells : null, blocks: S.blocks || null },
+      pageSim: { blocks: S.blocks || null, pageOrder: S.pageOrder || null },
     };
   }
   function finishAuth(ctx, session){
@@ -1121,8 +1133,19 @@ this is my whole personality now</div>
           S.cur=0; loadProject(0);
         }
         if(d.state && d.state.pageSim){
-          if(d.state.pageSim.cells && d.state.pageSim.cells.length) S.pageSim={cells:d.state.pageSim.cells};
-          if(Array.isArray(d.state.pageSim.blocks) && d.state.pageSim.blocks.length) S.blocks=d.state.pageSim.blocks;
+          var ps=d.state.pageSim;
+          if(Array.isArray(ps.blocks) && ps.blocks.length) S.blocks=ps.blocks;
+          if(Array.isArray(ps.pageOrder) && ps.pageOrder.length) S.pageOrder=ps.pageOrder;
+          if(Array.isArray(ps.cells) && ps.cells.length){
+            var bl=blocks();
+            ps.cells.forEach(function(c){
+              if(!c)return;
+              var slot=-1;
+              for(var i=0;i<bl.length;i++){if(!bl[i].title&&!bl[i].img){slot=i;break;}}
+              if(slot<0){bl.push({title:"",img:null});slot=bl.length-1;}
+              bl[slot].title=c.title||"";bl[slot].img=c.img||null;
+            });
+          }
           feedRender();
         }
       }).catch(function(){});
@@ -1251,11 +1274,11 @@ this is my whole personality now</div>
     if(S.token)fetch(API+"/api/auth/signout",{method:"POST",headers:{Authorization:"Bearer "+S.token}}).catch(function(){});
     try{localStorage.removeItem("nomiToken");localStorage.removeItem("nomiIdentity");}catch(e){}
     S.signedIn=false;S.token=null;S.identity=null;
-    S.projects=[];S.cur=-1;S.pageSim=null;pageShot=null;
+    S.projects=[];S.cur=-1;S.blocks=null;S.pageOrder=null;
     S.hasSelf=false;S.generated=false;S.learned=[];
     S.ownShotText="";S.admShotText="";
     pstate=[];ordList=[0];psel=0;
-    undoStudioStack.length=0;undoComposeStack.length=0;
+    undoStack.length=0;redoStack.length=0;
     document.getElementById("p-idea").value="";
     updateSaveLabel();
     toast(t("tSignedOut"));
@@ -1347,7 +1370,7 @@ this is my whole personality now</div>
     var v=nameIn.value.trim()||nameEl.textContent;
     nameIn.classList.remove("show");nameEl.classList.remove("hide");
     document.getElementById("p-rename").textContent=t("rename");
-    setName(v);toast(t("tRenamed")+" "+v);saveState();
+    setName(v);toast(t("tRenamed")+" "+v);doSaveNow();
   }
   nameIn.addEventListener("keydown",function(e){if(e.key==="Enter")commitName()});
   nameIn.addEventListener("blur",commitName);
@@ -1367,7 +1390,7 @@ this is my whole personality now</div>
   document.getElementById("p-lookcancel").addEventListener("click",function(){applyOrbPreview(appliedHue);lookPanel.hidden=true;});
   document.getElementById("p-lookok").addEventListener("click",function(){
     appliedHue=pendingHue;curHueF=HUES[appliedHue]==="none"?"":HUES[appliedHue];
-    applyOrbPreview(appliedHue);feedRender();lookPanel.hidden=true;toast(t("tLook"));saveState();
+    applyOrbPreview(appliedHue);feedRender();lookPanel.hidden=true;toast(t("tLook"));doSaveNow();
   });
   document.getElementById("p-writebtn").addEventListener("click",function(){
     document.getElementById("p-idea").value="";
@@ -1657,7 +1680,55 @@ this is my whole personality now</div>
   });
 
   /* ---------------- undo ---------------- */
-  var undoShapeStack=[],undoStudioStack=[],undoComposeStack=[];
+  var undoShapeStack=[];
+  // Global undo/redo: one history over EVERYTHING the user can change in
+  // compose + studio (idea text, drafts, covers, blocks, page order,
+  // placement, keep/discard). Cmd-Z / Shift-Cmd-Z work anywhere outside a
+  // text field (inside text fields the browser's native undo applies).
+  var undoStack=[],redoStack=[];
+  function snapState(){
+    var p=curProject();
+    return JSON.stringify({
+      idea:document.getElementById("p-idea").value,
+      psel:psel, ordList:ordList, pageOrder:S.pageOrder||[], blocks:S.blocks||[],
+      covers:covers(), drafts:p?p.drafts:null,
+      flags:pstate.map(function(x){return{k:x.kept,d:x.discarded}})
+    });
+  }
+  function mut(){
+    undoStack.push(snapState());
+    if(undoStack.length>60)undoStack.shift();
+    redoStack.length=0;
+  }
+  function applySnap(str){
+    var o=JSON.parse(str);
+    document.getElementById("p-idea").value=o.idea;
+    psel=o.psel; ordList=o.ordList.slice(); S.pageOrder=o.pageOrder.slice(); S.blocks=o.blocks;
+    var p=curProject();
+    if(p){ if(o.drafts)p.drafts=o.drafts; p.covers=o.covers.slice(); p.ordList=ordList.slice(); }
+    else guestCovers=o.covers.slice();
+    pstate=o.flags.map(function(f){return{kept:f.k,discarded:f.d}});
+    drawDrafts(); saveState();
+  }
+  function globalUndo(){
+    if(!undoStack.length){toast(t("tNothingUndo"));return;}
+    redoStack.push(snapState());
+    applySnap(undoStack.pop());
+    toast(t("tUndo"));
+  }
+  function globalRedo(){
+    if(!redoStack.length){toast(t("tNothingRedo"));return;}
+    undoStack.push(snapState());
+    applySnap(redoStack.pop());
+    toast(t("tRedo"));
+  }
+  document.addEventListener("keydown",function(e){
+    if(!(e.metaKey||e.ctrlKey)||String(e.key).toLowerCase()!=="z")return;
+    var el=e.target;
+    if(el&&(el.tagName==="INPUT"||el.tagName==="TEXTAREA"||el.isContentEditable))return;
+    e.preventDefault();
+    if(e.shiftKey)globalRedo();else globalUndo();
+  });
   function pushShapeUndo(){
     undoShapeStack.push({e:pe.value,i:pi.value,p:pp.value,customs:customs.slice(),freeform:freeform.slice(),
       own:document.getElementById("p-seedtext").value,adm:document.getElementById("p-admtext").value,
@@ -1681,30 +1752,8 @@ this is my whole personality now</div>
     restoreCats("p-catsnow",s.catsNow);restoreCats("p-catsgoal",s.catsGoal);
     pLast="";pRenderLocal();toast(t("tUndo"));
   });
-  function pushStudioUndo(){
-    undoStudioStack.push({
-      drafts:JSON.parse(JSON.stringify(drafts())),
-      covers:covers().slice(),
-      pstate:pstate.map(function(x){return{kept:x.kept,discarded:x.discarded}}),
-      ordList:ordList.slice(),psel:psel
-    });
-    if(undoStudioStack.length>25)undoStudioStack.shift();
-  }
-  document.getElementById("undo-studio").addEventListener("click",function(){
-    var s=undoStudioStack.pop();
-    if(!s){toast(t("tNothingUndo"));return;}
-    var p=curProject();
-    if(p){p.drafts=s.drafts;p.covers=s.covers.slice();}
-    else guestCovers=s.covers.slice();
-    pstate=s.pstate;ordList=s.ordList;psel=s.psel;
-    syncProject();
-    drawDrafts();toast(t("tUndo"));
-  });
-  document.getElementById("undo-compose").addEventListener("click",function(){
-    var s=undoComposeStack.pop();
-    if(s===undefined){toast(t("tNothingUndo"));return;}
-    document.getElementById("p-idea").value=s;toast(t("tUndo"));
-  });
+  document.getElementById("undo-studio").addEventListener("click",globalUndo);
+  document.getElementById("undo-compose").addEventListener("click",globalUndo);
 
   /* ---------------- compose + generate ---------------- */
   function setContentLang(cl){
@@ -1716,7 +1765,7 @@ this is my whole personality now</div>
   });
   document.querySelectorAll(".pstart").forEach(function(s){
     s.addEventListener("click",function(){
-      undoComposeStack.push(document.getElementById("p-idea").value);
+      mut();
       document.getElementById("p-idea").value=s.dataset.fill;
     });
   });
@@ -1726,7 +1775,7 @@ this is my whole personality now</div>
   // idea box so it feeds the generation.
   function appendIdea(txt){
     var ta=document.getElementById("p-idea");
-    undoComposeStack.push(ta.value);
+    mut();
     ta.value=(ta.value.trim()?ta.value.replace(/\s+$/,"")+"\n\n":"")+txt;
   }
   document.getElementById("p-attach").addEventListener("click",function(){document.getElementById("p-attfile").click()});
@@ -1778,7 +1827,7 @@ this is my whole personality now</div>
   function doGenerate(){
     var idea=document.getElementById("p-idea").value.trim();
     if(!idea){toast(t("tNeedGen"));pGoDirect("p-compose");return;}
-    undoComposeStack.push(idea);
+    mut();
     loading(true,"loadGen");
     fetch(API+"/api/generate",{
       method:"POST",
@@ -1842,7 +1891,7 @@ this is my whole personality now</div>
   }
 
   /* ---------------- studio ---------------- */
-  var pstate=[],psel=0,ordList=[0],pageShot=null,trayDragId=null,dragId=null,trayMode="studio";
+  var pstate=[],psel=0,ordList=[0],trayMode="studio";
   var KEPT=[{title:"5 hidden tea rooms in Kyoto"},{title:"what my tea budget really looks like"}];
   var LIKES=["1.2k","864","3.4k","921","640","512","208","96","1.1k","77"];
   function curProject(){return S.projects[S.cur]||null}
@@ -1884,60 +1933,25 @@ this is my whole personality now</div>
     if(!ordList.length)ordList=[psel];
     drawDrafts();
   }
-  function moveOrdRel(src,target,before){
-    var a=ordList.indexOf(src);if(a<0)return;
-    pushStudioUndo();
-    ordList.splice(a,1);
-    var b=target==null?-1:ordList.indexOf(target);
-    if(b<0)b=ordList.length;else if(!before)b=b+1;
-    ordList.splice(b,0,src);
-    syncProject();feedRender();saveState();
-  }
-  function nudgeOrd(id,dir){
-    var a=ordList.indexOf(id),b=a+dir;
-    if(a<0||b<0||b>=ordList.length)return;
-    pushStudioUndo();
-    ordList.splice(a,1);ordList.splice(b,0,id);
-    syncProject();feedRender();saveState();
-    var el=document.querySelector('#p-feedhost [data-did="'+id+'"]');
-    if(el)el.focus();
-  }
   function clearDropMarks(){document.querySelectorAll(".drop-before,.drop-after").forEach(function(el){el.classList.remove("drop-before","drop-after")})}
   function authorRow(likes){
     return '<svg class="orbi rnav"'+(curHueF?' style="filter:'+curHueF+'"':'')+'><use href="#orb"/></svg><span>'+selfName()+'</span><svg class="heart" viewBox="0 0 16 16"><path d="M8 13S2.5 9.7 2.5 6.2C2.5 4.4 4 3 5.7 3c1 0 1.9.5 2.3 1.2C8.4 3.5 9.3 3 10.3 3 12 3 13.5 4.4 13.5 6.2 13.5 9.7 8 13 8 13z" fill="currentColor"/></svg><span>'+likes+'</span>';
   }
+  // Cover renders at the image's OWN proportions (whole photo visible, frame
+  // adapts) - never a fixed frame that crops to a corner of a large upload.
+  function natCov(src,tint){
+    var cov=document.createElement("div");
+    cov.className="rncov"+(src?" nat":"")+(tint?" t2":"");
+    if(src){var im=document.createElement("img");im.src=src;im.alt="";cov.appendChild(im);}
+    return cov;
+  }
   function youCell(id){
     var cell=document.createElement("div");
     cell.className="rncell"+(id===psel?" cur":"");
-    cell.draggable=true;cell.dataset.did=id;cell.tabIndex=0;
+    cell.tabIndex=0;
     cell.setAttribute("role","listitem");
     cell.setAttribute("aria-label",trayTitle(id)+". Drag, or use arrow keys, to reorder.");
-    cell.addEventListener("dragstart",function(e){dragId=id;cell.classList.add("dragging");e.dataTransfer.effectAllowed="move"});
-    cell.addEventListener("dragend",function(){dragId=null;cell.classList.remove("dragging");clearDropMarks()});
-    cell.addEventListener("dragover",function(e){
-      e.preventDefault();
-      if(dragId==null||dragId===id)return;
-      var r=cell.getBoundingClientRect(),before=e.clientX<r.left+r.width/2;
-      cell.classList.toggle("drop-before",before);
-      cell.classList.toggle("drop-after",!before);
-    });
-    cell.addEventListener("dragleave",function(e){
-      if(e.relatedTarget&&cell.contains(e.relatedTarget))return;
-      cell.classList.remove("drop-before","drop-after");
-    });
-    cell.addEventListener("drop",function(e){
-      e.preventDefault();
-      var r=cell.getBoundingClientRect(),before=e.clientX<r.left+r.width/2;
-      clearDropMarks();
-      if(dragId!=null&&dragId!==id)moveOrdRel(dragId,id,before);
-    });
-    cell.addEventListener("keydown",function(e){
-      if(e.key==="ArrowLeft"||e.key==="ArrowUp"){e.preventDefault();nudgeOrd(id,-1)}
-      if(e.key==="ArrowRight"||e.key==="ArrowDown"){e.preventDefault();nudgeOrd(id,1)}
-    });
-    var cov=document.createElement("div");
-    cov.className="rncov"+(id%2?" t2":"");
-    if(id<3&&covers()[id])cov.style.backgroundImage="url("+covers()[id]+")";
+    var cov=natCov(id<3?covers()[id]:null,id%2);
     if(id===psel){var tg=document.createElement("span");tg.className="curtag";tg.textContent="current";cov.appendChild(tg);}
     var txt=document.createElement("div");txt.className="rntxt";
     var tt=document.createElement("div");tt.className="rntitle";tt.textContent=trayTitle(id);
@@ -1947,64 +1961,17 @@ this is my whole personality now</div>
     cell.appendChild(cov);cell.appendChild(txt);
     return cell;
   }
-  // Extracted page cells are editable: tap the title to correct it, tap the
-  // image to replace it with your own upload.
-  var simEditIx=-1;
-  function simCell(c,ci,ix){
-    var cell=document.createElement("div");cell.className="rncell";
-    var cov=document.createElement("div");cov.className="rncov"+(ix%2?" t2":"");
-    if(c.img)cov.style.backgroundImage="url("+c.img+")";
-    cov.style.cursor="pointer";
-    cov.setAttribute("role","button");
-    cov.setAttribute("aria-label","Replace this extracted image");
-    cov.addEventListener("click",function(){
-      simEditIx=ci;
-      document.getElementById("p-simfile").click();
-    });
-    var tg=document.createElement("span");tg.className="simtag";tg.textContent="your page";cov.appendChild(tg);
-    var txt=document.createElement("div");txt.className="rntxt";
-    var tt=document.createElement("div");tt.className="rntitle";tt.textContent=c.title||"";
-    tt.contentEditable="true";tt.spellcheck=false;
-    tt.setAttribute("aria-label","Extracted note title, editable");
-    tt.addEventListener("keydown",function(e){e.stopPropagation();if(e.key==="Enter"){e.preventDefault();tt.blur();}});
-    tt.addEventListener("blur",function(){
-      var v=tt.innerText.replace(/\n+/g," ").trim().slice(0,80);
-      if(S.pageSim&&S.pageSim.cells[ci]&&v!==S.pageSim.cells[ci].title){
-        S.pageSim.cells[ci].title=v;
-        toast(t("tEdited"));saveState();
-      }
-    });
-    txt.appendChild(tt);
-    cell.appendChild(cov);cell.appendChild(txt);
-    return cell;
-  }
   document.getElementById("p-blockfile").addEventListener("change",function(e){
     var f=e.target.files&&e.target.files[0];
     if(!f||blockEditIx<0)return;
     var target=blockEditIx; blockEditIx=-1;
     var r=new FileReader();
-    r.onload=function(){ shrink(r.result,900,function(sm){
-      blocks()[target].img=sm;
+    r.onload=function(){ shrink(r.result,900,function(sm){ storeImage(sm,function(url){
+      mut();
+      blocks()[target].img=url;
       feedRender();toast(t("tCover"));saveState();
       track("block_upload");
-    }); };
-    r.readAsDataURL(f);
-    e.target.value="";
-  });
-  document.getElementById("p-simfile").addEventListener("change",function(e){
-    var f=e.target.files&&e.target.files[0];
-    if(!f||simEditIx<0||!S.pageSim)return;
-    var target=simEditIx;
-    simEditIx=-1;
-    var r=new FileReader();
-    r.onload=function(){
-      shrink(r.result,1000,function(sm){
-        if(S.pageSim&&S.pageSim.cells[target]){
-          S.pageSim.cells[target].img=sm;
-          feedRender();toast(t("tCover"));saveState();
-        }
-      });
-    };
+    }); }); };
     r.readAsDataURL(f);
     e.target.value="";
   });
@@ -2013,16 +1980,18 @@ this is my whole personality now</div>
   var blockEditIx=-1;
   function blocks(){
     if(!Array.isArray(S.blocks)||!S.blocks.length){
-      S.blocks=[{title:"",img:null},{title:"",img:null},{title:"",img:null},{title:"",img:null},{title:"",img:null}];
+      S.blocks=[];
+      for(var i=0;i<8;i++)S.blocks.push({title:"",img:null});
     }
     return S.blocks;
   }
-  function blockCell(i,ix){
+  function blockCell(i){
     var b=blocks()[i];
+    if(!b)return document.createElement("div");
     var cell=document.createElement("div");cell.className="rncell";
-    var cov=document.createElement("div");cov.className="rncov blkcov"+(ix%2?" t2":"");
-    if(b.img)cov.style.backgroundImage="url("+b.img+")";
-    else{var h=document.createElement("span");h.className="blkhint";h.textContent=t("blkImgHint");cov.appendChild(h);}
+    var cov=natCov(b.img,i%2);
+    cov.classList.add("blkcov");
+    if(!b.img){var h=document.createElement("span");h.className="blkhint";h.textContent=t("blkImgHint");cov.appendChild(h);}
     cov.setAttribute("role","button");
     cov.setAttribute("aria-label","Upload an image for this placeholder note");
     cov.addEventListener("click",function(){blockEditIx=i;document.getElementById("p-blockfile").click();});
@@ -2035,7 +2004,7 @@ this is my whole personality now</div>
     tt.addEventListener("keydown",function(e){e.stopPropagation();if(e.key==="Enter"){e.preventDefault();tt.blur();}});
     tt.addEventListener("blur",function(){
       var v=tt.innerText.replace(/\n+/g," ").trim().slice(0,60);
-      if(v!==b.title){b.title=v;saveState();}
+      if(v!==b.title){mut();b.title=v;saveState();}
     });
     var row=document.createElement("div");row.className="rnrow";
     row.innerHTML=authorRow("");
@@ -2043,39 +2012,74 @@ this is my whole personality now</div>
     cell.appendChild(cov);cell.appendChild(txt);
     return cell;
   }
+  // ONE ordered list for the whole page column: placed draft cells ("dN") and
+  // placeholder blocks ("bN") together, all draggable against each other.
+  var dragKey=null;
+  function pageKeys(){
+    if(!Array.isArray(S.pageOrder))S.pageOrder=[];
+    var want={};
+    ordList.forEach(function(id){want["d"+id]=1});
+    blocks().forEach(function(b,i){want["b"+i]=1});
+    var keys=[];
+    S.pageOrder.forEach(function(k){ if(want[k]){keys.push(k);delete want[k];} });
+    Object.keys(want).filter(function(k){return k.charAt(0)==="d"}).forEach(function(k){keys.unshift(k)});
+    Object.keys(want).filter(function(k){return k.charAt(0)==="b"}).forEach(function(k){keys.push(k)});
+    S.pageOrder=keys;
+    return keys;
+  }
+  function moveKey(src,target,before){
+    var a=S.pageOrder.indexOf(src);
+    if(a<0||src===target)return;
+    mut();
+    S.pageOrder.splice(a,1);
+    var b=target==null?S.pageOrder.length:S.pageOrder.indexOf(target);
+    if(b<0)b=S.pageOrder.length;else if(!before)b=b+1;
+    S.pageOrder.splice(b,0,src);
+    feedRender();saveState();
+  }
+  function wireCellDrag(cell,key){
+    cell.draggable=true;cell.dataset.pkey=key;
+    cell.addEventListener("dragstart",function(e){dragKey=key;cell.classList.add("dragging");e.dataTransfer.effectAllowed="move"});
+    cell.addEventListener("dragend",function(){dragKey=null;cell.classList.remove("dragging");clearDropMarks()});
+    cell.addEventListener("dragover",function(e){
+      e.preventDefault();
+      if(dragKey==null||dragKey===key)return;
+      var r=cell.getBoundingClientRect(),before=e.clientY<r.top+r.height/2;
+      cell.classList.toggle("drop-before",before);
+      cell.classList.toggle("drop-after",!before);
+    });
+    cell.addEventListener("dragleave",function(e){
+      if(e.relatedTarget&&cell.contains(e.relatedTarget))return;
+      cell.classList.remove("drop-before","drop-after");
+    });
+    cell.addEventListener("drop",function(e){
+      e.preventDefault();
+      var r=cell.getBoundingClientRect(),before=e.clientY<r.top+r.height/2;
+      clearDropMarks();
+      if(dragKey!=null&&dragKey!==key)moveKey(dragKey,key,before);
+    });
+    cell.addEventListener("keydown",function(e){
+      if(e.target.isContentEditable)return;
+      var a=S.pageOrder.indexOf(key);
+      if(e.key==="ArrowLeft"||e.key==="ArrowUp"){e.preventDefault();if(a>0)moveKey(key,S.pageOrder[a-1],true)}
+      if(e.key==="ArrowRight"||e.key==="ArrowDown"){e.preventDefault();if(a<S.pageOrder.length-1)moveKey(key,S.pageOrder[a+1],false)}
+    });
+  }
   function feedRender(){
-    // Placement is EXPLICIT: selection never adds, removes, or reorders cells.
-    ordList=ordList.filter(function(x){return x>=0&&x<3+KEPT.length});
+    ordList=ordList.filter(function(x){return x>=0&&x<3});
     var host=document.getElementById("p-feedhost");
     host.innerHTML="";
-    if(S.pageSim && S.pageSim.cells && S.pageSim.cells.length){
-      // Simulated page: the user's drafts placed first (a fresh post leads the
-      // grid), then the extracted cells of their real page in original order.
-      var grid=document.createElement("div");grid.className="pgridwrap";
-      ordList.forEach(function(id){grid.appendChild(youCell(id))});
-      S.pageSim.cells.forEach(function(c,ci){grid.appendChild(simCell(c,ci,ordList.length+ci))});
-      host.appendChild(grid);
-    }else if(pageShot){
-      var wrap=document.createElement("div");wrap.className="pfeedshot";
-      var img=document.createElement("img");img.src=pageShot;img.alt="Your RedNote page screenshot";
-      var over=document.createElement("div");over.className="overcells";
-      ordList.forEach(function(id){over.appendChild(youCell(id))});
-      wrap.appendChild(img);wrap.appendChild(over);
-      host.appendChild(wrap);
-    }else{
-      var grid2=document.createElement("div");grid2.className="pgridwrap";
-      grid2.addEventListener("dragover",function(e){e.preventDefault()});
-      grid2.addEventListener("drop",function(e){
-        if(e.target===grid2&&dragId!=null){e.preventDefault();clearDropMarks();moveOrdRel(dragId,null,false);}
-      });
-      ordList.forEach(function(id){grid2.appendChild(youCell(id))});
-      blocks().forEach(function(b,i){grid2.appendChild(blockCell(i,ordList.length+i))});
-      host.appendChild(grid2);
-    }
+    var grid=document.createElement("div");grid.className="pgridwrap";
+    pageKeys().forEach(function(k){
+      var cell = k.charAt(0)==="d" ? youCell(+k.slice(1)) : blockCell(+k.slice(1));
+      wireCellDrag(cell,k);
+      grid.appendChild(cell);
+    });
+    host.appendChild(grid);
   }
   var tray=document.getElementById("p-tray");
   function trayToggle(id){
-    pushStudioUndo();
+    mut();
     if(ordList.indexOf(id)>=0)ordList=ordList.filter(function(x){return x!==id});
     else ordList.push(id);
     syncProject();feedRender();trayRender();saveState();
@@ -2114,33 +2118,9 @@ this is my whole personality now</div>
         cell.addEventListener("click",function(){trayToggle(id)});
         cell.addEventListener("keydown",function(e){
           if(e.key==="Enter"||e.key===" "){e.preventDefault();trayToggle(id)}
-          if(sel&&(e.key==="ArrowLeft"||e.key==="ArrowUp")){e.preventDefault();nudgeOrd(id,-1);trayRender()}
-          if(sel&&(e.key==="ArrowRight"||e.key==="ArrowDown")){e.preventDefault();nudgeOrd(id,1);trayRender()}
+
         });
-        cell.draggable=sel;
-        cell.addEventListener("dragstart",function(e){trayDragId=id;cell.classList.add("dragging");e.dataTransfer.effectAllowed="move"});
-        cell.addEventListener("dragend",function(){trayDragId=null;cell.classList.remove("dragging");clearDropMarks()});
-        cell.addEventListener("dragover",function(e){
-          e.preventDefault();
-          if(trayDragId==null||trayDragId===id)return;
-          if(ordList.indexOf(id)<0){cell.classList.add("drop-after");return;}
-          var r=cell.getBoundingClientRect(),before=e.clientX<r.left+r.width/2;
-          cell.classList.toggle("drop-before",before);
-          cell.classList.toggle("drop-after",!before);
-        });
-        cell.addEventListener("dragleave",function(e){
-          if(e.relatedTarget&&cell.contains(e.relatedTarget))return;
-          cell.classList.remove("drop-before","drop-after");
-        });
-        cell.addEventListener("drop",function(e){
-          e.preventDefault();
-          var r=cell.getBoundingClientRect(),before=e.clientX<r.left+r.width/2;
-          clearDropMarks();
-          if(trayDragId==null||trayDragId===id)return;
-          if(ordList.indexOf(id)>=0){moveOrdRel(trayDragId,id,before);}
-          else{moveOrdRel(trayDragId,null,false);}
-          trayRender();
-        });
+
       }
       host.appendChild(cell);
     });
@@ -2189,23 +2169,35 @@ this is my whole personality now</div>
     var f=e.target.files&&e.target.files[0];
     if(!f)return;
     var r=new FileReader();
-    r.onload=function(){ shrink(r.result,2000,function(smallShot){
-      pageShot=smallShot;
-      S.pageSim=null;
-      feedRender();
+    r.onload=function(){ shrink(r.result,2000,function(shot){
       toast(t("tShotSim"));
-      fetch(API+"/api/vision/page",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({image:pageShot})})
+      fetch(API+"/api/vision/page",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({image:shot})})
         .then(function(x){return x.json()})
         .then(function(d){
-          if(d.cells && d.cells.length){
-            cropCells(pageShot,d.cells,function(out){
-              S.pageSim={cells:out};
-              feedRender();
-              toast(t("tShotSimDone"));
-              track("sim_upload",{cells:out.length});
-              saveState();
+          if(!(d.cells&&d.cells.length)){toast(t("tShotSimFail"));return;}
+          cropCells(shot,d.cells,function(out){
+            // Extracted titles + cropped photos fill EMPTY blocks first, then
+            // append new blocks. The screenshot itself is never shown.
+            mut();
+            var bl=blocks();
+            var pending=out.length;
+            out.forEach(function(c){
+              storeImage(c.img,function(url){
+                var slot=-1;
+                for(var i=0;i<bl.length;i++){if(!bl[i].title&&!bl[i].img){slot=i;break;}}
+                if(slot<0){bl.push({title:"",img:null});slot=bl.length-1;}
+                bl[slot].title=c.title||"";
+                bl[slot].img=url;
+                pending--;
+                if(pending===0){
+                  feedRender();
+                  toast(t("tShotSimDone"));
+                  track("sim_upload",{cells:out.length});
+                  saveState();
+                }
+              });
             });
-          } else { toast(t("tShotSimFail")); }
+          });
         })
         .catch(function(){ toast(t("tShotSimFail")); });
     }); };
@@ -2239,7 +2231,7 @@ this is my whole personality now</div>
     el.addEventListener("blur",function(){
       var v=el.innerText;
       if(v===el.dataset.before)return;
-      pushStudioUndo();
+      mut();
       ensureProject();
       var d=curProject().drafts[ix];
       if(field==="title"){ d.title=v.replace(/\n+/g," ").trim().slice(0,120); el.innerText=d.title; }
@@ -2295,8 +2287,8 @@ this is my whole personality now</div>
       });
       cv.addEventListener("click",function(e){e.stopPropagation();psel=ix;document.getElementById("p-file").click();});
       cv.addEventListener("keydown",function(e){if(e.key==="Enter"||e.key===" "){e.preventDefault();e.stopPropagation();psel=ix;document.getElementById("p-file").click();}});
-      pk.addEventListener("click",function(e){e.stopPropagation();pushStudioUndo();st.kept=!st.kept;st.discarded=false;drawDrafts();if(st.kept)toast(t("tKept"));});
-      px.addEventListener("click",function(e){e.stopPropagation();pushStudioUndo();st.discarded=!st.discarded;if(st.discarded)st.kept=false;drawDrafts();});
+      pk.addEventListener("click",function(e){e.stopPropagation();mut();st.kept=!st.kept;st.discarded=false;drawDrafts();if(st.kept)toast(t("tKept"));});
+      px.addEventListener("click",function(e){e.stopPropagation();mut();st.discarded=!st.discarded;if(st.discarded)st.kept=false;drawDrafts();});
       host.appendChild(card);
     });
     feedRender();
@@ -2311,11 +2303,11 @@ this is my whole personality now</div>
     var target=psel;
     var r=new FileReader();
     r.onload=function(){
-      shrink(r.result,1200,function(sm){
-        pushStudioUndo();
-        covers()[target]=sm;
+      shrink(r.result,1200,function(sm){ storeImage(sm,function(url){
+        mut();
+        covers()[target]=url;
         drawDrafts();toast(t("tCover"));saveState();
-      });
+      }); });
     };
     r.readAsDataURL(f);
     e.target.value="";
@@ -2336,7 +2328,7 @@ this is my whole personality now</div>
     document.querySelectorAll(".pechip").forEach(function(c){c.disabled=true});
     toast(t("tRefining"));
     ensureProject();
-    pushStudioUndo();
+    mut();
     var proj=curProject();
     fetch(API+"/api/refine",{
       method:"POST",headers:{"Content-Type":"application/json"},
@@ -2353,12 +2345,12 @@ this is my whole personality now</div>
         toast(t("tRefined"));
         recordLearn("refine preference: "+instruction);
         saveState();
-      } else { undoStudioStack.pop(); toast(t("tOffline")); }
+      } else { undoStack.pop(); toast(t("tOffline")); }
     })
     .catch(function(){
       refining=false;
       document.querySelectorAll(".pechip").forEach(function(c){c.disabled=false});
-      undoStudioStack.pop();
+      undoStack.pop();
       toast(t("tOffline"));
     });
   }
