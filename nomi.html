@@ -1074,7 +1074,7 @@ this is my whole personality now</div>
     var img=new Image();
     img.onload=function(){
       var w=img.naturalWidth,h=img.naturalHeight;
-      var sc=Math.min(1,maxW/w);
+      var sc=Math.min(1,maxW/w,Math.sqrt(2000000/Math.max(1,w*h)));
       var cv=document.createElement("canvas");
       cv.width=Math.max(1,Math.round(w*sc));cv.height=Math.max(1,Math.round(h*sc));
       cv.getContext("2d").drawImage(img,0,0,cv.width,cv.height);
@@ -1121,13 +1121,16 @@ this is my whole personality now</div>
   }
   // Downscale big uploads client-side so every image fits the API body limits
   // while staying visually sharp.
+  // Scale by BOTH width and total pixels, and re-encode heavy files (tall
+  // phone-screenshot PNGs stay narrow but weigh megabytes) as JPEG.
   function shrink(dataUrl,maxW,cb){
     var img=new Image();
     img.onload=function(){
       var w=img.naturalWidth,h=img.naturalHeight;
-      if(w<=maxW){cb(dataUrl);return;}
-      var s=maxW/w,cv=document.createElement("canvas");
-      cv.width=Math.round(w*s);cv.height=Math.round(h*s);
+      var s=Math.min(1, maxW/w, Math.sqrt(2400000/Math.max(1,w*h)));
+      if(s>=1 && dataUrl.length<400000){cb(dataUrl);return;}
+      var cv=document.createElement("canvas");
+      cv.width=Math.max(1,Math.round(w*s));cv.height=Math.max(1,Math.round(h*s));
       cv.getContext("2d").drawImage(img,0,0,cv.width,cv.height);
       cb(cv.toDataURL("image/jpeg",0.85));
     };
