@@ -78,7 +78,7 @@
   .adiv::before,.adiv::after{content:"";flex:1;height:1px;background:var(--line)}
   .ain{border:1px solid var(--line);border-radius:10px;padding:11px 14px;font-size:13.5px;font-family:var(--body);color:var(--text);width:100%}
   .amsg{font-size:12px;color:var(--blue);min-height:1.2em}
-  .amodal{position:absolute;inset:0;background:rgba(30,42,56,.4);backdrop-filter:blur(3px);display:none;align-items:center;justify-content:center;z-index:34;padding:20px}
+  .amodal{position:fixed;inset:0;background:rgba(30,42,56,.4);backdrop-filter:blur(3px);display:none;align-items:center;justify-content:center;z-index:34;padding:20px}
   .amodal.show{display:flex;animation:pfade .25s ease}
 
   /* gate */
@@ -234,7 +234,9 @@
   #p-feedhost .rncov:not(.nat){aspect-ratio:3/3.3}
   #p-feedhost .rntitle[contenteditable]:hover{background:var(--tint)}
   #p-feedhost .rntitle[contenteditable]:focus{background:var(--tint);outline:1.5px solid var(--ind)}
-  .pgridwrap{columns:2 150px;column-gap:7px;max-width:430px}
+  .pgridwrap{column-gap:7px;max-width:430px}
+  .pgridwrap.cols1{columns:1}
+  .pgridwrap.cols2{columns:2}
   .pgridwrap .rncell{break-inside:avoid;margin-bottom:7px;display:flex}
   .pgridwrap .rntxt{flex:none}
   .pfeedshot{position:relative;border-radius:8px;overflow:hidden;flex:none;min-height:0}
@@ -308,13 +310,14 @@
   @media (max-width:900px){.pstudio{grid-template-columns:1fr}.pdrafts{grid-template-columns:1fr}.pfeed{height:auto;min-height:0}#p-feedhost{flex:none;max-height:360px}}
 
   /* tray, modal, load, toast */
-  .ptray{position:absolute;inset:0;background:rgba(30,42,56,.35);display:none;align-items:center;justify-content:center;z-index:28;padding:16px}
+  .ptray{position:fixed;inset:0;background:rgba(30,42,56,.35);display:none;align-items:center;justify-content:center;z-index:28;padding:16px}
   .ptray.show{display:flex;animation:pfade .2s ease}
   .ptraycard{background:var(--panel);border-radius:14px;padding:24px;width:min(460px,96%);box-shadow:0 24px 60px rgba(30,42,56,.25);display:flex;flex-direction:column;gap:10px}
   .ptraycard h6{font-family:var(--disp);font-weight:500;font-size:15px;color:var(--text)}
   .ptraycard .tsub{font-size:11.5px;color:var(--mut);margin-bottom:4px}
-  .traygrid{display:grid;grid-template-columns:repeat(2,minmax(0,210px));gap:10px;justify-content:center;max-height:420px;overflow:auto;padding:2px}
-  .pmodal{position:absolute;inset:0;background:rgba(30,42,56,.4);backdrop-filter:blur(3px);display:none;align-items:center;justify-content:center;z-index:30;padding:16px}
+  .traygrid{columns:2 150px;column-gap:10px;max-height:420px;overflow:auto;padding:2px}
+  .traygrid .rncell{break-inside:avoid;margin-bottom:10px}
+  .pmodal{position:fixed;inset:0;background:rgba(30,42,56,.4);backdrop-filter:blur(3px);display:none;align-items:center;justify-content:center;z-index:30;padding:16px}
   .pmodal.show{display:flex;animation:pfade .25s ease}
   .pmcard{background:var(--panel);border-radius:16px;padding:34px 38px;max-width:420px;text-align:center;display:none;flex-direction:column;gap:12px;align-items:center;box-shadow:0 24px 60px rgba(30,42,56,.25)}
   .pmcard.on{display:flex}
@@ -323,10 +326,10 @@
   .pmcard .pwl{color:var(--ind);font-size:14px;text-decoration:underline;cursor:pointer;background:none;border:0;font-family:var(--body)}
   .pmcard .pcl{font-size:12px;color:var(--dim);background:none;border:0;cursor:pointer;margin-top:4px;font-family:var(--body)}
   .pmcard .ain{text-align:center}
-  .pload{position:absolute;inset:0;background:rgba(255,255,255,.94);display:none;align-items:center;justify-content:center;z-index:35;flex-direction:column;gap:14px}
+  .pload{position:fixed;inset:0;background:rgba(255,255,255,.94);display:none;align-items:center;justify-content:center;z-index:35;flex-direction:column;gap:14px}
   .pload.show{display:flex}
   .pload span{font-size:13px;color:var(--ind);font-family:var(--mono);letter-spacing:.05em}
-  .ptoast{position:absolute;left:50%;bottom:26px;transform:translate(-50%,20px);background:var(--navy);color:#FFFFFF;font-size:13px;border-radius:999px;padding:10px 22px;opacity:0;pointer-events:none;transition:opacity .25s ease,transform .25s ease;box-shadow:0 10px 30px rgba(30,42,56,.3);z-index:40;max-width:90%}
+  .ptoast{position:fixed;left:50%;bottom:26px;transform:translate(-50%,20px);background:var(--navy);color:#FFFFFF;font-size:13px;border-radius:999px;padding:10px 22px;opacity:0;pointer-events:none;transition:opacity .25s ease,transform .25s ease;box-shadow:0 10px 30px rgba(30,42,56,.3);z-index:40;max-width:90%}
   .ptoast.show{opacity:1;transform:translate(-50%,0)}
   .wl h2,.wl .wsupport{text-wrap:balance}
   .rncell .blkcov{cursor:pointer}
@@ -636,7 +639,11 @@ this is my whole personality now</div>
         <div class="pstudio">
           <div class="pfeed">
             <div class="pfeedbar"><div class="fh2" data-i="pagePrev">Your RedNote page preview</div>
-              <button class="pboxbtn" id="p-box" aria-label="Open the drafts box"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><path d="M2.5 5.5h11M3.2 5.5V13h9.6V5.5M2 2.8h12v2.7H2zM6.3 8.2h3.4"/></svg></button>
+              <div class="langtog" role="group" aria-label="Preview layout" style="margin-left:auto">
+                <button id="cols-1" data-i="col1">1</button>
+                <button id="cols-2" class="on" data-i="col2">2</button>
+              </div>
+              <button class="pboxbtn" id="p-box" aria-label="Open the drafts box" style="margin-left:6px"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><path d="M2.5 5.5h11M3.2 5.5V13h9.6V5.5M2 2.8h12v2.7H2zM6.3 8.2h3.4"/></svg></button>
             </div>
             <div style="font-size:10px;color:var(--dim)" data-i="pagePrevSub">your RedNote page, with this note placed in it</div>
             <div id="p-feedhost" style="display:flex;flex-direction:column"></div>
@@ -827,6 +834,7 @@ this is my whole personality now</div>
       tSignedOut:"signed out",
       tAuthErr:"could not verify, check the code", tUndo:"undone", tNothingUndo:"nothing to undo",
       tRedo:"redone", tNothingRedo:"nothing to redo",
+      col1:"1", col2:"2",
       loadGen:"writing three notes as your social-self", loadAuth:"one moment",
       gTimePre:"recipe · post this",
     },
@@ -938,6 +946,7 @@ this is my whole personality now</div>
       tSignedOut:"已退出登录",
       tAuthErr:"验证失败，请检查验证码", tUndo:"已撤销", tNothingUndo:"没有可撤销的操作",
       tRedo:"已重做", tNothingRedo:"没有可重做的操作",
+      col1:"1列", col2:"2列",
       loadGen:"正在以你的 social-self 写三篇笔记", loadAuth:"请稍候",
       gTimePre:"配方 · 建议发布时间",
     }
@@ -1011,14 +1020,61 @@ this is my whole personality now</div>
     el.textContent=msg; el.classList.add("show");
     clearTimeout(toastT); toastT=setTimeout(function(){el.classList.remove("show")},2600);
   }
+  // Iteratively downscale until the image fits comfortably under the storage
+  // per-record limit (~950k chars), preserving proportions.
+  function shrinkFit(dataUrl,cb){
+    var steps=[[1200,0.85],[1000,0.78],[840,0.72],[680,0.62]];
+    function attempt(i){
+      shrinkQ(dataUrl,steps[i][0],steps[i][1],function(out){
+        if(out.length<820000||i>=steps.length-1)cb(out);
+        else attempt(i+1);
+      });
+    }
+    attempt(0);
+  }
+  function shrinkQ(dataUrl,maxW,q,cb){
+    var img=new Image();
+    img.onload=function(){
+      var w=img.naturalWidth,h=img.naturalHeight;
+      var sc=Math.min(1,maxW/w);
+      var cv=document.createElement("canvas");
+      cv.width=Math.max(1,Math.round(w*sc));cv.height=Math.max(1,Math.round(h*sc));
+      cv.getContext("2d").drawImage(img,0,0,cv.width,cv.height);
+      cb(cv.toDataURL("image/jpeg",q));
+    };
+    img.onerror=function(){cb(dataUrl)};
+    img.src=dataUrl;
+  }
   // Signed-in users' images are stored server-side (each as its own record)
   // and referenced by URL, so account saves never hit size limits.
   function storeImage(dataUrl,cb){
     if(!S.signedIn||!dataUrl||dataUrl.indexOf("data:")!==0||dataUrl.length<50000){cb(dataUrl);return;}
-    fetch(API+"/api/image",{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+S.token},body:JSON.stringify({img:dataUrl})})
-      .then(function(r){return r.json()})
-      .then(function(d){ cb(d&&d.id?(API+"/api/image?id="+encodeURIComponent(d.id)):dataUrl); })
-      .catch(function(){cb(dataUrl)});
+    shrinkFit(dataUrl,function(fit){
+      fetch(API+"/api/image",{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+S.token},body:JSON.stringify({img:fit})})
+        .then(function(r){return r.json()})
+        .then(function(d){ cb(d&&d.id?(API+"/api/image?id="+encodeURIComponent(d.id)):fit); })
+        .catch(function(){cb(fit)});
+    });
+  }
+  // Migrate any legacy inline images (old saves) to server storage, a few per
+  // pass, so accounts with big historical photos become saveable again.
+  function externalizePending(done){
+    if(!S.signedIn){done();return;}
+    var jobs=[];
+    S.projects.forEach(function(p){
+      (p.covers||[]).forEach(function(c,i){
+        if(typeof c==="string"&&c.indexOf("data:")===0&&c.length>50000)jobs.push({set:function(v){p.covers[i]=v},val:c});
+      });
+    });
+    (S.blocks||[]).forEach(function(b){
+      if(b&&typeof b.img==="string"&&b.img.indexOf("data:")===0&&b.img.length>50000)jobs.push({set:function(v){b.img=v},val:b.img});
+    });
+    jobs=jobs.slice(0,4);
+    if(!jobs.length){done();return;}
+    var n=jobs.length;
+    jobs.forEach(function(j){
+      storeImage(j.val,function(url){ j.set(url); if(--n===0)done(); });
+    });
   }
   function loading(on,msgKey){
     var l=document.getElementById("pload");
@@ -1173,27 +1229,41 @@ this is my whole personality now</div>
   // past it. Slim a COPY of the payload progressively (never the live state)
   // until it fits, and treat non-2xx responses as failures.
   function slimPayload(payload){
+    function stripInline(v){return (typeof v==="string"&&v.indexOf("data:")===0)?null:v}
     var s=JSON.stringify(payload);
-    if(s.length<3800000) return s;
+    if(s.length<3600000) return s;
     var p=JSON.parse(s);
-    (p.projects||[]).forEach(function(pr,ix){ if(ix>0&&pr.covers) pr.covers=pr.covers.map(function(){return null}); });
+    (p.projects||[]).forEach(function(pr,ix){ if(ix>0&&pr.covers) pr.covers=pr.covers.map(stripInline); });
+    if(p.pageSim&&p.pageSim.blocks) p.pageSim.blocks.forEach(function(b){ if(b) b.img=stripInline(b.img); });
     s=JSON.stringify(p);
-    if(s.length<3800000) return s;
-    (p.projects||[]).forEach(function(pr){ if(pr.covers) pr.covers=pr.covers.map(function(){return null}); });
-    s=JSON.stringify(p);
-    if(s.length<3800000) return s;
-    if(p.pageSim&&p.pageSim.cells) p.pageSim.cells=p.pageSim.cells.map(function(c){return {title:c.title,img:null}});
+    if(s.length<3600000) return s;
+    (p.projects||[]).forEach(function(pr){ if(pr.covers) pr.covers=pr.covers.map(stripInline); });
     return JSON.stringify(p);
   }
   function doSaveNow(){
     if(!S.signedIn) return Promise.resolve(false);
     clearTimeout(saveTimer);
-    return fetch(API+"/api/state/save",{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+S.token},
-      body:slimPayload(guestState()),keepalive:true})
-      .then(function(r){return !!r.ok})
-      .catch(function(){return false});
+    return new Promise(function(res){
+      externalizePending(function(){
+        fetch(API+"/api/state/save",{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+S.token},
+          body:slimPayload(guestState()),keepalive:true})
+          .then(function(r){S.dirty=false;res(!!r.ok)})
+          .catch(function(){res(false)});
+      });
+    });
   }
+  // Cmd-S / Ctrl-S saves; autosave flushes dirty state every 40 seconds.
+  document.addEventListener("keydown",function(e){
+    if((e.metaKey||e.ctrlKey)&&String(e.key).toLowerCase()==="s"){
+      e.preventDefault();
+      if(!S.signedIn){openAuth("register");return;}
+      syncProject();
+      doSaveNow().then(function(ok){toast(t(ok?"tSaved":"tSaveFail"))});
+    }
+  });
+  setInterval(function(){ if(S.signedIn&&S.dirty) doSaveNow(); },40000);
   function saveState(){
+    S.dirty=true;
     if(!S.signedIn) return;
     clearTimeout(saveTimer);
     saveTimer=setTimeout(doSaveNow,800);
@@ -2069,7 +2139,7 @@ this is my whole personality now</div>
     ordList=ordList.filter(function(x){return x>=0&&x<3});
     var host=document.getElementById("p-feedhost");
     host.innerHTML="";
-    var grid=document.createElement("div");grid.className="pgridwrap";
+    var grid=document.createElement("div");grid.className="pgridwrap cols"+(S.cols||"2");
     pageKeys().forEach(function(k){
       var cell = k.charAt(0)==="d" ? youCell(+k.slice(1)) : blockCell(+k.slice(1));
       wireCellDrag(cell,k);
@@ -2104,8 +2174,7 @@ this is my whole personality now</div>
         cell.setAttribute("aria-pressed",sel?"true":"false");
         cell.setAttribute("aria-label",trayTitle(id));
       }
-      var cov=document.createElement("div");cov.className="rncov"+(ix%2?" t2":"");
-      if(id<3&&covers()[id])cov.style.backgroundImage="url("+covers()[id]+")";
+      var cov=natCov(id<3?covers()[id]:null,ix%2);
       if(!browse&&id===psel){var tg=document.createElement("span");tg.className="curtag";tg.textContent="current";cov.appendChild(tg);}
       if(!browse){var bd=document.createElement("span");bd.className="selbadge";cov.appendChild(bd);}
       var txt=document.createElement("div");txt.className="rntxt";
@@ -2130,6 +2199,17 @@ this is my whole personality now</div>
     tray.classList.add("show");
   }
   document.getElementById("p-box").addEventListener("click",function(){openTray("studio")});
+  function setCols(n){
+    S.cols=String(n);
+    try{localStorage.setItem("nomiCols",S.cols)}catch(e){}
+    document.getElementById("cols-1").classList.toggle("on",S.cols==="1");
+    document.getElementById("cols-2").classList.toggle("on",S.cols==="2");
+    feedRender();
+  }
+  document.getElementById("cols-1").addEventListener("click",function(){setCols(1)});
+  document.getElementById("cols-2").addEventListener("click",function(){setCols(2)});
+  try{S.cols=localStorage.getItem("nomiCols")||"2"}catch(e){S.cols="2"}
+  setCols(S.cols);
   document.getElementById("p-trayclose").addEventListener("click",function(){tray.classList.remove("show")});
   tray.addEventListener("click",function(e){if(e.target===tray)tray.classList.remove("show")});
 

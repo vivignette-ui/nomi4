@@ -81,14 +81,16 @@ async function kvSet(key, val) {
   const url = process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL, tok = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN;
   if (url && tok) {
     try {
-      await fetch(url + "/set/" + encodeURIComponent(key), {
+      const r = await fetch(url + "/set/" + encodeURIComponent(key), {
         method: "POST", headers: { Authorization: "Bearer " + tok }, body: JSON.stringify(val),
       });
-      return;
-    } catch { return; }
+      if (!r.ok) console.error("[kv] set failed", key.slice(0, 30), r.status);
+      return r.ok;
+    } catch (e) { console.error("[kv] set error", e.message); return false; }
   }
   const db = tmpLoad();
   db[key] = val; tmpSave();
+  return true;
 }
 
 /* ---------- analytics (Airtable: Nomi Users / Nomi Events) ---------- */
@@ -520,12 +522,12 @@ function originOf(req) {
 // Redis entry and replaced by a stable /api/image URL, so state stays small.
 async function externalizeImages(userId, obj) {
   async function store(v) {
-    if (typeof v !== "string" || !v.startsWith("data:image") || v.length < 50000) return v;
-    if (v.length > 1400000) return null;
+    if (typeof v !== "string" || !v.startsWith("data:image") || v.length < 20000) return v;
+    if (v.length > 950000) return null; // over the KV per-request limit: drop rather than poison the save
     const hash = crypto.createHash("sha1").update(v).digest("hex").slice(0, 20);
     const id = userId + ":" + hash;
-    await kvSet("img:" + id, v);
-    return "/api/image?id=" + id;
+    const ok = await kvSet("img:" + id, v);
+    return ok ? "/api/image?id=" + id : null;
   }
   for (const p of (obj.projects || [])) {
     if (Array.isArray(p.covers)) for (let i = 0; i < p.covers.length; i++) p.covers[i] = await store(p.covers[i]);
@@ -556,7 +558,15 @@ async function migrateGuestState(userId, guestState) {
   } else {
     next.projects = Array.isArray(cur.projects) ? cur.projects : [];
   }
-  await kvSet("state:" + userId, next);
+  // final guard: if state still exceeds the KV request limit, shed remaining
+  // inline images before writing
+  let js = JSON.stringify(next);
+  if (js.length > 900000) {
+    for (const p of (next.projects || [])) if (Array.isArray(p.covers)) p.covers = p.covers.map(c => (typeof c === "string" && c.startsWith("data:")) ? null : c);
+    if (next.pageSim && Array.isArray(next.pageSim.blocks)) next.pageSim.blocks.forEach(b => { if (b && typeof b.img === "string" && b.img.startsWith("data:")) b.img = null; });
+    js = JSON.stringify(next);
+  }
+  return await kvSet("state:" + userId, next);
 }
 
 /* ---------- rate limit (best effort, per warm instance) ---------- */
@@ -691,10 +701,11 @@ Signing you in… you can close this window.</body>`);
       const sess = sessionFromToken(tokenFrom(req));
       if (!sess) return res.status(401).json({ error: "auth_required" });
       const img = String(body.img || "");
-      if (!img.startsWith("data:image") || img.length > 1400000) return res.status(400).json({ error: "bad_image" });
+      if (!img.startsWith("data:image") || img.length > 950000) return res.status(400).json({ error: "bad_image" });
       const hash = crypto.createHash("sha1").update(img).digest("hex").slice(0, 20);
       const id = sess.userId + ":" + hash;
-      await kvSet("img:" + id, img);
+      const ok = await kvSet("img:" + id, img);
+      if (!ok) return res.status(500).json({ error: "store_failed" });
       return res.status(200).json({ id });
     }
 
@@ -847,7 +858,8 @@ Signing you in… you can close this window.</body>`);
     if (req.method === "POST" && p === "/api/state/save") {
       const sess = sessionFromToken(tokenFrom(req));
       if (!sess) return res.status(401).json({ error: "auth_required" });
-      await migrateGuestState(sess.userId, body);
+      const stored = await migrateGuestState(sess.userId, body);
+      if (stored === false) return res.status(500).json({ error: "store_failed" });
       return res.status(200).json({ ok: true });
     }
 
