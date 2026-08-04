@@ -2360,9 +2360,26 @@ this is my whole personality now</div>
         .then(function(x){return x.json()})
         .then(function(d){
           if(!(d.cells&&d.cells.length)){document.getElementById("shot-guide").classList.add("show");return;}
-          cropCells(shot,d.cells,function(out){
-            // Extracted titles + cropped photos fill EMPTY blocks first, then
-            // append new blocks. The screenshot itself is never shown.
+          cropCells(shot,d.cells,verifyThenMerge);
+          // Quality gate: each crop is re-judged individually - anything that
+          // is not a clean, complete photo syncs its TITLE only.
+          function verifyThenMerge(out){
+            var candidates=out.map(function(c,i){return c.img?{i:i,img:c.img}:null}).filter(Boolean);
+            function proceed(){ mergeExtract(out); }
+            if(!candidates.length){proceed();return;}
+            fetch(API+"/api/vision/verify",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({images:candidates.map(function(c){return c.img})})})
+              .then(function(x){return x.json()})
+              .then(function(v){
+                if(v&&Array.isArray(v.verdicts)){
+                  candidates.forEach(function(c,j){
+                    if(!(v.verdicts[j]&&v.verdicts[j].clean))out[c.i].img=null;
+                  });
+                }
+                proceed();
+              })
+              .catch(proceed);
+          }
+          function mergeExtract(out){
             mut();
             var bl=blocks();
             // Fill EXISTING empty blocks only, in extraction order - the total
@@ -2392,7 +2409,7 @@ this is my whole personality now</div>
                 }
               });
             });
-          });
+          }
         })
         .catch(function(){ toast(t("tShotSimFail")); });
     }); };

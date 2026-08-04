@@ -837,6 +837,22 @@ Signing you in… you can close this window.</body>`);
       return res.status(200).json({ cells, usage });
     }
 
+    // Quality gate: judge each cropped candidate individually - far more
+    // reliable than trusting boxes from the full-page pass.
+    if (req.method === "POST" && p === "/api/vision/verify") {
+      const imgs = Array.isArray(body.images) ? body.images.slice(0, 10).filter(i => String(i).startsWith("data:image")) : [];
+      if (!imgs.length) return res.status(400).json({ error: "images_required" });
+      const content = [{ type: "text", text: `You will see ${imgs.length} numbered images, each a candidate cover photo cropped from a Xiaohongshu screenshot. For EACH image, answer: is it a CLEAN, COMPLETE photograph usable as a note cover? clean=false if it contains ANY app UI: status bar, time, battery, navigation icons, tab labels, note title text, author name row, like counts BELOW the photo, or if the photo is obviously cut off mid-subject or is mostly a text screenshot of an app page. Small view-count/watermark overlays baked into a real photo are fine. Return JSON exactly: {"verdicts":[{"clean":true},{"clean":false},...]} in the same order, one per image.` }];
+      for (const im of imgs) content.push({ type: "image_url", image_url: { url: im, detail: "low" } });
+      const { parsed, usage } = await callOpenAI([
+        { role: "system", content: "You judge image crops. Return JSON only." },
+        { role: "user", content },
+      ], { maxTokens: 300, temperature: 0 });
+      const verdicts = Array.isArray(parsed.verdicts) ? parsed.verdicts.map(v => ({ clean: v && v.clean === true })) : imgs.map(() => ({ clean: true }));
+      while (verdicts.length < imgs.length) verdicts.push({ clean: true });
+      return res.status(200).json({ verdicts, usage });
+    }
+
     if (req.method === "POST" && p === "/api/vision/text") {
       if (!body.image || !String(body.image).startsWith("data:image")) return res.status(400).json({ error: "image_required" });
       const messages = [
