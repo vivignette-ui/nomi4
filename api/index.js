@@ -813,7 +813,7 @@ Signing you in… you can close this window.</body>`);
       const messages = [
         { role: "system", content: "You analyze screenshots of Xiaohongshu/RedNote profile pages. Return JSON only." },
         { role: "user", content: [
-          { type: "text", text: 'This is a screenshot of a Xiaohongshu/RedNote notes grid (profile page, explore feed, or search results). Work TITLE-FIRST, in this exact order: STEP 1 - find every note TITLE text in the grid, in reading order (left column top-to-bottom interleaved with right column by vertical position). A note title is a text line sitting directly BELOW a cover photo, usually with an author row or like-count beneath it. STEP 2 - for each title, the note cover photo is the image block DIRECTLY ABOVE that title, in the same column, same card width. STEP 3 - return, per note: the title text, the WHOLE card box, and the COVER PHOTO box (the photo only - it must NOT include the title text, the author row, or any text strip; note grids use a consistent card width per column, so photo boxes in the same column share the same x and w). STRICTLY EXCLUDE: the status bar, profile header, tab labels, the bottom navigation bar (Home/Market/Messages/Me icons), floating buttons, and any region without a note title - if there is no readable title below a photo, skip that region entirely. All boxes NORMALIZED to the full image: x, y = top-left (0-1), w, h = width/height (0-1). If the image contains no note cards, return an empty list. Return JSON exactly: {"cells":[{"title":"...","x":0.0,"y":0.0,"w":0.0,"h":0.0,"ix":0.0,"iy":0.0,"iw":0.0,"ih":0.0}]} where ix/iy/iw/ih is the cover-photo box.' },
+          { type: "text", text: 'This is a screenshot of a Xiaohongshu/RedNote notes grid (profile page, explore feed, or search results). Work TITLE-FIRST, in this exact order: STEP 1 - find every note TITLE text in the grid, in reading order (left column top-to-bottom interleaved with right column by vertical position). A note title is a text line sitting directly BELOW a cover photo, usually with an author row or like-count beneath it. STEP 2 - for each title, the note cover photo is the image block DIRECTLY ABOVE that title, in the same column, same card width. STEP 3 - return, per note: the title text, the WHOLE card box, the COVER PHOTO box (the photo only - it must NOT include the title text, the author row, any status bar, tab header, or text strip; photo boxes in one column share the same x and w), the normalized y where the title text STARTS (ty), and "complete": true only if the cover photo is FULLY visible - set false if it is cut off by the screenshot edge, hidden behind headers/tabs, or only partially shown. STRICTLY EXCLUDE: the status bar, profile header, tab labels, the bottom navigation bar (Home/Market/Messages/Me icons), floating buttons, and any region without a note title. All boxes NORMALIZED to the full image: x, y = top-left (0-1), w, h = width/height (0-1). If the image contains no note cards, return an empty list. Return JSON exactly: {"cells":[{"title":"...","x":0.0,"y":0.0,"w":0.0,"h":0.0,"ix":0.0,"iy":0.0,"iw":0.0,"ih":0.0,"ty":0.0,"complete":true}]}' },
           { type: "image_url", image_url: { url: body.image, detail: "high" } },
         ]},
       ];
@@ -823,8 +823,15 @@ Signing you in… you can close this window.</body>`);
           title: String(c.title || "").slice(0, 80),
           x: clamp01(c.x), y: clamp01(c.y), w: clamp01(c.w), h: clamp01(c.h),
           ix: clamp01(c.ix), iy: clamp01(c.iy), iw: clamp01(c.iw), ih: clamp01(c.ih),
+          complete: c.complete !== false,
         };
         if (cell.iw < 0.03 || cell.ih < 0.03) { cell.ix = cell.x; cell.iy = cell.y; cell.iw = cell.w; cell.ih = cell.h * 0.8; }
+        // Geometric discipline: the photo can never extend past the top of its
+        // own title text, and edge-cut photos are not complete.
+        const ty = clamp01(c.ty);
+        if (ty > cell.iy + 0.02) cell.ih = Math.min(cell.ih, ty - cell.iy - 0.004);
+        if (cell.ih < 0.04) cell.complete = false;
+        if (cell.iy < 0.005 || cell.iy + cell.ih > 0.995) cell.complete = false;
         return cell;
       }).filter(c => c.w > 0.04 && c.h > 0.03 && c.title && c.title.trim().length > 0) : [];
       return res.status(200).json({ cells, usage });

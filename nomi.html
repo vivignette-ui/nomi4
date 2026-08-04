@@ -1320,6 +1320,7 @@ this is my whole personality now</div>
   // Flush any pending save when the tab is closed or backgrounded so nothing
   // typed in the last moments is lost.
   window.addEventListener("pagehide",function(){ doSaveNow(); });
+  window.addEventListener("beforeunload",function(){ doSaveNow(); });
   document.addEventListener("visibilitychange",function(){ if(document.visibilityState==="hidden") doSaveNow(); });
   // Sign-in restores the account's saved state; only registration (the gate,
   // or "create an account") migrates the guest's work. Sending guest state on
@@ -2321,6 +2322,7 @@ this is my whole personality now</div>
       var out=[];
       cells.forEach(function(c){
         try{
+          if(c.complete===false){out.push({title:c.title,img:null});return;}
           var useImg=(c.iw>0.03&&c.ih>0.03);
           var bx=useImg?c.ix:c.x, by=useImg?c.iy:c.y;
           var bw=useImg?c.iw:c.w, bh=useImg?c.ih:(c.h*0.8);
@@ -2372,6 +2374,12 @@ this is my whole personality now</div>
             var pending=take.length;
             take.forEach(function(c,j){
               var slot=empties[j];
+              if(!c.img){
+                bl[slot].title=c.title||"";
+                pending--;
+                if(pending===0){feedRender();toast(t("tShotSimDone"));track("sim_upload",{cells:take.length});saveState();}
+                return;
+              }
               storeImage(c.img,function(url){
                 bl[slot].title=c.title||"";
                 bl[slot].img=url;
