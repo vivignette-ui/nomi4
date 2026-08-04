@@ -231,7 +231,7 @@
   .pboxbtn:hover{color:var(--ind);border-color:var(--ind)}
   .pboxbtn svg{width:13px;height:13px}
   #p-feedhost{display:flex;flex-direction:column;flex:1 1 0;overflow:auto;min-height:0}
-  #p-feedhost .rncov:not(.nat){aspect-ratio:3/3.3}
+  #p-feedhost .rncov:not(.nat){aspect-ratio:3/4}
   .pfeedbar .langtog button{width:26px;padding:4px 0;text-align:center;font-size:10px;line-height:1.4}
   .pfeedbar .fh2{flex:1;min-width:0}
   #p-feedhost .rntitle[contenteditable]:hover{background:var(--tint)}
@@ -252,17 +252,19 @@
   .rncell.drop-before{box-shadow:-4px 0 0 0 var(--ind)}
   .rncell.drop-after{box-shadow:4px 0 0 0 var(--ind)}
   .rncov{aspect-ratio:3/4;background:#DCE4EC;position:relative;background-size:cover;background-position:center}
-  /* XHS-spec covers: portrait fills its frame (clamped at 3:4); landscape
-     keeps a FIXED 4:3 frame letterboxed on white - the frame never adapts. */
-  .rncov.nat{aspect-ratio:auto;min-height:34px;background:none;position:relative;overflow:hidden}
+  /* ONE uniform frame for every post: fixed 3:4, identical across the whole
+     grid. Portrait photos fill it; landscape photos sit centered on white. */
+  .rncov.nat{aspect-ratio:3/4;background:none;position:relative;overflow:hidden}
   .rncov.nat.portrait img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-  .rncov.nat.landscape{aspect-ratio:4/3;background:#fff;border:1px solid var(--tint2)}
+  .rncov.nat.landscape{background:#fff;border:1px solid var(--tint2)}
   .rncov.nat.landscape img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
   .rncov.nat.clickable{cursor:pointer}
-  .rmpost{position:absolute;top:5px;right:5px;width:17px;height:17px;border-radius:50%;background:rgba(36,49,94,.78);color:#fff;font-size:11px;line-height:17px;text-align:center;cursor:pointer;z-index:3;border:0;padding:0}
+  .rmpost{position:absolute;top:5px;right:5px;width:17px;height:17px;border-radius:50%;background:rgba(36,49,94,.78);color:#fff;font-size:11px;line-height:17px;text-align:center;cursor:pointer;z-index:3;border:0;padding:0;opacity:0;transition:opacity .15s ease}
+  .rncell:hover .rmpost,.rmpost:focus-visible{opacity:1}
   .rmpost:hover{background:#7C3A3A}
-  .addtile{border:1.5px dashed #B9C6D6;border-radius:8px;background:var(--panel);color:var(--ind);font-size:11px;cursor:pointer;font-family:var(--body);display:flex;align-items:center;justify-content:center;min-height:74px;width:100%;break-inside:avoid;margin-bottom:7px}
-  .addtile:hover{border-color:var(--ind)}
+  @media (hover:none){.rmpost{opacity:.85}}
+  .addtile{border:1.5px dashed var(--line);border-radius:8px;background:var(--panel);color:var(--dim);font-size:11px;cursor:pointer;font-family:var(--body);display:flex;align-items:center;justify-content:center;aspect-ratio:3/4;width:100%;break-inside:avoid;margin-bottom:7px}
+  .addtile:hover{border-color:#B9C6D6;color:var(--mut)}
   .rncov.t2{background:#D3DCE6}
   .rntxt{padding:6px 7px;display:flex;flex-direction:column;gap:4px}
   .rntitle{font-size:8.5px;font-weight:500;color:var(--text);line-height:1.3}
@@ -2058,8 +2060,7 @@ this is my whole personality now</div>
   // adapts) - never a fixed frame that crops to a corner of a large upload.
   function applyRatio(cov,im){
     var r=im.naturalHeight/Math.max(1,im.naturalWidth);
-    if(r<1){ cov.classList.add("landscape"); cov.style.aspectRatio=""; }
-    else { cov.classList.add("portrait"); cov.style.aspectRatio="1 / "+Math.min(r,1.334).toFixed(3); }
+    cov.classList.add(r<1?"landscape":"portrait");
   }
   function natCov(src,tint){
     var cov=document.createElement("div");
