@@ -28,6 +28,7 @@
   .pchrome .dots3{display:flex;gap:5px}
   .pchrome .dots3 i{width:9px;height:9px;border-radius:50%;background:#C2CDD9}
   .pchrome .pttl{font-family:var(--disp);font-weight:500;font-size:12.5px;color:var(--mut)}
+  .intbadge{font-family:var(--mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:#7C3A3A;border:1px solid #D9C2C2;background:#FBF3F3;border-radius:999px;padding:2px 8px}
   .chromeshelf{font-size:11px;color:var(--ind);background:none;border:0;cursor:pointer;text-decoration:underline;text-underline-offset:2px;font-family:var(--body)}
   .psteps{margin-left:auto;display:flex;gap:4px}
   .pstep{font-family:var(--mono);font-size:10px;letter-spacing:.05em;color:var(--dim);background:transparent;border:1px solid var(--line);border-radius:999px;padding:4px 10px;cursor:pointer}
@@ -409,6 +410,7 @@
       <div class="dots3"><i></i><i></i><i></i></div>
       <div class="pttl">nomi</div>
       <button class="chromeshelf" id="chrome-shelf" data-i="myShelf">My shelf</button>
+      <span class="intbadge" id="int-badge" style="display:none">test mode · not tracked</span>
       <div class="psteps">
         <button class="pstep" data-go="p-self">01 <span data-i="stepSelf">self</span></button>
         <button class="pstep" data-go="p-shape">02 <span data-i="stepShape">shape</span></button>
@@ -1029,7 +1031,21 @@ this is my whole personality now</div>
       return u;
     }catch(e){return "u-nolocal"}
   }
+  // Internal test mode: open /nomi?internal=1 once and this browser is flagged
+  // forever - nothing it does is written to analytics. ?internal=0 clears it.
+  var INTERNAL=(function(){
+    try{
+      var m=location.search.match(/[?&]internal=([01])/);
+      if(m){
+        if(m[1]==="1")localStorage.setItem("nomiInternal","1");
+        else localStorage.removeItem("nomiInternal");
+        history.replaceState(null,"",location.pathname+location.hash);
+      }
+      return localStorage.getItem("nomiInternal")==="1";
+    }catch(e){return false}
+  })();
   function track(event,meta){
+    if(INTERNAL)return;
     try{
       fetch(API+"/api/track",{method:"POST",keepalive:true,
         headers:Object.assign({"Content-Type":"application/json"},S.token?{Authorization:"Bearer "+S.token}:{}),
@@ -1343,7 +1359,7 @@ this is my whole personality now</div>
     document.querySelectorAll("[data-oauth]").forEach(function(b){
       b.onclick=function(){
         var ctx=b.dataset.ctx;
-        var startUrl=API+"/auth/google/start?ctx="+ctx+"&uid="+encodeURIComponent(uid());
+        var startUrl=API+"/auth/google/start?ctx="+ctx+"&uid="+encodeURIComponent(uid())+(INTERNAL?"&internal=1":"");
         var pop=window.open(startUrl,"nomiGoogle","width=480,height=640,menubar=no,toolbar=no");
         if(!pop){ location.href=startUrl; } // popup blocked: full-page fallback
       };
@@ -1373,7 +1389,7 @@ this is my whole personality now</div>
         var email=document.getElementById(ctx+"-email").value.trim();
         var code=document.getElementById(ctx+"-code").value.trim();
         loading(true,"loadAuth");
-        fetch(API+"/api/auth/email/verify",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:email,code:code,uid:uid(),guestState:migrationState(ctx)})})
+        fetch(API+"/api/auth/email/verify",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:email,code:code,uid:uid(),internal:INTERNAL,guestState:migrationState(ctx)})})
           .then(function(r){return r.json()})
           .then(function(d){ loading(false); if(d.ok) finishAuth(ctx,d.session); else toast(t("tAuthErr")); })
           .catch(function(){ loading(false); toast(t("tOffline")); });
@@ -1538,7 +1554,7 @@ this is my whole personality now</div>
       try{emailInput.focus({preventScroll:true})}catch(e){emailInput.focus()}
       return;
     }
-    fetch(API+"/api/waitlist",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:email,source:"nomi-mvp",uid:uid()})})
+    fetch(API+"/api/waitlist",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:email,source:"nomi-mvp",uid:uid(),internal:INTERNAL})})
       .then(function(r){return r.json()})
       .then(function(d){
         if(d.ok){
@@ -1952,7 +1968,7 @@ this is my whole personality now</div>
     fetch(API+"/api/generate",{
       method:"POST",
       headers:Object.assign({"Content-Type":"application/json"},S.token?{Authorization:"Bearer "+S.token}:{}),
-      body:JSON.stringify({idea:idea,self:collectSelf(),contentLang:S.contentLang,category:currentCategory(),uid:uid()})
+      body:JSON.stringify({idea:idea,self:collectSelf(),contentLang:S.contentLang,category:currentCategory(),uid:uid(),internal:INTERNAL})
     })
     .then(function(r){return r.json()})
     .then(function(d){
@@ -2549,7 +2565,7 @@ this is my whole personality now</div>
     var proj=curProject();
     fetch(API+"/api/refine",{
       method:"POST",headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({draft:proj.drafts[psel],instruction:instruction,self:collectSelf(),contentLang:proj.contentLang||S.contentLang,category:proj.category||currentCategory(),uid:uid()})
+      body:JSON.stringify({draft:proj.drafts[psel],instruction:instruction,self:collectSelf(),contentLang:proj.contentLang||S.contentLang,category:proj.category||currentCategory(),uid:uid(),internal:INTERNAL})
     })
     .then(function(r){return r.json()})
     .then(function(d){
@@ -2633,6 +2649,7 @@ this is my whole personality now</div>
     renderStudio();
     updateSaveLabel();
     renderSelf();
+    if(INTERNAL)document.getElementById("int-badge").style.display="";
     fetch(API+"/api/health").then(function(r){return r.json()}).then(function(d){
       S.googleClientId=d.googleClientId||null;
       S.emailDelivery=d.emailDelivery||"console";

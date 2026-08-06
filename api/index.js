@@ -109,7 +109,8 @@ async function atPost(path, payload) {
 }
 // uid: anonymous browser id that NEVER changes for a returning user; once the
 // user registers, the same row also carries their email (registered=true).
-async function track(uid, email, events) {
+async function track(uid, email, events, internal) {
+  if (internal) return; // internal test sessions are never recorded
   if (!uid && !email) return;
   uid = String(uid || ("email:" + email)).slice(0, 64);
   const now = new Date();
@@ -498,9 +499,9 @@ function localShorten(body, cap) {
 function clamp01(v) { const n = Number(v); return isFinite(n) ? Math.max(0, Math.min(1, n)) : 0; }
 
 /* ---------- google oauth (stateless state param) ---------- */
-function makeOauthState(ctx, uid) {
+function makeOauthState(ctx, uid, internal) {
   const exp = Date.now() + 10 * 60 * 1000;
-  const body = (ctx === "g" ? "g" : "m") + "|" + String(uid || "").replace(/[^\w-]/g, "").slice(0, 40) + "." + exp;
+  const body = (ctx === "g" ? "g" : "m") + (internal ? "I" : "") + "|" + String(uid || "").replace(/[^\w-]/g, "").slice(0, 40) + "." + exp;
   return body + "." + hmac("state:" + body);
 }
 function checkOauthState(state) {
@@ -509,7 +510,7 @@ function checkOauthState(state) {
   if (hmac("state:" + parts[0] + "." + parts[1]) !== parts[2]) return null;
   if (Number(parts[1]) < Date.now()) return null;
   const seg = parts[0].split("|");
-  return { ctx: seg[0], uid: seg[1] || null };
+  return { ctx: seg[0].charAt(0), internal: seg[0].indexOf("I") > 0, uid: seg[1] || null };
 }
 function originOf(req) {
   const proto = req.headers["x-forwarded-proto"] || "https";
@@ -620,7 +621,7 @@ export default async function handler(req, res) {
       const session = makeSession(email);
       const existed = !!(await kvGet("state:" + session.userId));
       await migrateGuestState(session.userId, body.guestState);
-      await track(body.uid, email, [{ event: existed ? "sign_in" : "register", meta: { method: "email" } }]);
+      await track(body.uid, email, [{ event: existed ? "sign_in" : "register", meta: { method: "email" } }], body.internal);
       return res.status(200).json({ ok: true, session });
     }
 
@@ -631,7 +632,7 @@ export default async function handler(req, res) {
       const qp = new URLSearchParams({
         client_id: clientId, redirect_uri: redirect, response_type: "code",
         scope: "openid email profile", prompt: "select_account",
-        state: makeOauthState(q.get("ctx"), q.get("uid")),
+        state: makeOauthState(q.get("ctx"), q.get("uid"), q.get("internal") === "1"),
       });
       res.statusCode = 302;
       res.setHeader("Location", "https://accounts.google.com/o/oauth2/v2/auth?" + qp.toString());
@@ -672,7 +673,7 @@ export default async function handler(req, res) {
             const gmail = String(claims.email).toLowerCase();
             const session = makeSession(gmail);
             const existed = !!(await kvGet("state:" + session.userId));
-            await track(st.uid, gmail, [{ event: existed ? "sign_in" : "register", meta: { method: "google" } }]);
+            await track(st.uid, gmail, [{ event: existed ? "sign_in" : "register", meta: { method: "google" } }], st.internal);
             payload = { type: "nomi-gauth", token: session.token, identity: session.identity, ctx };
           }
         }
@@ -723,7 +724,7 @@ Signing you in… you can close this window.</body>`);
 
     if (req.method === "POST" && p === "/api/track") {
       const sess = sessionFromToken(tokenFrom(req));
-      await track(body.uid, sess ? sess.identity : null, Array.isArray(body.events) ? body.events : []);
+      await track(body.uid, sess ? sess.identity : null, Array.isArray(body.events) ? body.events : [], body.internal);
       return res.status(200).json({ ok: true });
     }
 
@@ -761,7 +762,7 @@ Signing you in… you can close this window.</body>`);
         cur.projects = projects.slice(0, 30);
         await kvSet("state:" + sess.userId, cur);
       }
-      await track(body.uid, sess ? sess.identity : null, [{ event: "generate", meta: { researched, category: cat, lang: body.contentLang || "en" } }]);
+      await track(body.uid, sess ? sess.identity : null, [{ event: "generate", meta: { researched, category: cat, lang: body.contentLang || "en" } }], body.internal);
       return res.status(200).json({ drafts, projectName, projectId, model, usage, researched });
     }
 
@@ -790,7 +791,7 @@ Signing you in… you can close this window.</body>`);
         bestTime: draft.bestTime || bestTime(body.category || "lifestyle", draft.register),
       };
       const sessR = sessionFromToken(tokenFrom(req));
-      await track(body.uid, sessR ? sessR.identity : null, [{ event: "refine", meta: { instruction: String(body.instruction).slice(0, 60) } }]);
+      await track(body.uid, sessR ? sessR.identity : null, [{ event: "refine", meta: { instruction: String(body.instruction).slice(0, 60) } }], body.internal);
       return res.status(200).json({ draft: out, usage });
     }
 
@@ -874,7 +875,7 @@ Signing you in… you can close this window.</body>`);
       await kvSet("waitlist", list);
       console.log(`[waitlist] ${email}`);
       const sessW = sessionFromToken(tokenFrom(req));
-      await track(body.uid, (sessW && sessW.identity) || email, [{ event: "waitlist_join" }]);
+      await track(body.uid, (sessW && sessW.identity) || email, [{ event: "waitlist_join" }], body.internal);
       return res.status(200).json({ ok: true });
     }
 
