@@ -107,6 +107,24 @@ async function atPost(path, payload) {
     if (!r.ok) console.error("[track]", path, r.status, (await r.text().catch(()=>"")).slice(0,150));
   } catch (e) { console.error("[track]", e.message); }
 }
+// Milestone timestamp columns, stamped ONCE at first occurrence, plus the
+// elapsed-minutes columns that make funnel timing a one-click pivot.
+const STAMP_BY_EVENT = { self_saved: "profile_completed_at", generate: "generated_first_at", export: "exported_first_at", waitlist_join: "waitlist_at", register: "registered_at" };
+const ELAPSED_BY_STAMP = { profile_completed_at: "mins_to_profile", generated_first_at: "mins_to_generate", exported_first_at: "mins_to_export", registered_at: "mins_to_register" };
+
+async function atGetUser(uid) {
+  const base = process.env.AIRTABLE_BASE_ID, tok = process.env.AIRTABLE_TOKEN;
+  if (!base || !tok) return null;
+  try {
+    const f = encodeURIComponent(`{uid}='${String(uid).replace(/'/g, "")}'`);
+    const r = await fetch(`https://api.airtable.com/v0/${base}/Nomi%20Users?maxRecords=1&filterByFormula=${f}`,
+      { headers: { Authorization: `Bearer ${tok}` } });
+    if (!r.ok) return null;
+    const d = await r.json();
+    return (d.records && d.records[0]) ? d.records[0].fields : null;
+  } catch { return null; }
+}
+
 // uid: anonymous browser id that NEVER changes for a returning user; once the
 // user registers, the same row also carries their email (registered=true).
 async function track(uid, email, events, internal) {
@@ -114,23 +132,40 @@ async function track(uid, email, events, internal) {
   if (!uid && !email) return;
   uid = String(uid || ("email:" + email)).slice(0, 64);
   const now = new Date();
-  const day = now.toISOString().slice(0, 10);
+  const nowIso = now.toISOString();
+  const day = nowIso.slice(0, 10);
   const registered = !!email;
   const evs = (events || []).slice(0, 10).map(e => ({ fields: {
     event: String(e.event || "").slice(0, 50), uid,
     email: email || undefined,
     registered: registered || undefined,
     meta: e.meta ? JSON.stringify(e.meta).slice(0, 500) : undefined,
-    day, ts: now.toISOString(),
+    day, ts: nowIso,
   } }));
-  const userFields = { uid, last_seen: now.toISOString() };
+
+  const prev = (await atGetUser(uid)) || {};
+  const userFields = { uid, last_seen: nowIso };
+  if (!prev.first_seen) userFields.first_seen = nowIso;
   if (email) { userFields.email = email; userFields.registered = true; }
+
+  const firstSeen = new Date(prev.first_seen || nowIso);
+  const minsSinceFirst = Math.max(0, Math.round(((now - firstSeen) / 60000) * 10) / 10);
+
   for (const e of (events || [])) {
     const flag = USER_FLAG_BY_EVENT[e.event]; if (flag) userFields[flag] = true;
+    // stamp each milestone exactly once, and record how long it took
+    const stamp = STAMP_BY_EVENT[e.event] || ((e.event === "sign_in" && email) ? "registered_at" : null);
+    if (stamp && !prev[stamp]) {
+      userFields[stamp] = nowIso;
+      const elapsed = ELAPSED_BY_STAMP[stamp];
+      if (elapsed) userFields[elapsed] = minsSinceFirst;
+    }
     if (e.event === "welcome_choice" && e.meta && e.meta.exp) userFields.rednote_experience = e.meta.exp === "experienced" ? "experienced" : "new";
     if ((e.event === "register" || e.event === "sign_in") && e.meta && e.meta.method) userFields.auth_method = e.meta.method;
-    if (e.event === "visit" && e.meta && e.meta.source) userFields.source = String(e.meta.source).slice(0, 80);
+    if (e.event === "visit" && e.meta && e.meta.source && !prev.source) userFields.source = String(e.meta.source).slice(0, 80);
   }
+  userFields.days_active = Math.round(((now - firstSeen) / 86400000) * 10) / 10;
+
   await Promise.all([
     evs.length ? atPost("Nomi%20Events", { records: evs }) : null,
     atPost("Nomi%20Users", { performUpsert: { fieldsToMergeOn: ["uid"] }, records: [{ fields: userFields }] }),
