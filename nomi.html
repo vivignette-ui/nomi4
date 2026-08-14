@@ -880,6 +880,7 @@ this is my whole personality now</div>
       sgOk:"Got it, try again",
       addPostTile:"add a post", tShotNoRoom:"no empty post slots - add posts or clear some first",
       curTag:"current", uploadCover:"upload cover", coverConcept:"cover concept:",
+      tBadImage:"that file is not a usable image - try a JPG or PNG", tImgTooBig:"that image is too large (max 25MB)",
       tImgStoreFail:"image kept locally - could not store it on your account", tBadEmail:"that email does not look right",
       tWlFail:"could not join the waitlist, try again", draftsWord:"drafts",
       keepBtn:"keep", kept:"kept", discardBtn:"discard", restoreBtn:"restore",
@@ -1000,6 +1001,7 @@ this is my whole personality now</div>
       sgOk:"明白了，重新上传",
       addPostTile:"添加笔记位", tShotNoRoom:"没有空的笔记位了——先添加或清空几个格子",
       curTag:"当前", uploadCover:"上传封面", coverConcept:"封面构思：",
+      tBadImage:"这个文件不是可用的图片，请用 JPG 或 PNG", tImgTooBig:"图片太大了（最大 25MB）",
       tImgStoreFail:"图片已保留在本机，但未能存到你的账户", tBadEmail:"邮箱格式不太对",
       tWlFail:"加入等候名单失败，请重试", draftsWord:"篇草稿",
       keepBtn:"保留", kept:"已保留", discardBtn:"舍弃", restoreBtn:"恢复",
@@ -1104,6 +1106,7 @@ this is my whole personality now</div>
     var steps=[[1200,0.85],[1000,0.78],[840,0.72],[680,0.62]];
     function attempt(i){
       shrinkQ(dataUrl,steps[i][0],steps[i][1],function(out){
+        if(!out){cb(null);return;}
         if(out.length<820000||i>=steps.length-1)cb(out);
         else attempt(i+1);
       });
@@ -1120,7 +1123,7 @@ this is my whole personality now</div>
       cv.getContext("2d").drawImage(img,0,0,cv.width,cv.height);
       cb(cv.toDataURL("image/jpeg",q));
     };
-    img.onerror=function(){cb(dataUrl)};
+    img.onerror=function(){cb(null)};
     img.src=dataUrl;
   }
   // Signed-in users' images are stored server-side (each as its own record)
@@ -1128,6 +1131,7 @@ this is my whole personality now</div>
   function storeImage(dataUrl,cb){
     if(!S.signedIn||!dataUrl||dataUrl.indexOf("data:")!==0||dataUrl.length<50000){cb(dataUrl);return;}
     shrinkFit(dataUrl,function(fit){
+      if(!fit){toast(t("tBadImage"));cb(null);return;}
       fetch(API+"/api/image",{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+S.token},body:JSON.stringify({img:fit})})
         .then(function(r){return r.ok?r.json():null})
         .then(function(d){
@@ -1741,6 +1745,7 @@ this is my whole personality now</div>
       var target=shotTarget;
       var r=new FileReader();
       r.onload=function(){ shrink(r.result,1800,function(smImg){
+        if(!smImg){chipErr();toast(t("tBadImage"));return;}
         fetch(API+"/api/vision/text",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({image:smImg})})
           .then(function(x){return x.json()})
           .then(function(d){
@@ -2151,6 +2156,7 @@ this is my whole personality now</div>
     if(src){
       var im=document.createElement("img");im.alt="";
       im.onload=function(){applyRatio(cov,im)};
+      im.onerror=function(){im.remove();cov.classList.remove("nat","portrait","landscape")};
       im.src=src;
       cov.appendChild(im);
     }
@@ -2189,10 +2195,11 @@ this is my whole personality now</div>
   }
   document.getElementById("p-blockfile").addEventListener("change",function(e){
     var f=e.target.files&&e.target.files[0];
-    if(!f||blockEditIx<0)return;
+    if(blockEditIx<0||badPick(f)){e.target.value="";return;}
     var target=blockEditIx; blockEditIx=-1;
     var r=new FileReader();
-    r.onload=function(){ shrink(r.result,900,function(sm){ storeImage(sm,function(url){
+    r.onload=function(){ shrink(r.result,900,function(sm){ if(!sm){toast(t("tBadImage"));return;} storeImage(sm,function(url){
+      if(!url)return;
       mut();
       blocks()[target].img=url;
       feedRender();toast(t("tCover"));saveState();
@@ -2434,9 +2441,10 @@ this is my whole personality now</div>
   document.getElementById("shot-guide").addEventListener("click",function(e){if(e.target===this)this.classList.remove("show")});
   document.getElementById("p-pageshot").addEventListener("change",function(e){
     var f=e.target.files&&e.target.files[0];
-    if(!f)return;
+    if(badPick(f)){e.target.value="";return;}
     var r=new FileReader();
     r.onload=function(){ shrink(r.result,2000,function(shot){
+      if(!shot){toast(t("tBadImage"));return;}
       toast(t("tShotSim"));
       fetch(API+"/api/vision/page",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({image:shot})})
         .then(function(x){return x.json()})
@@ -2600,15 +2608,22 @@ this is my whole personality now</div>
     var bt=drafts()[psel]&&drafts()[psel].bestTime;
     if(bt)document.getElementById("p-besttime").textContent=bt.label+(bt.reason?(" · "+bt.reason):"");
   }
+  function badPick(f){
+    if(!f)return true;
+    if(f.type&&f.type.indexOf("image/")!==0){toast(t("tBadImage"));return true;}
+    if(f.size>25*1024*1024){toast(t("tImgTooBig"));return true;}
+    return false;
+  }
   document.getElementById("p-file").addEventListener("change",function(e){
     var f=e.target.files&&e.target.files[0];
-    if(!f)return;
+    if(badPick(f)){e.target.value="";return;}
     // Bind to the card that OPENED the picker; psel may change while the
     // image is being read/shrunk, which used to land covers on the wrong card.
     var target=psel;
     var r=new FileReader();
     r.onload=function(){
-      shrink(r.result,1200,function(sm){ storeImage(sm,function(url){
+      shrink(r.result,1200,function(sm){ if(!sm){toast(t("tBadImage"));return;} storeImage(sm,function(url){
+        if(!url)return;
         mut();
         covers()[target]=url;
         drawDrafts();toast(t("tCover"));saveState();
