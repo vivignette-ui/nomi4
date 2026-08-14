@@ -879,6 +879,8 @@ this is my whole personality now</div>
       sgBody:"Open your RedNote profile (or any notes grid) and screenshot the area where note cards are visible - covers with titles, like the highlighted grid above. Nomi reads each note and adds its title and photo into your page preview automatically.",
       sgOk:"Got it, try again",
       addPostTile:"add a post", tShotNoRoom:"no empty post slots - add posts or clear some first",
+      curTag:"current", uploadCover:"upload cover", coverConcept:"cover concept:",
+      keepBtn:"keep", kept:"kept", discardBtn:"discard", restoreBtn:"restore",
       loadGen:"writing three notes as your social-self", loadAuth:"one moment",
       gTimePre:"recipe · post this",
     },
@@ -995,6 +997,8 @@ this is my whole personality now</div>
       sgBody:"打开你的小红书主页（或任意笔记瀑布流），截取能看到笔记卡片的区域——像上图高亮的部分，封面和标题都在画面里。Nomi 会自动识别每篇笔记，把标题和图片同步到你的主页预览。",
       sgOk:"明白了，重新上传",
       addPostTile:"添加笔记位", tShotNoRoom:"没有空的笔记位了——先添加或清空几个格子",
+      curTag:"当前", uploadCover:"上传封面", coverConcept:"封面构思：",
+      keepBtn:"保留", kept:"已保留", discardBtn:"舍弃", restoreBtn:"恢复",
       loadGen:"正在以你的 social-self 写三篇笔记", loadAuth:"请稍候",
       gTimePre:"配方 · 建议发布时间",
     }
@@ -1071,6 +1075,14 @@ this is my whole personality now</div>
     updateSaveLabel();
     setName(currentName());
     pLast="";pRenderLocal();
+    // Dynamic surfaces are built in JS with t(), so they must be re-rendered
+    // when the interface language changes - otherwise they stay stale.
+    try{
+      if(typeof drawDrafts==="function"&&document.getElementById("p-drafts"))drawDrafts();
+      if(typeof renderSelf==="function")renderSelf();
+      if(typeof renderProjects==="function"&&document.getElementById("p-projects").classList.contains("on"))renderProjects();
+      if(typeof trayRender==="function"&&document.getElementById("p-tray").classList.contains("show"))trayRender();
+    }catch(e){}
   }
   document.getElementById("lang-zh").addEventListener("click",function(){S.lang="zh";applyLang();});
   document.getElementById("lang-en").addEventListener("click",function(){S.lang="en";applyLang();});
@@ -2107,7 +2119,7 @@ this is my whole personality now</div>
         document.getElementById("p-file").click();
       });
     }
-    if(id===psel){var tg=document.createElement("span");tg.className="curtag";tg.textContent="current";cov.appendChild(tg);}
+    if(id===psel){var tg=document.createElement("span");tg.className="curtag";tg.textContent=t("curTag");cov.appendChild(tg);}
     var rm=document.createElement("button");
     rm.className="rmpost";rm.textContent="\u00d7";
     rm.setAttribute("aria-label","Remove this note from the page");
@@ -2289,7 +2301,7 @@ this is my whole personality now</div>
         cell.setAttribute("aria-label",trayTitle(id));
       }
       var cov=natCov(id<3?covers()[id]:null,ix%2);
-      if(!browse&&id===psel){var tg=document.createElement("span");tg.className="curtag";tg.textContent="current";cov.appendChild(tg);}
+      if(!browse&&id===psel){var tg=document.createElement("span");tg.className="curtag";tg.textContent=t("curTag");cov.appendChild(tg);}
       if(!browse){var bd=document.createElement("span");bd.className="selbadge";cov.appendChild(bd);}
       var txt=document.createElement("div");txt.className="rntxt";
       var tt=document.createElement("div");tt.className="rntitle";tt.textContent=trayTitle(id);
@@ -2493,16 +2505,16 @@ this is my whole personality now</div>
         cim.src=cvr;
         cv.appendChild(cim);
       }
-      else{cv.innerHTML="<u>upload cover</u>";}
-      var cc=document.createElement("div");cc.className="pconcept";cc.textContent="cover concept: "+(d.coverConcept||"");
+      else{var u=document.createElement("u");u.textContent=t("uploadCover");cv.appendChild(u);}
+      var cc=document.createElement("div");cc.className="pconcept";cc.textContent=t("coverConcept")+" "+(d.coverConcept||"");
       var reg=document.createElement("div");reg.className="preg";reg.textContent=d.register;
       var tt=document.createElement("div");tt.className="pdt";tt.textContent=d.title;
       var bd=document.createElement("div");bd.className="pdb";bd.textContent=d.body;
       var tg=document.createElement("div");tg.className="pdg";tg.textContent=(d.tags||[]).join(" · ");
       mkEditable(tt,ix,"title");mkEditable(bd,ix,"body");mkEditable(tg,ix,"tags");
       var tri=document.createElement("div");tri.className="ptri";
-      var pk=document.createElement("button");pk.className="pk"+(st.kept?" on":"");pk.textContent=st.kept?"kept":"keep";
-      var px=document.createElement("button");px.className="px";px.textContent=st.discarded?"restore":"discard";
+      var pk=document.createElement("button");pk.className="pk"+(st.kept?" on":"");pk.textContent=t(st.kept?"kept":"keepBtn");
+      var px=document.createElement("button");px.className="px";px.textContent=t(st.discarded?"restoreBtn":"discardBtn");
       var placed=ordList.indexOf(ix)>=0;
       var pp=document.createElement("button");pp.className="pp"+(placed?" on":"");pp.textContent=t(placed?"removePrev":"addPrev");
       pp.addEventListener("click",function(e){e.stopPropagation();trayToggle(ix);drawDrafts();});
