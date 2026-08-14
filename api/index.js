@@ -377,7 +377,14 @@ async function researchBrief(idea, category) {
 
 function buildMessages({ idea, self, contentLang, category, brief }) {
   const lang = LANG_INSTRUCTIONS[contentLang] || LANG_INSTRUCTIONS.en;
+  const langHard = contentLang === "bilingual"
+    ? `CONTENT LANGUAGE - HARD REQUIREMENT, NON-NEGOTIABLE: every draft MUST be BILINGUAL (双语). Structure each body EXACTLY like this: the complete note in English first, then a line containing only "✨", then a SHORTER natural 简体中文 retelling (not a literal translation, 40-60% the length). A draft with no Chinese block is INVALID and must not be produced. ${lang}`
+    : contentLang === "zh"
+      ? `CONTENT LANGUAGE - HARD REQUIREMENT, NON-NEGOTIABLE: every title AND body MUST be written in 简体中文. English words are allowed only for brand/place names. A draft written in English is INVALID. ${lang}`
+      : `CONTENT LANGUAGE - HARD REQUIREMENT: every title and body in natural creator English. ${lang}`;
   const user = [
+    langHard,
+    ``,
     `THE CREATOR'S IDEA FOR TODAY'S NOTE:\n"""${String(idea || "").slice(0, 4000)}"""`,
     ``,
     brief ? `RESEARCH BRIEF (the creator's own substance MUST survive; verified context is trustworthy):\n"""${brief}"""\n` : ``,
@@ -433,6 +440,47 @@ function buildVoiceCheckMessages({ self, contentLang }) {
     `Return JSON only: {"title":"...","body":"...","tags":["#...","#..."]}`,
   ].join("\n");
   return [{ role: "system", content: systemPrompt() }, { role: "user", content: user }];
+}
+
+// Language enforcement: the model occasionally ignores the content-language
+// directive. Detect it deterministically and repair the affected drafts.
+const hasCJK = t => /[\u4e00-\u9fff]/.test(String(t || ""));
+const cjkRatio = t => {
+  const s = String(t || "");
+  const cjk = (s.match(/[\u4e00-\u9fff]/g) || []).length;
+  const letters = (s.match(/[A-Za-z]/g) || []).length;
+  return cjk / Math.max(1, cjk + letters);
+};
+function languageBroken(draft, contentLang) {
+  const body = String(draft.body || ""), title = String(draft.title || "");
+  if (contentLang === "zh") return cjkRatio(body) < 0.3 || !hasCJK(title);
+  if (contentLang === "bilingual") return !hasCJK(body) || cjkRatio(body) > 0.85;
+  if (contentLang === "en") return cjkRatio(body) > 0.5;
+  return false;
+}
+async function repairLanguage(draft, contentLang, self) {
+  const want = contentLang === "bilingual"
+    ? 'Rewrite this note as a BILINGUAL (双语) RedNote note: keep the English body as-is (lightly polished), then a line containing only "✨", then a SHORTER natural 简体中文 retelling of the same content (40-60% the length, not a literal translation). The title stays as the creator wrote it unless it needs a small fix.'
+    : contentLang === "zh"
+      ? 'Rewrite this note ENTIRELY in natural 简体中文 as a real 小红书 creator writes (口语化). Keep every concrete fact, number, price, and opinion exactly. English only for brand or place names. The title must be in 简体中文.'
+      : 'Rewrite this note ENTIRELY in natural creator English, keeping every concrete fact, number, price, and opinion exactly.';
+  const msgs = [
+    { role: "system", content: systemPrompt() },
+    { role: "user", content: [
+      `THE SOCIAL-SELF:`, describeSelf(self), ``,
+      `CURRENT DRAFT (register: ${draft.register}):`,
+      `TITLE: ${draft.title}`, `BODY:\n${draft.body}`, `TAGS: ${(draft.tags || []).join(" ")}`, ``,
+      want, ``,
+      `Plain text only, no markdown. Return JSON only: {"title":"...","body":"...","tags":["#..."]}`,
+    ].join("\n") },
+  ];
+  const { parsed } = await callOpenAI(msgs, { maxTokens: 1800, temperature: 0.6 });
+  return {
+    ...draft,
+    title: stripMarkdown(parsed.title || draft.title).slice(0, 120),
+    body: stripMarkdown(parsed.body || draft.body).slice(0, 4000),
+    tags: Array.isArray(parsed.tags) && parsed.tags.length ? parsed.tags.slice(0, 8).map(t => String(t).slice(0, 40)) : draft.tags,
+  };
 }
 
 /* ---------- best time (port of lib/besttime.js, condensed) ---------- */
@@ -775,7 +823,14 @@ Signing you in… you can close this window.</body>`);
       const { parsed, usage, model } = await callOpenAI(buildMessages({
         idea: body.idea, self: body.self, contentLang: body.contentLang || "en", category: body.category, brief,
       }), { maxTokens: 3200 });
-      const drafts = validateDrafts(parsed.drafts);
+      let drafts = validateDrafts(parsed.drafts);
+      const wantLang = body.contentLang || "en";
+      const broken = drafts.map((d, i) => languageBroken(d, wantLang) ? i : -1).filter(i => i >= 0);
+      if (broken.length) {
+        console.log(`[generate] language repair for ${broken.length}/3 drafts (${wantLang})`);
+        const repaired = await Promise.all(broken.map(i => repairLanguage(drafts[i], wantLang, body.self).catch(() => drafts[i])));
+        broken.forEach((idx, k) => { drafts[idx] = repaired[k]; });
+      }
       const cat = body.category || "lifestyle";
       for (const d of drafts) {
         d.tags = ensureTagMix(d.tags, body.contentLang || "en", cat);
@@ -814,7 +869,7 @@ Signing you in… you can close this window.</body>`);
         buildRefineMessages({ draft, instruction, self: body.self, contentLang: body.contentLang || "en" }),
         { maxTokens: 1200, temperature: 0.7 });
       if (wantsShorter && String(parsed.body || "").length > cap) parsed.body = localShorten(String(parsed.body || draft.body), cap);
-      const out = {
+      let out = {
         register: draft.register,
         title: stripMarkdown(parsed.title || draft.title).slice(0, 120),
         body: stripMarkdown(parsed.body || draft.body).slice(0, 4000),
@@ -825,6 +880,9 @@ Signing you in… you can close this window.</body>`);
         firstComment: draft.firstComment || "",
         bestTime: draft.bestTime || bestTime(body.category || "lifestyle", draft.register),
       };
+      if (languageBroken(out, body.contentLang || "en")) {
+        out = { ...out, ...(await repairLanguage(out, body.contentLang || "en", body.self).catch(() => out)) };
+      }
       const sessR = sessionFromToken(tokenFrom(req));
       await track(body.uid, sessR ? sessR.identity : null, [{ event: "refine", meta: { instruction: String(body.instruction).slice(0, 60) } }], body.internal);
       return res.status(200).json({ draft: out, usage });
