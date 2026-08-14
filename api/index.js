@@ -338,7 +338,7 @@ async function researchBrief(idea, category, contentLang) {
         ``,
         `Produce a brief with exactly these three sections:`,
         `CREATOR'S OWN SUBSTANCE: list every concrete fact, number, claim, experience, and opinion already present in the material above. These must survive verbatim-faithfully into any content written from this brief.`,
-        `VERIFIED CONTEXT: if the material references current products, tools, versions, events, news, prices, or anything time-sensitive - use web search and give 3-6 CURRENT, specific, verifiable facts (exact names, versions, dates, numbers). If nothing is time-sensitive, write "none needed" and do not search.`,
+        `VERIFIED CONTEXT: you MUST call the web_search tool whenever the material mentions ANY real-world entity - a place, city, venue, product, tool, brand, event, or season-specific activity - and return 4-8 CURRENT, specific, verifiable facts with proper names (exact venue/product names, neighborhoods, price ranges, opening hours, timings, seasons, version numbers). Name real, findable things. Only if the material is purely personal with no real-world entity at all, write "none needed".`,
         `SHARPEST ANGLES: 2-3 short notes on what is genuinely interesting in this material for a reader - the hook worth building around.`,
         `IF THE CREATOR'S MATERIAL IS THIN (a one-line idea with no names, numbers, or specifics): treat VERIFIED CONTEXT as essential, not optional - search and give at least 4 concrete, checkable specifics a reader could act on (real names, neighborhoods, price ranges, timings, seasons), because a note built only on the thin line would be generic filler.`,
         `Keep the whole brief under 350 words.`,
@@ -860,7 +860,7 @@ Signing you in… you can close this window.</body>`);
         await kvSet("state:" + sess.userId, cur);
       }
       await track(body.uid, sess ? sess.identity : null, [{ event: "generate", meta: { researched, category: cat, lang: body.contentLang || "en" } }], body.internal);
-      return res.status(200).json({ drafts, projectName, projectId, model, usage, researched });
+      return res.status(200).json({ drafts, projectName, projectId, model, usage, researched, brief: body.internal ? brief : undefined });
     }
 
     if (req.method === "POST" && p === "/api/refine") {
