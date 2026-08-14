@@ -880,6 +880,7 @@ this is my whole personality now</div>
       sgOk:"Got it, try again",
       addPostTile:"add a post", tShotNoRoom:"no empty post slots - add posts or clear some first",
       curTag:"current", uploadCover:"upload cover", coverConcept:"cover concept:",
+      tGuestRestored:"picked up where you left off - register to keep this safely",
       tBadImage:"that file is not a usable image - try a JPG or PNG", tImgTooBig:"that image is too large (max 25MB)",
       tImgStoreFail:"image kept locally - could not store it on your account", tBadEmail:"that email does not look right",
       tWlFail:"could not join the waitlist, try again", draftsWord:"drafts",
@@ -1001,6 +1002,7 @@ this is my whole personality now</div>
       sgOk:"明白了，重新上传",
       addPostTile:"添加笔记位", tShotNoRoom:"没有空的笔记位了——先添加或清空几个格子",
       curTag:"当前", uploadCover:"上传封面", coverConcept:"封面构思：",
+      tGuestRestored:"已恢复上次的进度——注册后可长期保存",
       tBadImage:"这个文件不是可用的图片，请用 JPG 或 PNG", tImgTooBig:"图片太大了（最大 25MB）",
       tImgStoreFail:"图片已保留在本机，但未能存到你的账户", tBadEmail:"邮箱格式不太对",
       tWlFail:"加入等候名单失败，请重试", draftsWord:"篇草稿",
@@ -1253,6 +1255,7 @@ this is my whole personality now</div>
   }
   function finishAuth(ctx, session){
     S.signedIn=true; S.token=session.token; S.identity=session.identity;
+    clearGuestLocal();
     try{localStorage.setItem("nomiToken",session.token);localStorage.setItem("nomiIdentity",session.identity||"");}catch(e){}
     document.getElementById("a-modal").classList.remove("show");
     if(ctx==="g"){
@@ -1315,7 +1318,9 @@ this is my whole personality now</div>
     if(Array.isArray(self.traits)&&self.traits.length) customs=self.traits.slice();
     if(Array.isArray(self.freeform)) freeform=self.freeform.slice();
     if(Array.isArray(self.learned)) S.learned=self.learned.slice();
-    if(self.seedText) document.getElementById("p-seedtext").value=String(self.seedText).slice(0,1500);
+    if(Array.isArray(self.categoriesNow)) restoreCats("p-catsnow",self.categoriesNow);
+    if(Array.isArray(self.categoriesGoal)) restoreCats("p-catsgoal",self.categoriesGoal);
+    if(self.seedText) document.getElementById("p-seedtext").value=String(self.seedText).slice(0,2000);
     if(self.inspirationText) document.getElementById("p-admtext").value=String(self.inspirationText).slice(0,1200);
     chipDesc(); pLast=""; pRenderLocal();
   }
@@ -1367,17 +1372,52 @@ this is my whole personality now</div>
     }
   });
   setInterval(function(){ if(S.signedIn&&S.dirty) doSaveNow(); },40000);
+  // Guests have no account yet, so their work is mirrored into localStorage -
+  // a reload before registering must not wipe a shaped self and real drafts.
+  var GUEST_KEY="nomiGuestState";
+  function saveGuestLocal(){
+    try{
+      var st=guestState();
+      var js=JSON.stringify(st);
+      if(js.length>3500000){
+        (st.projects||[]).forEach(function(p){ if(p.covers)p.covers=p.covers.map(function(){return null}); });
+        if(st.pageSim&&st.pageSim.blocks)st.pageSim.blocks.forEach(function(b){if(b)b.img=null});
+        js=JSON.stringify(st);
+      }
+      localStorage.setItem(GUEST_KEY,js);
+    }catch(e){}
+  }
+  function clearGuestLocal(){ try{localStorage.removeItem(GUEST_KEY)}catch(e){} }
+  function restoreGuestLocal(){
+    var raw=null;
+    try{raw=localStorage.getItem(GUEST_KEY)}catch(e){}
+    if(!raw)return false;
+    try{
+      var d=JSON.parse(raw);
+      if(d.self){ S.hasSelf=true; applySelfToControls(d.self); }
+      if(d.contentLang)setContentLang(d.contentLang);
+      if(d.redNoteExperience)S.experience=d.redNoteExperience;
+      if(Array.isArray(d.projects)&&d.projects.length){ S.projects=d.projects; S.generated=true; S.cur=0; loadProject(0); }
+      if(d.pageSim){
+        if(Array.isArray(d.pageSim.blocks)&&d.pageSim.blocks.length)S.blocks=d.pageSim.blocks;
+        if(Array.isArray(d.pageSim.pageOrder)&&d.pageSim.pageOrder.length)S.pageOrder=d.pageSim.pageOrder;
+      }
+      if(d.idea)document.getElementById("p-idea").value=d.idea;
+      feedRender();renderSelf();updateSaveLabel();
+      return !!(d.self||(d.projects&&d.projects.length));
+    }catch(e){return false}
+  }
   function saveState(){
     S.dirty=true;
-    if(!S.signedIn) return;
+    if(!S.signedIn){ clearTimeout(saveTimer); saveTimer=setTimeout(saveGuestLocal,600); return; }
     clearTimeout(saveTimer);
     saveTimer=setTimeout(doSaveNow,800);
   }
   // Flush any pending save when the tab is closed or backgrounded so nothing
   // typed in the last moments is lost.
-  window.addEventListener("pagehide",function(){ doSaveNow({exiting:true}); });
-  window.addEventListener("beforeunload",function(){ doSaveNow({exiting:true}); });
-  document.addEventListener("visibilitychange",function(){ if(document.visibilityState==="hidden") doSaveNow({exiting:true}); });
+  window.addEventListener("pagehide",function(){ if(S.signedIn)doSaveNow({exiting:true}); else saveGuestLocal(); });
+  window.addEventListener("beforeunload",function(){ if(S.signedIn)doSaveNow({exiting:true}); else saveGuestLocal(); });
+  document.addEventListener("visibilitychange",function(){ if(document.visibilityState!=="hidden")return; if(S.signedIn)doSaveNow({exiting:true}); else saveGuestLocal(); });
   // Sign-in restores the account's saved state; only registration (the gate,
   // or "create an account") migrates the guest's work. Sending guest state on
   // a plain sign-in would overwrite the saved self with a blank one.
@@ -1449,6 +1489,7 @@ this is my whole personality now</div>
     // clean and nothing migrates across accounts.
     if(S.token)fetch(API+"/api/auth/signout",{method:"POST",headers:{Authorization:"Bearer "+S.token}}).catch(function(){});
     try{localStorage.removeItem("nomiToken");localStorage.removeItem("nomiIdentity");}catch(e){}
+    clearGuestLocal();
     S.signedIn=false;S.token=null;S.identity=null;
     S.projects=[];S.cur=-1;S.blocks=null;S.pageOrder=null;
     S.hasSelf=false;S.generated=false;S.learned=[];
@@ -2774,6 +2815,10 @@ this is my whole personality now</div>
     }
     var saved=null,savedId="";
     try{saved=localStorage.getItem("nomiToken");savedId=localStorage.getItem("nomiIdentity")||"";}catch(e){}
+    if(!saved){
+      if(restoreGuestLocal()){ toast(t("tGuestRestored")); pGoDirect("p-self"); }
+      return;
+    }
     if(saved){
       S.token=saved;
       fetch(API+"/api/state",{headers:{Authorization:"Bearer "+saved}})
