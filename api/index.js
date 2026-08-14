@@ -324,14 +324,14 @@ const LANG_INSTRUCTIONS = {
 // Research pass: a Responses-API call that may use web search to gather
 // CURRENT facts when the idea references real products, events, or news, and
 // that extracts the creator's own claims so the writer must preserve them.
-async function researchBrief(idea, category) {
+async function researchBrief(idea, category, contentLang) {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) return null;
   const model = process.env.OPENAI_RESEARCH_MODEL || process.env.OPENAI_MODEL || "gpt-4o-mini";
   const body = {
     model,
     input: [
-      { role: "system", content: "You are a meticulous research analyst preparing a brief for a RedNote/Xiaohongshu creator. Be factual and concise. Plain text only." },
+      { role: "system", content: `You are a meticulous research analyst preparing a brief for a RedNote/Xiaohongshu creator. Be factual and concise. Plain text only. WRITE THE ENTIRE BRIEF IN ${contentLang === "zh" ? "简体中文 (Chinese)" : contentLang === "bilingual" ? "简体中文 with English proper nouns kept as-is" : "English"} - the notes will be written in that language, so the brief must not force the writer to translate.` },
       { role: "user", content: [
         `CREATOR'S MATERIAL (topic category: ${category || "lifestyle"}):`,
         `"""${String(idea || "").slice(0, 4000)}"""`,
@@ -340,6 +340,7 @@ async function researchBrief(idea, category) {
         `CREATOR'S OWN SUBSTANCE: list every concrete fact, number, claim, experience, and opinion already present in the material above. These must survive verbatim-faithfully into any content written from this brief.`,
         `VERIFIED CONTEXT: if the material references current products, tools, versions, events, news, prices, or anything time-sensitive - use web search and give 3-6 CURRENT, specific, verifiable facts (exact names, versions, dates, numbers). If nothing is time-sensitive, write "none needed" and do not search.`,
         `SHARPEST ANGLES: 2-3 short notes on what is genuinely interesting in this material for a reader - the hook worth building around.`,
+        `IF THE CREATOR'S MATERIAL IS THIN (a one-line idea with no names, numbers, or specifics): treat VERIFIED CONTEXT as essential, not optional - search and give at least 4 concrete, checkable specifics a reader could act on (real names, neighborhoods, price ranges, timings, seasons), because a note built only on the thin line would be generic filler.`,
         `Keep the whole brief under 350 words.`,
       ].join("\n") },
     ],
@@ -395,6 +396,7 @@ function buildMessages({ idea, self, contentLang, category, brief }) {
     `CONTENT LANGUAGE: ${lang}`,
     ``,
     `FIRST, comprehend the request: decide what the notes are ABOUT (the subject and substance the creator wants delivered). Write THAT content itself - never advice about how to create such content.`,
+    `IF THE CREATOR'S IDEA IS THIN (few or no specifics), you MUST ground every note in the verified context from the research brief: real names, places, numbers, seasons, timings. A note that could describe ANY place or ANY product is a FAILED note. Never write hollow lines like "the atmosphere is great" or "worth a visit" with nothing concrete attached. If after the brief there is still nothing concrete, write from an honest first-person angle with at least one specific, checkable detail per numbered point.`,
     `Produce exactly three complete RedNote note drafts delivering that same substance, one per register (three voices, same subject):`,
     `1. "guide" - the useful structured voice: the substance organized as numbered, concrete, saveable points ABOUT THE SUBJECT`,
     `2. "review" - the honest first-person voice: the substance told through personal judgment, criteria, and verdicts ABOUT THE SUBJECT`,
@@ -452,8 +454,8 @@ const cjkRatio = t => {
   return cjk / Math.max(1, cjk + letters);
 };
 function languageBroken(draft, contentLang) {
-  const body = String(draft.body || ""), title = String(draft.title || "");
-  if (contentLang === "zh") return cjkRatio(body) < 0.3 || !hasCJK(title);
+  const body = String(draft.body || ""), title = String(draft.title || ""), fc = String(draft.firstComment || "");
+  if (contentLang === "zh") return cjkRatio(body) < 0.3 || !hasCJK(title) || (fc.length > 8 && cjkRatio(fc) < 0.3);
   if (contentLang === "bilingual") return !hasCJK(body) || cjkRatio(body) > 0.85;
   if (contentLang === "en") return cjkRatio(body) > 0.5;
   return false;
@@ -471,7 +473,7 @@ async function repairLanguage(draft, contentLang, self) {
       `CURRENT DRAFT (register: ${draft.register}):`,
       `TITLE: ${draft.title}`, `BODY:\n${draft.body}`, `TAGS: ${(draft.tags || []).join(" ")}`, ``,
       want, ``,
-      `Plain text only, no markdown. Return JSON only: {"title":"...","body":"...","tags":["#..."]}`,
+      `Also rewrite the creator's first comment in the SAME language. Plain text only, no markdown. Return JSON only: {"title":"...","body":"...","tags":["#..."],"firstComment":"..."}`,
     ].join("\n") },
   ];
   const { parsed } = await callOpenAI(msgs, { maxTokens: 1800, temperature: 0.6 });
@@ -480,6 +482,7 @@ async function repairLanguage(draft, contentLang, self) {
     title: stripMarkdown(parsed.title || draft.title).slice(0, 120),
     body: stripMarkdown(parsed.body || draft.body).slice(0, 4000),
     tags: Array.isArray(parsed.tags) && parsed.tags.length ? parsed.tags.slice(0, 8).map(t => String(t).slice(0, 40)) : draft.tags,
+    firstComment: stripMarkdown(parsed.firstComment || draft.firstComment || "").slice(0, 600),
   };
 }
 
@@ -605,12 +608,14 @@ function originOf(req) {
 // Any inline dataURL image in an incoming payload is moved into its own
 // Redis entry and replaced by a stable /api/image URL, so state stays small.
 async function externalizeImages(userId, obj) {
+  let dropped = 0;
   async function store(v) {
     if (typeof v !== "string" || !v.startsWith("data:image") || v.length < 20000) return v;
     if (v.length > 950000) return null; // over the KV per-request limit: drop rather than poison the save
     const hash = crypto.createHash("sha1").update(v).digest("hex").slice(0, 20);
     const id = userId + ":" + hash;
     const ok = await kvSet("img:" + id, v);
+    if (!ok) dropped += 1;
     return ok ? "/api/image?id=" + id : null;
   }
   for (const p of (obj.projects || [])) {
@@ -619,10 +624,11 @@ async function externalizeImages(userId, obj) {
   const ps = obj.pageSim;
   if (ps && Array.isArray(ps.blocks)) for (const b of ps.blocks) if (b) b.img = await store(b.img);
   if (ps && Array.isArray(ps.cells)) for (const c of ps.cells) if (c) c.img = await store(c.img);
+  return dropped;
 }
 async function migrateGuestState(userId, guestState) {
   if (!guestState || typeof guestState !== "object") return;
-  await externalizeImages(userId, guestState);
+  const droppedImages = await externalizeImages(userId, guestState);
   const cur = (await kvGet("state:" + userId)) || {};
   const ps = guestState.pageSim;
   const psHasContent = ps && ((Array.isArray(ps.cells) && ps.cells.length) || (Array.isArray(ps.blocks) && ps.blocks.some(b => b && (b.title || b.img))) || (Array.isArray(ps.pageOrder) && ps.pageOrder.length));
@@ -650,7 +656,8 @@ async function migrateGuestState(userId, guestState) {
     if (next.pageSim && Array.isArray(next.pageSim.blocks)) next.pageSim.blocks.forEach(b => { if (b && typeof b.img === "string" && b.img.startsWith("data:")) b.img = null; });
     js = JSON.stringify(next);
   }
-  return await kvSet("state:" + userId, next);
+  const ok = await kvSet("state:" + userId, next);
+  return ok ? (droppedImages ? { ok: true, droppedImages } : true) : false;
 }
 
 /* ---------- rate limit (best effort, per warm instance) ---------- */
@@ -819,7 +826,7 @@ Signing you in… you can close this window.</body>`);
       const ip = req.headers["x-forwarded-for"] || "?";
       if (rateLimited(String(ip))) return res.status(429).json({ error: "rate_limited" });
       if (!body.idea || String(body.idea).trim().length < 3) return res.status(400).json({ error: "idea_required" });
-      const brief = await researchBrief(body.idea, body.category);
+      const brief = await researchBrief(body.idea, body.category, body.contentLang || "en");
       const { parsed, usage, model } = await callOpenAI(buildMessages({
         idea: body.idea, self: body.self, contentLang: body.contentLang || "en", category: body.category, brief,
       }), { maxTokens: 3200 });
@@ -921,8 +928,10 @@ Signing you in… you can close this window.</body>`);
         };
         if (cell.iw < 0.03 || cell.ih < 0.03) { cell.ix = cell.x; cell.iy = cell.y; cell.iw = cell.w; cell.ih = cell.h * 0.8; }
         // Geometric discipline: the photo can never extend past the top of its
-        // own title text, and edge-cut photos are not complete.
-        const ty = clamp01(c.ty);
+        // own title text. A missing ty must NOT disable the guard, so fall back
+        // to the card box: the title strip is the bottom slice of the card.
+        const tyRaw = Number(c.ty);
+        const ty = (isFinite(tyRaw) && tyRaw > 0 && tyRaw <= 1) ? tyRaw : (cell.y + cell.h * 0.80);
         if (ty > cell.iy + 0.02) cell.ih = Math.min(cell.ih, ty - cell.iy - 0.004);
         if (cell.ih < 0.04) cell.complete = false;
         if (cell.iy < 0.005 || cell.iy + cell.ih > 0.995) cell.complete = false;
@@ -977,6 +986,7 @@ Signing you in… you can close this window.</body>`);
       if (!sess) return res.status(401).json({ error: "auth_required" });
       const stored = await migrateGuestState(sess.userId, body);
       if (stored === false) return res.status(500).json({ error: "store_failed" });
+      if (stored && stored.droppedImages) return res.status(200).json({ ok: true, droppedImages: stored.droppedImages });
       return res.status(200).json({ ok: true });
     }
 

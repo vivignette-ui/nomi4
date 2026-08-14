@@ -1347,7 +1347,11 @@ this is my whole personality now</div>
         var init={method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+S.token},body:payload};
         if(exiting&&payload.length<60000)init.keepalive=true;
         fetch(API+"/api/state/save",init)
-          .then(function(r){ if(r.ok)S.dirty=false; res(!!r.ok); })
+          .then(function(r){
+            if(r.ok)S.dirty=false;
+            if(r.ok)r.json().then(function(d){ if(d&&d.droppedImages)toast(t("tImgStoreFail")); }).catch(function(){});
+            res(!!r.ok);
+          })
           .catch(function(){res(false)});
       }
       if(exiting)send(); else externalizePending(send);
