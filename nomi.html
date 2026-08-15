@@ -32,7 +32,7 @@
   .intbadge:hover{background:#F5E6E6;border-color:#C9A8A8}
   .chromeshelf{font-size:11px;color:var(--ind);background:none;border:0;cursor:pointer;text-decoration:underline;text-underline-offset:2px;font-family:var(--body)}
   .psteps{margin-left:auto;display:flex;gap:4px}
-  .pstep{font-family:var(--mono);font-size:10px;letter-spacing:.05em;color:var(--dim);background:transparent;border:1px solid var(--line);border-radius:999px;padding:4px 10px;cursor:pointer}
+  .pstep{font-family:var(--mono);font-size:10px;letter-spacing:.05em;color:var(--dim);background:transparent;border:1px solid var(--line);border-radius:999px;padding:4px 10px;cursor:default;pointer-events:none}
   .pstep.on{color:var(--ind);border-color:var(--ind);background:var(--ind-soft)}
   .langtog{display:flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;margin-left:10px}
   .langtog button{border:0;background:var(--panel);color:var(--mut);font-size:11px;padding:4px 11px;cursor:pointer;font-family:var(--body)}
@@ -1254,7 +1254,14 @@ this is my whole personality now</div>
     }
     pGoDirect(id);
   }
+  // The 01-04 chips are a PROGRESS INDICATOR, not navigation: everyone comes
+  // in through the welcome screen and moves with the real in-flow controls.
   document.querySelectorAll("[data-go]").forEach(function(b){
+    if(b.classList.contains("pstep")){
+      b.setAttribute("aria-disabled","true");
+      b.tabIndex=-1;
+      return;
+    }
     b.addEventListener("click",function(){pGo(b.dataset.go)});
   });
   document.getElementById("chrome-shelf").addEventListener("click",function(){pGoDirect("p-self")});
@@ -2921,7 +2928,9 @@ this is my whole personality now</div>
     var saved=null,savedId="";
     try{saved=localStorage.getItem("nomiToken");savedId=localStorage.getItem("nomiIdentity")||"";}catch(e){}
     if(!saved){
-      if(restoreGuestLocal()){ toast(t("tGuestRestored")); pGoDirect("p-self"); }
+      // Restore any unfinished guest work, but ALWAYS enter through welcome.
+      if(restoreGuestLocal()) toast(t("tGuestRestored"));
+      pGoDirect("w-welcome");
       return;
     }
     if(saved){
