@@ -570,15 +570,27 @@ function ensureTagMix(tags, contentLang, category) {
   if (contentLang === "bilingual") { if (!out.some(hasZh)) push(zhTag); if (out.every(hasZh)) push("#lifestyle"); }
   return out.slice(0, 8);
 }
+// Trim by whole ITEMS, never mid-item: a numbered heading whose content was
+// dropped reads as a broken note.
+const isItemHead = l => /^\s*(?:[0-9]+[.、)]|[0-9]\u{FE0F}?\u{20E3}|[\u{2460}-\u{2473}])/u.test(l);
 function localShorten(body, cap) {
   const lines = body.split("\n");
   if (lines.length <= 3) return body.slice(0, cap);
   const head = lines.slice(0, 2), tail = lines[lines.length - 1], middle = lines.slice(2, -1);
-  const out = head.slice();
+  // group middle lines into blocks that start at each numbered item
+  const blocks = [];
   for (const line of middle) {
-    if ((out.join("\n") + "\n" + line + "\n" + tail).length > cap) break;
-    out.push(line);
+    if (!blocks.length || isItemHead(line)) blocks.push([line]);
+    else blocks[blocks.length - 1].push(line);
   }
+  const out = head.slice();
+  for (const b of blocks) {
+    const candidate = out.concat(b, [tail]).join("\n");
+    if (candidate.length > cap) break;
+    out.push(...b);
+  }
+  // never end on a heading with nothing under it
+  while (out.length > head.length && isItemHead(out[out.length - 1])) out.pop();
   out.push(tail);
   return out.join("\n");
 }
