@@ -28,7 +28,8 @@
   .pchrome .dots3{display:flex;gap:5px}
   .pchrome .dots3 i{width:9px;height:9px;border-radius:50%;background:#C2CDD9}
   .pchrome .pttl{font-family:var(--disp);font-weight:500;font-size:12.5px;color:var(--mut)}
-  .intbadge{font-family:var(--mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:#7C3A3A;border:1px solid #D9C2C2;background:#FBF3F3;border-radius:999px;padding:2px 8px}
+  .intbadge{font-family:var(--mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:#7C3A3A;border:1px solid #D9C2C2;background:#FBF3F3;border-radius:999px;padding:3px 9px;cursor:pointer}
+  .intbadge:hover{background:#F5E6E6;border-color:#C9A8A8}
   .chromeshelf{font-size:11px;color:var(--ind);background:none;border:0;cursor:pointer;text-decoration:underline;text-underline-offset:2px;font-family:var(--body)}
   .psteps{margin-left:auto;display:flex;gap:4px}
   .pstep{font-family:var(--mono);font-size:10px;letter-spacing:.05em;color:var(--dim);background:transparent;border:1px solid var(--line);border-radius:999px;padding:4px 10px;cursor:pointer}
@@ -426,7 +427,7 @@
       <div class="dots3"><i></i><i></i><i></i></div>
       <div class="pttl">nomi</div>
       <button class="chromeshelf" id="chrome-shelf" data-i="myShelf">My shelf</button>
-      <span class="intbadge" id="int-badge" style="display:none">test mode · not tracked</span>
+      <button class="intbadge" id="int-badge" style="display:none" title="Click to leave test mode and start counting this browser">TEST MODE · NOT TRACKED ✕</button>
       <div class="psteps">
         <button class="pstep" data-go="p-self">01 <span data-i="stepSelf">self</span></button>
         <button class="pstep" data-go="p-shape">02 <span data-i="stepShape">shape</span></button>
@@ -896,6 +897,7 @@ this is my whole personality now</div>
       sgOk:"Got it, try again",
       addPostTile:"add a post", tShotNoRoom:"no empty post slots - add posts or clear some first",
       curTag:"current", uploadCover:"upload cover", coverConcept:"cover concept:",
+      tTrackingOn:"test mode off - this browser now counts in your metrics",
       tGuestRestored:"picked up where you left off - register to keep this safely",
       tBadImage:"that file is not a usable image - try a JPG or PNG", tImgTooBig:"that image is too large (max 25MB)",
       tImgStoreFail:"image kept locally - could not store it on your account", tBadEmail:"that email does not look right",
@@ -1018,6 +1020,7 @@ this is my whole personality now</div>
       sgOk:"明白了，重新上传",
       addPostTile:"添加笔记位", tShotNoRoom:"没有空的笔记位了——先添加或清空几个格子",
       curTag:"当前", uploadCover:"上传封面", coverConcept:"封面构思：",
+      tTrackingOn:"已退出测试模式——这个浏览器会计入统计",
       tGuestRestored:"已恢复上次的进度——注册后可长期保存",
       tBadImage:"这个文件不是可用的图片，请用 JPG 或 PNG", tImgTooBig:"图片太大了（最大 25MB）",
       tImgStoreFail:"图片已保留在本机，但未能存到你的账户", tBadEmail:"邮箱格式不太对",
@@ -2847,12 +2850,41 @@ this is my whole personality now</div>
     renderStudio();
     updateSaveLabel();
     renderSelf();
-    if(INTERNAL)document.getElementById("int-badge").style.display="";
+    if(INTERNAL){
+      var badge=document.getElementById("int-badge");
+      badge.style.display="";
+      badge.addEventListener("click",function(){
+        try{localStorage.removeItem("nomiInternal")}catch(e){}
+        toast(t("tTrackingOn"));
+        setTimeout(function(){location.href=location.pathname},700);
+      });
+    }
     fetch(API+"/api/health").then(function(r){return r.json()}).then(function(d){
       S.googleClientId=d.googleClientId||null;
       S.emailDelivery=d.emailDelivery||"console";
     }).catch(function(){});
-    track("visit",{source:document.referrer?document.referrer.slice(0,80):"direct",lang:S.lang});
+    track("visit",{
+      source:document.referrer?document.referrer.slice(0,80):"direct",
+      lang:S.lang,
+      ua:(navigator.userAgent||"").slice(0,140),
+      w:window.innerWidth,
+      inapp:/Instagram|FBAN|FBAV|FB_IAB|Line\/|MicroMessenger|XiaoHongShu|TikTok/i.test(navigator.userAgent||"")?1:0
+    });
+    // "engaged" fires on the FIRST genuine human interaction - it separates
+    // real visitors from link-preview crawlers and silent prefetches.
+    (function(){
+      var fired=false;
+      function engage(){
+        if(fired)return; fired=true;
+        track("engaged",{});
+        ["pointerdown","touchstart","keydown","scroll"].forEach(function(t){
+          window.removeEventListener(t,engage,true);
+        });
+      }
+      ["pointerdown","touchstart","keydown","scroll"].forEach(function(t){
+        window.addEventListener(t,engage,{capture:true,passive:true});
+      });
+    })();
     // Session persistence: a full-page OAuth fallback lands with #gauth=…;
     // otherwise restore the last session from localStorage so neither a page
     // reload nor a server restart requires signing in again.
