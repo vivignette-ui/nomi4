@@ -94,6 +94,23 @@ async function kvSet(key, val) {
 }
 
 /* ---------- analytics (Airtable: Nomi Users / Nomi Events) ---------- */
+// Reporting timezone: DAU/retention are grouped by the creator's local day,
+// not UTC, so an evening visit never lands on tomorrow's date.
+const REPORT_TZ = process.env.REPORT_TIMEZONE || "America/New_York";
+function localDay(d) {
+  try {
+    return new Intl.DateTimeFormat("en-CA", { timeZone: REPORT_TZ, year: "numeric", month: "2-digit", day: "2-digit" }).format(d);
+  } catch { return d.toISOString().slice(0, 10); }
+}
+function localStamp(d) {
+  try {
+    const p = new Intl.DateTimeFormat("en-CA", { timeZone: REPORT_TZ, year: "numeric", month: "2-digit", day: "2-digit",
+      hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }).formatToParts(d)
+      .reduce((a, x) => (a[x.type] = x.value, a), {});
+    return `${p.year}-${p.month}-${p.day} ${p.hour}:${p.minute}:${p.second}`;
+  } catch { return d.toISOString().slice(0, 19).replace("T", " "); }
+}
+
 const USER_FLAG_BY_EVENT = { self_saved: "profile_completed", generate: "generated_once", export: "exported_once", waitlist_join: "joined_waitlist", engaged: "engaged" };
 async function atPost(path, payload) {
   const base = process.env.AIRTABLE_BASE_ID, tok = process.env.AIRTABLE_TOKEN;
@@ -139,14 +156,14 @@ async function track(uid, email, events, internal, ua) {
   uid = String(uid || ("email:" + email)).slice(0, 64);
   const now = new Date();
   const nowIso = now.toISOString();
-  const day = nowIso.slice(0, 10);
+  const day = localDay(now);
   const registered = !!email;
   const evs = (events || []).slice(0, 10).map(e => ({ fields: {
     event: String(e.event || "").slice(0, 50), uid,
     email: email || undefined,
     registered: registered || undefined,
     meta: e.meta ? JSON.stringify(e.meta).slice(0, 500) : undefined,
-    day, ts: nowIso,
+    day, ts: nowIso, local_time: localStamp(now),
     internal: isInternal || undefined,
     bot: isBot || undefined,
   } }));
@@ -204,8 +221,9 @@ async function logPrompt(row) {
     titles: row.titles ? row.titles.join("\n").slice(0, 600) : undefined,
     researched: row.researched || undefined,
     internal: row.internal || undefined,
-    day: now.toISOString().slice(0, 10),
+    day: localDay(now),
     ts: now.toISOString(),
+    local_time: localStamp(now),
   } }] });
 }
 
