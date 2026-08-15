@@ -400,6 +400,14 @@
     .pstudio .pfeed{order:2}
     .pdrafts{grid-template-columns:1fr}
     .pfeed .fh2{font-size:10px}
+    /* an empty cover slot must not push the writing off the first screen */
+    .pdraft .pcov:not(.hasimg){aspect-ratio:auto;min-height:56px;max-height:56px}
+    .pdraft .pcov:not(.hasimg) u{font-size:11px}
+    .pdraft{padding:13px}
+    .pdraft .pconcept{display:none}
+    .pdraft.sel .pconcept{display:block}
+    #p-studio .phead .psub{display:none}
+    #p-studio .edithint{font-size:10.5px}
     .pfeed{height:auto;min-height:0;overflow:visible}
     /* no nested scroll on phones: the page scrolls, cells are never clipped */
     #p-feedhost{flex:none;max-height:none;overflow:visible}
