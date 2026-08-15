@@ -94,7 +94,7 @@ async function kvSet(key, val) {
 }
 
 /* ---------- analytics (Airtable: Nomi Users / Nomi Events) ---------- */
-const USER_FLAG_BY_EVENT = { self_saved: "profile_completed", generate: "generated_once", export: "exported_once", waitlist_join: "joined_waitlist" };
+const USER_FLAG_BY_EVENT = { self_saved: "profile_completed", generate: "generated_once", export: "exported_once", waitlist_join: "joined_waitlist", engaged: "engaged" };
 async function atPost(path, payload) {
   const base = process.env.AIRTABLE_BASE_ID, tok = process.env.AIRTABLE_TOKEN;
   if (!base || !tok) return;
@@ -127,8 +127,12 @@ async function atGetUser(uid) {
 
 // uid: anonymous browser id that NEVER changes for a returning user; once the
 // user registers, the same row also carries their email (registered=true).
-async function track(uid, email, events, internal) {
+// Link-preview crawlers and prefetchers hit the page with a fresh context each
+// time; counting them as "visitors" would inflate every funnel metric.
+const BOT_UA = /bot|crawler|spider|crawling|preview|facebookexternalhit|meta-externalagent|whatsapp|slackbot|telegram|discord|twitterbot|linkedinbot|bingpreview|headless|lighthouse|pagespeed|gtmetrix|python-requests|curl\/|wget|axios|node-fetch|go-http/i;
+async function track(uid, email, events, internal, ua) {
   if (internal) return; // internal test sessions are never recorded
+  if (ua && BOT_UA.test(String(ua))) return; // automated fetch, not a creator
   if (!uid && !email) return;
   uid = String(uid || ("email:" + email)).slice(0, 64);
   const now = new Date();
@@ -162,7 +166,11 @@ async function track(uid, email, events, internal) {
     }
     if (e.event === "welcome_choice" && e.meta && e.meta.exp) userFields.rednote_experience = e.meta.exp === "experienced" ? "experienced" : "new";
     if ((e.event === "register" || e.event === "sign_in") && e.meta && e.meta.method) userFields.auth_method = e.meta.method;
-    if (e.event === "visit" && e.meta && e.meta.source && !prev.source) userFields.source = String(e.meta.source).slice(0, 80);
+    if (e.event === "visit" && e.meta) {
+      if (e.meta.source && !prev.source) userFields.source = String(e.meta.source).slice(0, 80);
+      if (e.meta.ua && !prev.user_agent) userFields.user_agent = String(e.meta.ua).slice(0, 140);
+      if (e.meta.inapp) userFields.in_app_browser = true;
+    }
   }
   userFields.days_active = Math.round(((now - firstSeen) / 86400000) * 10) / 10;
 
@@ -723,7 +731,7 @@ export default async function handler(req, res) {
       const session = makeSession(email);
       const existed = !!(await kvGet("state:" + session.userId));
       await migrateGuestState(session.userId, body.guestState);
-      await track(body.uid, email, [{ event: existed ? "sign_in" : "register", meta: { method: "email" } }], body.internal);
+      await track(body.uid, email, [{ event: existed ? "sign_in" : "register", meta: { method: "email" } }], body.internal, req.headers["user-agent"]);
       return res.status(200).json({ ok: true, session });
     }
 
@@ -775,7 +783,7 @@ export default async function handler(req, res) {
             const gmail = String(claims.email).toLowerCase();
             const session = makeSession(gmail);
             const existed = !!(await kvGet("state:" + session.userId));
-            await track(st.uid, gmail, [{ event: existed ? "sign_in" : "register", meta: { method: "google" } }], st.internal);
+            await track(st.uid, gmail, [{ event: existed ? "sign_in" : "register", meta: { method: "google" } }], st.internal, req.headers["user-agent"]);
             payload = { type: "nomi-gauth", token: session.token, identity: session.identity, ctx };
           }
         }
@@ -826,7 +834,7 @@ Signing you in… you can close this window.</body>`);
 
     if (req.method === "POST" && p === "/api/track") {
       const sess = sessionFromToken(tokenFrom(req));
-      await track(body.uid, sess ? sess.identity : null, Array.isArray(body.events) ? body.events : [], body.internal);
+      await track(body.uid, sess ? sess.identity : null, Array.isArray(body.events) ? body.events : [], body.internal, req.headers["user-agent"]);
       return res.status(200).json({ ok: true });
     }
 
@@ -871,7 +879,7 @@ Signing you in… you can close this window.</body>`);
         cur.projects = projects.slice(0, 30);
         await kvSet("state:" + sess.userId, cur);
       }
-      await track(body.uid, sess ? sess.identity : null, [{ event: "generate", meta: { researched, category: cat, lang: body.contentLang || "en" } }], body.internal);
+      await track(body.uid, sess ? sess.identity : null, [{ event: "generate", meta: { researched, category: cat, lang: body.contentLang || "en" } }], body.internal, req.headers["user-agent"]);
       return res.status(200).json({ drafts, projectName, projectId, model, usage, researched, brief: body.internal ? brief : undefined });
     }
 
@@ -903,7 +911,7 @@ Signing you in… you can close this window.</body>`);
         out = { ...out, ...(await repairLanguage(out, body.contentLang || "en", body.self).catch(() => out)) };
       }
       const sessR = sessionFromToken(tokenFrom(req));
-      await track(body.uid, sessR ? sessR.identity : null, [{ event: "refine", meta: { instruction: String(body.instruction).slice(0, 60) } }], body.internal);
+      await track(body.uid, sessR ? sessR.identity : null, [{ event: "refine", meta: { instruction: String(body.instruction).slice(0, 60) } }], body.internal, req.headers["user-agent"]);
       return res.status(200).json({ draft: out, usage });
     }
 
@@ -989,7 +997,7 @@ Signing you in… you can close this window.</body>`);
       await kvSet("waitlist", list);
       console.log(`[waitlist] ${email}`);
       const sessW = sessionFromToken(tokenFrom(req));
-      await track(body.uid, (sessW && sessW.identity) || email, [{ event: "waitlist_join" }], body.internal);
+      await track(body.uid, (sessW && sessW.identity) || email, [{ event: "waitlist_join" }], body.internal, req.headers["user-agent"]);
       return res.status(200).json({ ok: true });
     }
 
