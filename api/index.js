@@ -186,6 +186,29 @@ async function track(uid, email, events, internal, ua) {
   ]);
 }
 
+// Every idea a creator types is logged verbatim (with the social-self that
+// shaped it) so the pilot can read what people actually ask for.
+async function logPrompt(row) {
+  const now = new Date();
+  await atPost("Nomi%20Prompts", { records: [{ fields: {
+    uid: row.uid ? String(row.uid).slice(0, 64) : undefined,
+    email: row.email || undefined,
+    idea: String(row.idea || "").slice(0, 4000),
+    kind: row.kind,
+    content_lang: ["en", "zh", "bilingual"].includes(row.contentLang) ? row.contentLang : undefined,
+    category: row.category ? String(row.category).slice(0, 40) : undefined,
+    self_name: (row.self && row.self.name) ? String(row.self.name).slice(0, 40) : undefined,
+    self_traits: (row.self && Array.isArray(row.self.traits)) ? row.self.traits.join(", ").slice(0, 200) : undefined,
+    seed_text: (row.self && row.self.seedText) ? String(row.self.seedText).slice(0, 1500) : undefined,
+    project_name: row.projectName ? String(row.projectName).slice(0, 80) : undefined,
+    titles: row.titles ? row.titles.join("\n").slice(0, 600) : undefined,
+    researched: row.researched || undefined,
+    internal: row.internal || undefined,
+    day: now.toISOString().slice(0, 10),
+    ts: now.toISOString(),
+  } }] });
+}
+
 /* ---------- email delivery ---------- */
 function emailTransport() {
   if (process.env.RESEND_API_KEY) return "resend";
@@ -886,6 +909,9 @@ Signing you in… you can close this window.</body>`);
         await kvSet("state:" + sess.userId, cur);
       }
       await track(body.uid, sess ? sess.identity : null, [{ event: "generate", meta: { researched, category: cat, lang: body.contentLang || "en" } }], body.internal, req.headers["user-agent"]);
+      await logPrompt({ uid: body.uid, email: sess ? sess.identity : null, idea: body.idea, kind: "generate",
+        contentLang: body.contentLang || "en", category: cat, self: body.self, projectName,
+        titles: drafts.map(d => d.title), researched, internal: body.internal });
       return res.status(200).json({ drafts, projectName, projectId, model, usage, researched, brief: body.internal ? brief : undefined });
     }
 
@@ -917,6 +943,9 @@ Signing you in… you can close this window.</body>`);
         out = { ...out, ...(await repairLanguage(out, body.contentLang || "en", body.self).catch(() => out)) };
       }
       const sessR = sessionFromToken(tokenFrom(req));
+      await logPrompt({ uid: body.uid, email: sessR ? sessR.identity : null, idea: body.instruction, kind: "refine",
+        contentLang: body.contentLang || "en", category: body.category, self: body.self,
+        titles: [out.title], internal: body.internal });
       await track(body.uid, sessR ? sessR.identity : null, [{ event: "refine", meta: { instruction: String(body.instruction).slice(0, 60) } }], body.internal, req.headers["user-agent"]);
       return res.status(200).json({ draft: out, usage });
     }
