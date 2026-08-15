@@ -427,7 +427,7 @@
       <div class="dots3"><i></i><i></i><i></i></div>
       <div class="pttl">nomi</div>
       <button class="chromeshelf" id="chrome-shelf" data-i="myShelf">My shelf</button>
-      <button class="intbadge" id="int-badge" style="display:none" title="Click to leave test mode and start counting this browser">TEST MODE · NOT TRACKED ✕</button>
+      <button class="intbadge" id="int-badge" style="display:none" title="Click to leave test mode and start counting this browser">TEST MODE · FLAGGED ✕</button>
       <div class="psteps">
         <button class="pstep" data-go="p-self">01 <span data-i="stepSelf">self</span></button>
         <button class="pstep" data-go="p-shape">02 <span data-i="stepShape">shape</span></button>
@@ -897,7 +897,7 @@ this is my whole personality now</div>
       sgOk:"Got it, try again",
       addPostTile:"add a post", tShotNoRoom:"no empty post slots - add posts or clear some first",
       curTag:"current", uploadCover:"upload cover", coverConcept:"cover concept:",
-      tTrackingOn:"test mode off - this browser now counts in your metrics",
+      tTrackingOn:"test flag removed - this browser now counts as a normal creator",
       tGuestRestored:"picked up where you left off - register to keep this safely",
       tBadImage:"that file is not a usable image - try a JPG or PNG", tImgTooBig:"that image is too large (max 25MB)",
       tImgStoreFail:"image kept locally - could not store it on your account", tBadEmail:"that email does not look right",
@@ -1020,7 +1020,7 @@ this is my whole personality now</div>
       sgOk:"明白了，重新上传",
       addPostTile:"添加笔记位", tShotNoRoom:"没有空的笔记位了——先添加或清空几个格子",
       curTag:"当前", uploadCover:"上传封面", coverConcept:"封面构思：",
-      tTrackingOn:"已退出测试模式——这个浏览器会计入统计",
+      tTrackingOn:"已取消测试标记——这个浏览器现在按普通创作者统计",
       tGuestRestored:"已恢复上次的进度——注册后可长期保存",
       tBadImage:"这个文件不是可用的图片，请用 JPG 或 PNG", tImgTooBig:"图片太大了（最大 25MB）",
       tImgStoreFail:"图片已保留在本机，但未能存到你的账户", tBadEmail:"邮箱格式不太对",
@@ -1076,11 +1076,10 @@ this is my whole personality now</div>
     }catch(e){return false}
   })();
   function track(event,meta){
-    if(INTERNAL)return;
     try{
       fetch(API+"/api/track",{method:"POST",keepalive:true,
         headers:Object.assign({"Content-Type":"application/json"},S.token?{Authorization:"Bearer "+S.token}:{}),
-        body:JSON.stringify({uid:uid(),events:[{event:event,meta:meta||undefined}]})}).catch(function(){});
+        body:JSON.stringify({uid:uid(),internal:INTERNAL,events:[{event:event,meta:meta||undefined}]})}).catch(function(){});
     }catch(e){}
   }
   function applyLang(){

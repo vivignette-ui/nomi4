@@ -130,10 +130,12 @@ async function atGetUser(uid) {
 // Link-preview crawlers and prefetchers hit the page with a fresh context each
 // time; counting them as "visitors" would inflate every funnel metric.
 const BOT_UA = /bot|crawler|spider|crawling|preview|facebookexternalhit|meta-externalagent|whatsapp|slackbot|telegram|discord|twitterbot|linkedinbot|bingpreview|headless|lighthouse|pagespeed|gtmetrix|python-requests|curl\/|wget|axios|node-fetch|go-http/i;
+// Nothing is suppressed: internal test traffic and crawler hits are RECORDED
+// and flagged, so the pilot numbers can be filtered at analysis time.
 async function track(uid, email, events, internal, ua) {
-  if (internal) return; // internal test sessions are never recorded
-  if (ua && BOT_UA.test(String(ua))) return; // automated fetch, not a creator
   if (!uid && !email) return;
+  const isInternal = !!internal;
+  const isBot = !!(ua && BOT_UA.test(String(ua)));
   uid = String(uid || ("email:" + email)).slice(0, 64);
   const now = new Date();
   const nowIso = now.toISOString();
@@ -145,10 +147,14 @@ async function track(uid, email, events, internal, ua) {
     registered: registered || undefined,
     meta: e.meta ? JSON.stringify(e.meta).slice(0, 500) : undefined,
     day, ts: nowIso,
+    internal: isInternal || undefined,
+    bot: isBot || undefined,
   } }));
 
   const prev = (await atGetUser(uid)) || {};
   const userFields = { uid, last_seen: nowIso };
+  if (isInternal) userFields.internal = true;
+  if (isBot) userFields.bot = true;
   if (!prev.first_seen) userFields.first_seen = nowIso;
   if (email) { userFields.email = email; userFields.registered = true; }
 
