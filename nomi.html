@@ -62,10 +62,24 @@
   .wl .wsupport{color:var(--mut);max-width:52ch}
   .wl .wasp{font-size:13px;color:var(--dim)}
   .wchoices{display:grid;grid-template-columns:1fr 1fr;gap:16px;width:100%;margin-top:8px}
-  .wchoice{background:var(--panel);border:2px solid var(--line);border-radius:14px;padding:24px;text-align:left;cursor:pointer;font-family:var(--body);transition:border-color .15s ease,box-shadow .15s ease}
-  .wchoice:hover{border-color:var(--ind);box-shadow:0 10px 28px rgba(30,42,56,.08)}
-  .wchoice .wt{font-family:var(--disp);font-weight:500;font-size:16px;color:var(--text);margin-bottom:6px}
-  .wchoice .wd{font-size:13px;color:var(--mut)}
+  .wpick{font-size:12.5px;color:var(--mut);display:flex;align-items:center;gap:8px;justify-content:center}
+  .wpick::before,.wpick::after{content:"";height:1px;width:34px;background:var(--line)}
+  .wchoice{background:var(--panel);border:2px solid var(--line);border-radius:14px;padding:22px 24px;text-align:left;cursor:pointer;font-family:var(--body);
+    display:flex;align-items:center;gap:14px;position:relative;
+    box-shadow:0 2px 0 rgba(30,42,56,.04);
+    transition:border-color .15s ease,box-shadow .15s ease,transform .12s ease}
+  .wchoice:hover{border-color:var(--ind);box-shadow:0 12px 30px rgba(51,47,166,.14);transform:translateY(-2px)}
+  .wchoice:active{transform:translateY(0);box-shadow:0 4px 12px rgba(51,47,166,.12)}
+  .wchoice .wtxt{flex:1;min-width:0}
+  .wchoice .wt{display:block;font-family:var(--disp);font-weight:500;font-size:16.5px;color:var(--text);margin-bottom:5px}
+  .wchoice .wd{display:block;font-size:13px;color:var(--mut);line-height:1.5}
+  .wchoice .wgo{flex:none;width:34px;height:34px;border-radius:50%;background:var(--ind-soft);color:var(--ind);
+    display:flex;align-items:center;justify-content:center;font-size:15px;transition:background .15s ease,transform .15s ease}
+  .wchoice:hover .wgo{background:var(--ind);color:#fff;transform:translateX(3px)}
+  .wchoice .wstart{position:absolute;left:24px;bottom:-9px;font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;
+    background:var(--ind);color:#fff;border-radius:999px;padding:2px 10px;opacity:0;transition:opacity .15s ease}
+  .wchoice:hover .wstart{opacity:1}
+  @media (hover:none){.wchoice .wgo{background:var(--ind);color:#fff}}
   .wsignin{font-size:13.5px;color:var(--mut);display:flex;gap:18px;flex-wrap:wrap;justify-content:center}
   .wdisc{font-size:10.5px;color:var(--dim);max-width:60ch;margin-top:14px}
   @media (max-width:700px){.wchoices{grid-template-columns:1fr}}
@@ -448,14 +462,23 @@
           <h2 data-i="wHead">Create through the version of you you want to share.</h2>
           <div class="wsupport" data-i="wSupport">Shape a reusable social-self and turn your ideas into RedNote-ready content in Chinese or English.</div>
           <div class="wasp" data-i="wAsp">Build a recognizable creator presence, one post at a time.</div>
+          <div class="wpick" data-i="wPick">Pick one to start · about 90 seconds</div>
           <div class="wchoices">
             <button class="wchoice" data-exp="new">
-              <div class="wt" data-i="wC1t">I'm new to RedNote</div>
-              <div class="wd" data-i="wC1d">Learn how the platform works and create your first note.</div>
+              <span class="wtxt">
+                <span class="wt" data-i="wC1t">I'm new to RedNote</span>
+                <span class="wd" data-i="wC1d">Learn how the platform works and create your first note.</span>
+              </span>
+              <span class="wgo" aria-hidden="true">&rarr;</span>
+              <span class="wstart" data-i="wStart">start</span>
             </button>
             <button class="wchoice" data-exp="experienced">
-              <div class="wt" data-i="wC2t">I already create on RedNote</div>
-              <div class="wd" data-i="wC2d">Create more consistently through a reusable social-self.</div>
+              <span class="wtxt">
+                <span class="wt" data-i="wC2t">I already create on RedNote</span>
+                <span class="wd" data-i="wC2d">Create more consistently through a reusable social-self.</span>
+              </span>
+              <span class="wgo" aria-hidden="true">&rarr;</span>
+              <span class="wstart" data-i="wStart">start</span>
             </button>
           </div>
           <div class="wsignin">
@@ -803,6 +826,7 @@ this is my whole personality now</div>
       wC1t:"I'm new to RedNote", wC1d:"Learn how the platform works and create your first note.",
       wC2t:"I already create on RedNote", wC2d:"Create more consistently through a reusable social-self.",
       wRet:"Returning to Nomi?", wSignin:"Sign in", wNew:"New here?", wRegister:"Create an account",
+      wPick:"Pick one to start · about 90 seconds", wStart:"start",
       wDisc:"Nomi is an independent creator tool and is not affiliated with or endorsed by RedNote or Xiaohongshu.",
       selfHead:"Your shelf", signOut:"Sign out",
       selfExplain:"A social-self is your saved RedNote voice. It remembers how you sound, so every note starts from you. Nomi holds one; Nyla will hold as many as you need.",
@@ -926,6 +950,7 @@ this is my whole personality now</div>
       wC1t:"我是小红书新手", wC1d:"了解平台的内容表达方式，完成你的第一篇笔记。",
       wC2t:"我已经在小红书创作", wC2d:"用可复用的 social-self，更稳定地持续创作。",
       wRet:"欢迎回来，", wSignin:"登录 Nomi", wNew:"第一次来？", wRegister:"创建账户",
+      wPick:"选一个开始 · 大约 90 秒", wStart:"开始",
       wDisc:"Nomi 是独立创作者工具，与小红书或 RedNote 无官方关联，也未获得其官方背书。",
       selfHead:"我的书架", signOut:"退出登录",
       selfExplain:"social-self 是你保存下来的小红书声音。它记得你的表达方式，让每篇笔记都从你出发。Nomi 保存一个；Nyla 将保存你需要的每一个。",
