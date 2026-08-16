@@ -125,7 +125,14 @@
   .pself .pnm{font-family:var(--disp);font-weight:500;font-size:19px;color:var(--text)}
   .pself .pvoice{font-size:13px;line-height:1.55;color:var(--mut);font-style:italic}
   .pself .pst{font-size:11px;color:var(--dim);margin-top:auto;padding-top:12px}
-  .pself .prow{display:flex;gap:10px;margin-top:10px}
+  .pself .prow{display:flex;gap:14px;margin-top:12px;align-items:center}
+  .pbtn.cta{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:14px 22px;font-size:15px;font-weight:500;
+    box-shadow:0 8px 20px rgba(51,47,166,.22);transition:filter .15s ease,transform .12s ease,box-shadow .15s ease}
+  .pbtn.cta:hover{transform:translateY(-1px);box-shadow:0 12px 26px rgba(51,47,166,.28)}
+  .pbtn.cta:active{transform:translateY(0)}
+  .ctaarrow{transition:transform .15s ease}
+  .pbtn.cta:hover .ctaarrow{transform:translateX(3px)}
+  .ctahint{font-size:11.5px;color:var(--dim);margin-top:8px;text-align:center}
   .pcreate{background:var(--panel);border:2px dashed #B9C6D6;border-radius:14px;padding:26px;display:none;flex-direction:column;gap:12px;align-items:flex-start;justify-content:center}
   .pcreate .ct1{font-family:var(--disp);font-weight:500;font-size:17px}
   .pcreate .ct2{font-size:12.5px;color:var(--mut);max-width:34ch}
@@ -559,9 +566,10 @@
             <div class="pvoice">"Uji at first light, warm mochi in hand. everything since has been an audition."</div>
             <div class="pst"><span data-i="selfStat2pre">Every note you keep teaches</span> <span class="rn">Rain</span> <span data-i="selfStat2post">more of you.</span></div>
             <div class="prow">
-              <button class="pbtn sm" id="p-writebtn" data-i="startNow">Start now</button>
-              <button class="pbtn sm ghost" id="p-reshape" data-i="reshape">Reshape</button>
+              <button class="pbtn cta" id="p-writebtn"><span data-i="startNow">Start now</span><span class="ctaarrow" aria-hidden="true">&rarr;</span></button>
+              <button class="plink" id="p-reshape" data-i="reshape">Reshape</button>
             </div>
+            <div class="ctahint" data-i="startHint">write today's note in your own voice</div>
           </div>
           <div class="plock" id="plock" role="button" tabindex="0" aria-label="New social-self, locked, opens the Nyla waitlist">
             <div class="plk" data-i="locked">locked</div>
@@ -864,7 +872,7 @@ this is my whole personality now</div>
       rename:"rename", editlook:"edit look", lookTitle:"Choose a look for this social-self",
       cancel:"Cancel", confirm:"Confirm",
       selfStat2pre:"Every note you keep teaches", selfStat2post:"more of you.",
-      writeWith:"Write with", startNow:"Start now", reshape:"Reshape",
+      writeWith:"Write with", startNow:"Start now", startHint:"write today's note in your own voice", reshape:"Reshape",
       locked:"locked", newSelf:"New social-self",
       lockCopy:"Nomi is a one-social-self experience. Nyla will support multiple social-selves.",
       joinWl:"join the Nyla waitlist",
@@ -991,7 +999,7 @@ this is my whole personality now</div>
       rename:"重命名", editlook:"更换形象", lookTitle:"为这个 social-self 选择形象",
       cancel:"取消", confirm:"确认",
       selfStat2pre:"你保留的每篇笔记都让", selfStat2post:"更懂你。",
-      writeWith:"和它一起写：", startNow:"开始创作", reshape:"重新塑造",
+      writeWith:"和它一起写：", startNow:"开始创作", startHint:"用你自己的声音，写今天这篇", reshape:"重新塑造",
       locked:"未解锁", newSelf:"新的 social-self",
       lockCopy:"Nomi 目前支持一个 social-self。Nyla 将支持多个 social-self。",
       joinWl:"加入 Nyla 等候名单",
