@@ -151,7 +151,11 @@ const BOT_UA = /bot|crawler|spider|crawling|preview|facebookexternalhit|meta-ext
 // and flagged, so the pilot numbers can be filtered at analysis time.
 async function track(uid, email, events, internal, ua) {
   if (!uid && !email) return;
-  const isInternal = !!internal;
+  // Known team/friend accounts are always treated as internal, however they
+  // arrive, so the pilot funnel stays clean without deleting anything.
+  const knownInternal = String(process.env.INTERNAL_EMAILS || "")
+    .split(",").map(x => x.trim().toLowerCase()).filter(Boolean);
+  const isInternal = !!internal || (!!email && knownInternal.includes(String(email).toLowerCase()));
   const isBot = !!(ua && BOT_UA.test(String(ua)));
   uid = String(uid || ("email:" + email)).slice(0, 64);
   const now = new Date();
@@ -220,7 +224,7 @@ async function logPrompt(row) {
     project_name: row.projectName ? String(row.projectName).slice(0, 80) : undefined,
     titles: row.titles ? row.titles.join("\n").slice(0, 600) : undefined,
     researched: row.researched || undefined,
-    internal: row.internal || undefined,
+    internal: (row.internal || (row.email && String(process.env.INTERNAL_EMAILS || "").toLowerCase().split(",").map(x=>x.trim()).includes(String(row.email).toLowerCase()))) || undefined,
     day: localDay(now),
     ts: now.toISOString(),
     local_time: localStamp(now),
