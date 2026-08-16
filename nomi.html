@@ -67,6 +67,11 @@
   /* Chinese needs a shorter measure and more leading than Latin */
   html[lang^="zh"] .wl h2{max-width:12em;line-height:1.35}
   html[lang^="zh"] .wl .wsupport{max-width:22em;line-height:1.75}
+  @media (max-width:640px){
+    html[lang^="zh"] .wl h2{font-size:23px;line-height:1.3}
+    html[lang^="zh"] .wl .wsupport{margin-top:12px}
+    html[lang^="zh"] .wl .wpick{margin-top:18px}
+  }
   .wpick{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim)}
   .wchoice{background:var(--panel);border:2px solid var(--line);border-radius:14px;padding:16px 18px;min-height:64px;text-align:left;cursor:pointer;font-family:var(--body);
     display:flex;align-items:center;gap:14px;position:relative;
@@ -498,20 +503,20 @@
       <div class="pscr on" id="w-welcome">
         <div class="wl">
           <h2 data-i="wHead">Write RedNote notes that still sound like you.</h2>
-          <div class="wsupport" data-i="wSupport">One idea in, three drafts out - a guide, a review, a diary. In Chinese, English, or both.</div>
+          <div class="wsupport" data-i="wSupport">One idea in, three drafts out — a guide, a review, a diary. In Chinese, English, or both.</div>
           <div class="wpick" data-i="wPick">Two ways in · about 90 seconds</div>
           <div class="wchoices">
             <button class="wchoice" data-exp="new">
               <span class="wtxt">
                 <span class="wt" data-i="wC1t">Write my first note</span>
-                <span class="wd" data-i="wC1d">New to RedNote - see what works here, then write one with you.</span>
+                <span class="wd" data-i="wC1d">New to RedNote — see what works here, then write one with you.</span>
               </span>
               <span class="wgo" aria-hidden="true">&rarr;</span>
             </button>
             <button class="wchoice" data-exp="experienced">
               <span class="wtxt">
                 <span class="wt" data-i="wC2t">Keep my posting consistent</span>
-                <span class="wd" data-i="wC2d">Already on RedNote - save how you sound once, then draft faster every time.</span>
+                <span class="wd" data-i="wC2d">Already on RedNote — save how you sound once, then draft faster every time.</span>
               </span>
               <span class="wgo" aria-hidden="true">&rarr;</span>
             </button>
@@ -859,9 +864,9 @@ this is my whole personality now</div>
       tAttNoText:"no readable text in that image", tAttFile:"file content added to your idea",
       blkTitleHint:"tap to add a title", blkImgHint:"tap to add an image",
       wHead:"Write RedNote notes that still sound like you.",
-      wSupport:"One idea in, three drafts out - a guide, a review, a diary. In Chinese, English, or both.",
-      wC1t:"Write my first note", wC1d:"New to RedNote - see what works here, then write one with you.",
-      wC2t:"Keep my posting consistent", wC2d:"Already on RedNote - save how you sound once, then draft faster every time.",
+      wSupport:"One idea in, three drafts out — a guide, a review, a diary. In Chinese, English, or both.",
+      wC1t:"Write my first note", wC1d:"New to RedNote — see what works here, then write one with you.",
+      wC2t:"Keep my posting consistent", wC2d:"Already on RedNote — save how you sound once, then draft faster every time.",
       wSignin:"Sign in", wRegister:"Create an account",
       wPick:"Two ways in · about 90 seconds",
       selfHead:"Your shelf", signOut:"Sign out",
