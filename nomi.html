@@ -34,9 +34,11 @@
   .psteps{margin-left:auto;display:flex;gap:4px}
   .pstep{font-family:var(--mono);font-size:10px;letter-spacing:.05em;color:var(--dim);background:transparent;border:1px solid var(--line);border-radius:999px;padding:4px 10px;cursor:default;pointer-events:none}
   .pstep.on{color:var(--ind);border-color:var(--ind);background:var(--ind-soft)}
-  .langtog{display:flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;margin-left:10px}
-  .langtog button{border:0;background:var(--panel);color:var(--mut);font-size:11px;padding:4px 11px;cursor:pointer;font-family:var(--body)}
-  .langtog button.on{background:var(--ind);color:#fff}
+  .langtog{display:flex;align-items:center;margin-left:10px}
+  .langtog button{border:0;background:transparent;color:var(--dim);font-size:12px;padding:4px 9px;cursor:pointer;font-family:var(--body)}
+  .langtog button+button{border-left:1px solid var(--line)}
+  .langtog button.on{color:var(--text);font-weight:600}
+  .langtog button:hover{color:var(--text)}
   .pstage{position:relative;min-height:640px}
   .pscr{display:none;position:relative;min-height:640px;padding:36px 40px 40px;background:linear-gradient(180deg,#FFFFFF,var(--tint))}
   .pscr.on{display:flex;flex-direction:column;animation:pfade .35s ease}
@@ -56,15 +58,17 @@
   .peditlook{font-size:10.5px;color:var(--ind);background:none;border:0;cursor:pointer;text-decoration:underline;font-family:var(--body);padding:2px 0}
 
   /* welcome */
-  .wl{max-width:660px;margin:auto;width:100%;display:flex;flex-direction:column;gap:22px;text-align:center;align-items:center}
-  .wl .weyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim)}
-  .wl h2{font-family:var(--disp);font-weight:500;font-size:clamp(24px,3.4vw,34px);line-height:1.2}
-  .wl .wsupport{color:var(--mut);max-width:52ch}
-  .wl .wasp{font-size:13px;color:var(--dim)}
-  .wchoices{display:grid;grid-template-columns:1fr 1fr;gap:16px;width:100%;margin-top:8px}
-  .wpick{font-size:12.5px;color:var(--mut);display:flex;align-items:center;gap:8px;justify-content:center}
-  .wpick::before,.wpick::after{content:"";height:1px;width:34px;background:var(--line)}
-  .wchoice{background:var(--panel);border:2px solid var(--line);border-radius:14px;padding:22px 24px;text-align:left;cursor:pointer;font-family:var(--body);
+  /* One deliberate breath before the decision: a spacing rhythm, not a flat gap */
+  .wl{max-width:660px;margin:auto;width:100%;display:flex;flex-direction:column;gap:0;text-align:center;align-items:center}
+  .wl h2{font-family:var(--disp);font-weight:500;font-size:clamp(24px,3.4vw,34px);line-height:1.2;max-width:22ch}
+  .wl .wsupport{color:var(--mut);max-width:46ch;line-height:1.6;margin-top:16px}
+  .wl .wpick{margin-top:24px}
+  .wchoices{display:grid;grid-template-columns:1fr 1fr;gap:12px;width:100%;margin-top:14px}
+  /* Chinese needs a shorter measure and more leading than Latin */
+  html[lang^="zh"] .wl h2{max-width:12em;line-height:1.35}
+  html[lang^="zh"] .wl .wsupport{max-width:22em;line-height:1.75}
+  .wpick{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim)}
+  .wchoice{background:var(--panel);border:2px solid var(--line);border-radius:14px;padding:16px 18px;min-height:64px;text-align:left;cursor:pointer;font-family:var(--body);
     display:flex;align-items:center;gap:14px;position:relative;
     box-shadow:0 2px 0 rgba(30,42,56,.04);
     transition:border-color .15s ease,box-shadow .15s ease,transform .12s ease}
@@ -76,12 +80,10 @@
   .wchoice .wgo{flex:none;width:34px;height:34px;border-radius:50%;background:var(--ind-soft);color:var(--ind);
     display:flex;align-items:center;justify-content:center;font-size:15px;transition:background .15s ease,transform .15s ease}
   .wchoice:hover .wgo{background:var(--ind);color:#fff;transform:translateX(3px)}
-  .wchoice .wstart{position:absolute;left:24px;bottom:-9px;font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;
-    background:var(--ind);color:#fff;border-radius:999px;padding:2px 10px;opacity:0;transition:opacity .15s ease}
-  .wchoice:hover .wstart{opacity:1}
+  .wchoice:focus-visible{border-color:var(--ind)}
   @media (hover:none){.wchoice .wgo{background:var(--ind);color:#fff}}
-  .wsignin{font-size:13.5px;color:var(--mut);display:flex;gap:18px;flex-wrap:wrap;justify-content:center}
-  .wdisc{font-size:10.5px;color:var(--dim);max-width:60ch;margin-top:14px}
+  .wsignin{font-size:13px;color:var(--mut);display:flex;gap:10px;flex-wrap:wrap;justify-content:center;align-items:center;margin-top:20px}
+  .wsignin .wdot{color:var(--dim)}
   @media (max-width:700px){.wchoices{grid-template-columns:1fr}}
 
   /* auth */
@@ -399,8 +401,12 @@
     .phead{flex-wrap:wrap;gap:8px;margin-bottom:18px}
     .phead h4{font-size:17px}
     .phead .headright{margin-left:auto;gap:10px}
-    .wl{gap:16px}
-    .wchoice{padding:18px}
+    .pchrome .dots3{display:none}
+    .wl h2{font-size:24px}
+    .wl .wsupport{font-size:15px;margin-top:14px}
+    .wl .wpick{margin-top:22px}
+    .wchoices{grid-template-columns:1fr;gap:12px;margin-top:14px}
+    .wchoice{padding:16px 18px}
     .pshelf{grid-template-columns:1fr;gap:14px}
     .pbuild{grid-template-columns:1fr;gap:14px}
     .pfoot{flex-direction:column;align-items:stretch;gap:12px}
@@ -491,34 +497,30 @@
       <!-- WELCOME -->
       <div class="pscr on" id="w-welcome">
         <div class="wl">
-          <div class="weyebrow" data-i="wEyebrow">Welcome to Nomi</div>
-          <h2 data-i="wHead">Create through the version of you you want to share.</h2>
-          <div class="wsupport" data-i="wSupport">Shape a reusable social-self and turn your ideas into RedNote-ready content in Chinese or English.</div>
-          <div class="wasp" data-i="wAsp">Build a recognizable creator presence, one post at a time.</div>
-          <div class="wpick" data-i="wPick">Pick one to start · about 90 seconds</div>
+          <h2 data-i="wHead">Write RedNote notes that still sound like you.</h2>
+          <div class="wsupport" data-i="wSupport">One idea in, three drafts out - a guide, a review, a diary. In Chinese, English, or both.</div>
+          <div class="wpick" data-i="wPick">Two ways in · about 90 seconds</div>
           <div class="wchoices">
             <button class="wchoice" data-exp="new">
               <span class="wtxt">
-                <span class="wt" data-i="wC1t">I'm new to RedNote</span>
-                <span class="wd" data-i="wC1d">Learn how the platform works and create your first note.</span>
+                <span class="wt" data-i="wC1t">Write my first note</span>
+                <span class="wd" data-i="wC1d">New to RedNote - see what works here, then write one with you.</span>
               </span>
               <span class="wgo" aria-hidden="true">&rarr;</span>
-              <span class="wstart" data-i="wStart">start</span>
             </button>
             <button class="wchoice" data-exp="experienced">
               <span class="wtxt">
-                <span class="wt" data-i="wC2t">I already create on RedNote</span>
-                <span class="wd" data-i="wC2d">Create more consistently through a reusable social-self.</span>
+                <span class="wt" data-i="wC2t">Keep my posting consistent</span>
+                <span class="wd" data-i="wC2d">Already on RedNote - save how you sound once, then draft faster every time.</span>
               </span>
               <span class="wgo" aria-hidden="true">&rarr;</span>
-              <span class="wstart" data-i="wStart">start</span>
             </button>
           </div>
           <div class="wsignin">
-            <span><span data-i="wRet">Returning to Nomi?</span> <button class="plink" id="w-signin" data-i="wSignin">Sign in</button></span>
-            <span><span data-i="wNew">New here?</span> <button class="plink" id="w-register" data-i="wRegister">Create an account</button></span>
+            <button class="plink" id="w-signin" data-i="wSignin">Sign in</button>
+            <span class="wdot" aria-hidden="true">·</span>
+            <button class="plink" id="w-register" data-i="wRegister">Create an account</button>
           </div>
-          <div class="wdisc" data-i="wDisc">Nomi is an independent creator tool and is not affiliated with or endorsed by RedNote or Xiaohongshu.</div>
         </div>
       </div>
 
@@ -832,7 +834,7 @@ this is my whole personality now</div>
       <div class="ptoast" id="ptoast">…</div>
     </div>
   </div>
-  <p style="font-size:12px;color:var(--dim);margin-top:14px" data-i="footNote">Nomi beta · an independent creator tool. Interface language and content language are independent.</p>
+  <p style="font-size:11.5px;color:var(--dim);margin-top:30px;text-align:center" data-i="footNote">Nomi beta · an independent creator tool, not affiliated with or endorsed by RedNote (Xiaohongshu).</p>
 </div>
 
 <script>
@@ -856,14 +858,12 @@ this is my whole personality now</div>
       tAttReading:"reading your files…", tAttImg:"image content added to your idea",
       tAttNoText:"no readable text in that image", tAttFile:"file content added to your idea",
       blkTitleHint:"tap to add a title", blkImgHint:"tap to add an image",
-      wEyebrow:"Welcome to Nomi", wHead:"Create through the version of you you want to share.",
-      wSupport:"Shape a reusable social-self and turn your ideas into RedNote-ready content in Chinese or English.",
-      wAsp:"Build a recognizable creator presence, one post at a time.",
-      wC1t:"I'm new to RedNote", wC1d:"Learn how the platform works and create your first note.",
-      wC2t:"I already create on RedNote", wC2d:"Create more consistently through a reusable social-self.",
-      wRet:"Returning to Nomi?", wSignin:"Sign in", wNew:"New here?", wRegister:"Create an account",
-      wPick:"Pick one to start · about 90 seconds", wStart:"start",
-      wDisc:"Nomi is an independent creator tool and is not affiliated with or endorsed by RedNote or Xiaohongshu.",
+      wHead:"Write RedNote notes that still sound like you.",
+      wSupport:"One idea in, three drafts out - a guide, a review, a diary. In Chinese, English, or both.",
+      wC1t:"Write my first note", wC1d:"New to RedNote - see what works here, then write one with you.",
+      wC2t:"Keep my posting consistent", wC2d:"Already on RedNote - save how you sound once, then draft faster every time.",
+      wSignin:"Sign in", wRegister:"Create an account",
+      wPick:"Two ways in · about 90 seconds",
       selfHead:"Your shelf", signOut:"Sign out",
       selfExplain:"A social-self is your saved RedNote voice. It remembers how you sound, so every note starts from you. Nomi holds one; Nyla will hold as many as you need.",
       emptyTitle:"No social-self yet",
@@ -933,7 +933,7 @@ this is my whole personality now</div>
       signinTitle:"Sign in to Nomi", signinSub:"Pick up your saved social-self and drafts.",
       registerTitle:"Create your Nomi account", registerSub:"Your social-self and drafts will be saved to it.",
       writing:"writing as your social-self",
-      footNote:"Nomi beta · an independent creator tool. Interface language and content language are independent.",
+      footNote:"Nomi beta · an independent creator tool, not affiliated with or endorsed by RedNote (Xiaohongshu).",
       aGoogle:"Continue with Google", aApple:"Continue with Apple", aEmail:"Continue with email",
       aEmailPh:"you@example.com", aSend:"Send code", aCodePh:"6-digit code", aVerify:"Verify and continue",
       aCodeSent:"Code sent. For this beta it also appears in the server console.",
@@ -983,14 +983,12 @@ this is my whole personality now</div>
       tAttReading:"正在读取文件…", tAttImg:"图片内容已加入想法",
       tAttNoText:"图片中没有可识别的文字", tAttFile:"文件内容已加入想法",
       blkTitleHint:"点击添加标题", blkImgHint:"点击添加图片",
-      wEyebrow:"欢迎来到 Nomi", wHead:"塑造你的 social-self，让每一篇内容都更像你。",
-      wSupport:"选择你想呈现的自己，把想法转化为适合小红书的中文、英文或双语内容。",
-      wAsp:"从一个 social-self 开始，逐步建立有辨识度的创作者表达。",
-      wC1t:"我是小红书新手", wC1d:"了解平台的内容表达方式，完成你的第一篇笔记。",
-      wC2t:"我已经在小红书创作", wC2d:"用可复用的 social-self，更稳定地持续创作。",
-      wRet:"欢迎回来，", wSignin:"登录 Nomi", wNew:"第一次来？", wRegister:"创建账户",
-      wPick:"选一个开始 · 大约 90 秒", wStart:"开始",
-      wDisc:"Nomi 是独立创作者工具，与小红书或 RedNote 无官方关联，也未获得其官方背书。",
+      wHead:"写小红书笔记，还是你自己的味道",
+      wSupport:"说一个想法，拿到三个能直接发的版本：攻略、测评、日常。中文、英文，或者两种都要。",
+      wC1t:"写出我的第一篇笔记", wC1d:"小红书新手：先看懂这里什么内容有人看，再一起写第一篇。",
+      wC2t:"让我的更新更稳定", wC2d:"已经在发笔记：把你的语感存下来，写得更快，也不容易断更。",
+      wSignin:"登录", wRegister:"注册账号",
+      wPick:"两种开始方式 · 大约 90 秒",
       selfHead:"我的书架", signOut:"退出登录",
       selfExplain:"social-self 是你保存下来的小红书声音。它记得你的表达方式，让每篇笔记都从你出发。Nomi 保存一个；Nyla 将保存你需要的每一个。",
       emptyTitle:"还没有 social-self",
@@ -1060,7 +1058,7 @@ this is my whole personality now</div>
       signinTitle:"登录 Nomi", signinSub:"找回你保存的 social-self 和草稿。",
       registerTitle:"创建 Nomi 账户", registerSub:"你的 social-self 和草稿都会保存在这里。",
       writing:"正在以你的 social-self 写作",
-      footNote:"Nomi 测试版 · 独立创作者工具。界面语言与内容语言相互独立。",
+      footNote:"Nomi 测试版 · 独立创作者工具，与小红书（RedNote）无隶属关系，也未获其背书。",
       aGoogle:"使用 Google 继续", aApple:"使用 Apple 继续", aEmail:"使用邮箱继续",
       aEmailPh:"you@example.com", aSend:"发送验证码", aCodePh:"6 位验证码", aVerify:"验证并继续",
       aCodeSent:"验证码已发送。测试版中也会显示在服务器控制台。",
@@ -1142,11 +1140,30 @@ this is my whole personality now</div>
       return localStorage.getItem("nomiInternal")==="1";
     }catch(e){return false}
   })();
+  // A session is one sitting: it starts on load and ends after 30 minutes of
+  // no activity, so we can measure how long creators actually spend.
+  var SESSION_GAP=30*60*1000;
+  function session(){
+    var now=Date.now();
+    var sid,start,last;
+    try{
+      sid=sessionStorage.getItem("nomiSid");
+      start=+sessionStorage.getItem("nomiSidStart")||0;
+      last=+sessionStorage.getItem("nomiSidLast")||0;
+    }catch(e){}
+    if(!sid||!start||(last&&now-last>SESSION_GAP)){
+      sid=(crypto.randomUUID?crypto.randomUUID():("s"+now.toString(36)+Math.random().toString(36).slice(2,8))).slice(0,24);
+      start=now;
+      try{sessionStorage.setItem("nomiSid",sid);sessionStorage.setItem("nomiSidStart",String(start));}catch(e){}
+    }
+    try{sessionStorage.setItem("nomiSidLast",String(now));}catch(e){}
+    return {sid:sid,minutes:Math.round(((now-start)/60000)*10)/10,isNew:start===now};
+  }
   function track(event,meta){
     try{
       fetch(API+"/api/track",{method:"POST",keepalive:true,
         headers:Object.assign({"Content-Type":"application/json"},S.token?{Authorization:"Bearer "+S.token}:{}),
-        body:JSON.stringify({uid:uid(),internal:INTERNAL,events:[{event:event,meta:meta||undefined}]})}).catch(function(){});
+        body:(function(){var ss=session();return JSON.stringify({uid:uid(),internal:INTERNAL,session:ss,events:[{event:event,meta:meta||undefined}]})})()}).catch(function(){});
     }catch(e){}
   }
   function applyLang(){
@@ -1285,6 +1302,9 @@ this is my whole personality now</div>
   function pGoDirect(id){
     document.querySelectorAll(".pscr").forEach(function(s){s.classList.remove("on")});
     document.getElementById(id).classList.add("on");
+    // the inert 01-04 chips announce four steps of work before anyone has
+    // agreed to step one - keep them off the invitation screen
+    document.querySelector(".psteps").style.display = (id==="w-welcome") ? "none" : "";
     var hi = id==="p-studio" ? "p-projects" : id;
     document.querySelectorAll(".pstep").forEach(function(s){s.classList.toggle("on",s.dataset.go===hi)});
     if(id==="p-self") renderSelf();
@@ -2988,6 +3008,7 @@ this is my whole personality now</div>
       S.googleClientId=d.googleClientId||null;
       S.emailDelivery=d.emailDelivery||"console";
     }).catch(function(){});
+    setInterval(function(){ if(document.visibilityState==="visible") track("heartbeat",{}); },120000);
     track("visit",{
       source:document.referrer?document.referrer.slice(0,80):"direct",
       lang:S.lang,

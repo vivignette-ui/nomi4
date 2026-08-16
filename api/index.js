@@ -149,7 +149,7 @@ async function atGetUser(uid) {
 const BOT_UA = /bot|crawler|spider|crawling|preview|facebookexternalhit|meta-externalagent|whatsapp|slackbot|telegram|discord|twitterbot|linkedinbot|bingpreview|headless|lighthouse|pagespeed|gtmetrix|python-requests|curl\/|wget|axios|node-fetch|go-http/i;
 // Nothing is suppressed: internal test traffic and crawler hits are RECORDED
 // and flagged, so the pilot numbers can be filtered at analysis time.
-async function track(uid, email, events, internal, ua) {
+async function track(uid, email, events, internal, ua, session) {
   if (!uid && !email) return;
   // Known team/friend accounts are always treated as internal, however they
   // arrive, so the pilot funnel stays clean without deleting anything.
@@ -168,6 +168,8 @@ async function track(uid, email, events, internal, ua) {
     registered: registered || undefined,
     meta: e.meta ? JSON.stringify(e.meta).slice(0, 500) : undefined,
     day, ts: nowIso, local_time: localStamp(now),
+    session_id: (session && session.sid) ? String(session.sid).slice(0, 32) : undefined,
+    session_minutes: (session && typeof session.minutes === "number") ? session.minutes : undefined,
     internal: isInternal || undefined,
     bot: isBot || undefined,
   } }));
@@ -200,6 +202,27 @@ async function track(uid, email, events, internal, ua) {
     }
   }
   userFields.days_active = Math.round(((now - firstSeen) / 86400000) * 10) / 10;
+  // Session accounting: count each new sitting once, and keep a running total
+  // so average session length is readable straight off the row.
+  if (session && session.sid) {
+    const prevSid = prev.last_session_id;
+    const mins = (typeof session.minutes === "number") ? session.minutes : 0;
+    if (prevSid !== session.sid) {
+      userFields.sessions = (Number(prev.sessions) || 0) + 1;
+      userFields.total_minutes = Math.round(((Number(prev.total_minutes) || 0) + mins) * 10) / 10;
+      userFields.last_session_minutes = mins;
+    } else {
+      const prevLast = Number(prev.last_session_minutes) || 0;
+      if (mins > prevLast) {
+        userFields.total_minutes = Math.round(((Number(prev.total_minutes) || 0) + (mins - prevLast)) * 10) / 10;
+        userFields.last_session_minutes = mins;
+      }
+    }
+    userFields.last_session_id = session.sid;
+    const sess = userFields.sessions != null ? userFields.sessions : (Number(prev.sessions) || 1);
+    const tot = userFields.total_minutes != null ? userFields.total_minutes : (Number(prev.total_minutes) || 0);
+    userFields.avg_session_minutes = Math.round((tot / Math.max(1, sess)) * 10) / 10;
+  }
 
   await Promise.all([
     evs.length ? atPost("Nomi%20Events", { records: evs }) : null,
@@ -782,7 +805,7 @@ export default async function handler(req, res) {
       const session = makeSession(email);
       const existed = !!(await kvGet("state:" + session.userId));
       await migrateGuestState(session.userId, body.guestState);
-      await track(body.uid, email, [{ event: existed ? "sign_in" : "register", meta: { method: "email" } }], body.internal, req.headers["user-agent"]);
+      await track(body.uid, email, [{ event: existed ? "sign_in" : "register", meta: { method: "email" } }], body.internal, req.headers["user-agent"], body.session);
       return res.status(200).json({ ok: true, session });
     }
 
@@ -885,7 +908,7 @@ Signing you in… you can close this window.</body>`);
 
     if (req.method === "POST" && p === "/api/track") {
       const sess = sessionFromToken(tokenFrom(req));
-      await track(body.uid, sess ? sess.identity : null, Array.isArray(body.events) ? body.events : [], body.internal, req.headers["user-agent"]);
+      await track(body.uid, sess ? sess.identity : null, Array.isArray(body.events) ? body.events : [], body.internal, req.headers["user-agent"], body.session);
       return res.status(200).json({ ok: true });
     }
 
@@ -930,7 +953,7 @@ Signing you in… you can close this window.</body>`);
         cur.projects = projects.slice(0, 30);
         await kvSet("state:" + sess.userId, cur);
       }
-      await track(body.uid, sess ? sess.identity : null, [{ event: "generate", meta: { researched, category: cat, lang: body.contentLang || "en" } }], body.internal, req.headers["user-agent"]);
+      await track(body.uid, sess ? sess.identity : null, [{ event: "generate", meta: { researched, category: cat, lang: body.contentLang || "en" } }], body.internal, req.headers["user-agent"], body.session);
       await logPrompt({ uid: body.uid, email: sess ? sess.identity : null, idea: body.idea, kind: "generate",
         contentLang: body.contentLang || "en", category: cat, self: body.self, projectName,
         titles: drafts.map(d => d.title), researched, internal: body.internal });
@@ -968,7 +991,7 @@ Signing you in… you can close this window.</body>`);
       await logPrompt({ uid: body.uid, email: sessR ? sessR.identity : null, idea: body.instruction, kind: "refine",
         contentLang: body.contentLang || "en", category: body.category, self: body.self,
         titles: [out.title], internal: body.internal });
-      await track(body.uid, sessR ? sessR.identity : null, [{ event: "refine", meta: { instruction: String(body.instruction).slice(0, 60) } }], body.internal, req.headers["user-agent"]);
+      await track(body.uid, sessR ? sessR.identity : null, [{ event: "refine", meta: { instruction: String(body.instruction).slice(0, 60) } }], body.internal, req.headers["user-agent"], body.session);
       return res.status(200).json({ draft: out, usage });
     }
 
@@ -1054,7 +1077,7 @@ Signing you in… you can close this window.</body>`);
       await kvSet("waitlist", list);
       console.log(`[waitlist] ${email}`);
       const sessW = sessionFromToken(tokenFrom(req));
-      await track(body.uid, (sessW && sessW.identity) || email, [{ event: "waitlist_join" }], body.internal, req.headers["user-agent"]);
+      await track(body.uid, (sessW && sessW.identity) || email, [{ event: "waitlist_join" }], body.internal, req.headers["user-agent"], body.session);
       return res.status(200).json({ ok: true });
     }
 
