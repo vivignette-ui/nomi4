@@ -259,6 +259,16 @@
   .pstart{font-size:12px;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:6px 14px;color:var(--mut);cursor:pointer;font-family:var(--body)}
   .pstart:hover{border-color:var(--ind);color:var(--text)}
   .pstart b{color:var(--ind);font-weight:500}
+  /* generation failure: say what happened. never substitute invented notes */
+  .pgenerr{background:var(--panel);border:1px solid #D9C2C2;border-left:3px solid #A85252;border-radius:12px;
+    padding:16px 18px;display:flex;flex-direction:column;gap:7px}
+  .pgenerr[hidden]{display:none}
+  .pgenerr .ge1{font-family:var(--disp);font-weight:500;font-size:15px;color:#7C3A3A}
+  .pgenerr .ge2{font-size:12.5px;color:var(--mut);line-height:1.6;max-width:56ch}
+  .pgenerr .ge3{font-family:var(--mono);font-size:10px;color:var(--dim);word-break:break-word}
+  .pgenerr .ge3:empty{display:none}
+  .pgenerr .gerow{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:3px}
+  .pgenerr .gehint{font-size:11.5px;color:var(--dim)}
 
   /* studio */
   .pstudio{display:grid;grid-template-columns:.85fr 2.3fr;gap:22px;flex:1;min-height:0}
@@ -317,6 +327,11 @@
   .rncell.selq .selbadge::after{content:"";width:8px;height:4px;border-left:1.5px solid #fff;border-bottom:1.5px solid #fff;transform:rotate(-45deg);margin-top:-2px}
   .prail{display:flex;flex-direction:column;gap:14px;min-height:0}
   .pdrafts{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;flex:1;min-height:0}
+  /* studio with nothing generated: an empty rail, not sample notes */
+  .pnodrafts{grid-column:1/-1;background:var(--panel);border:2px dashed #B9C6D6;border-radius:12px;padding:26px;
+    display:flex;flex-direction:column;gap:10px;align-items:flex-start;justify-content:center}
+  .pnodrafts .nd1{font-family:var(--disp);font-weight:500;font-size:16px}
+  .pnodrafts .nd2{font-size:12.5px;color:var(--mut);max-width:42ch;line-height:1.6}
   .pdraft{background:var(--panel);border-radius:12px;padding:15px;display:flex;flex-direction:column;gap:8px;cursor:pointer;position:relative;min-height:0;transition:box-shadow .15s ease;border:2px solid var(--line)}
   .pdraft:hover{box-shadow:0 10px 26px rgba(30,42,56,.12)}
   .pdraft.sel{border-color:var(--ind)}
@@ -704,6 +719,17 @@ this is my whole personality now</div>
             <button class="pstart" data-fill="a Kyoto autumn note: the tea houses worth the queue when the leaves turn"><b data-i="recipeWord">recipe</b> <span data-i="warm2">· trending: Kyoto autumn</span></button>
             <button class="pstart" data-fill="finish my saved draft from Tuesday about quiet mornings" data-i="warm3">resume: saved draft from Tuesday</button>
           </div>
+          <!-- Shown only when a generation actually failed. It never carries
+               notes: a failed generation produces nothing, and says so. -->
+          <div class="pgenerr" id="p-generr" role="alert" aria-live="polite" hidden>
+            <div class="ge1" data-i="genErrTitle">Nomi could not write your notes</div>
+            <div class="ge2" id="p-generrmsg"></div>
+            <div class="ge3" id="p-generrdet"></div>
+            <div class="gerow">
+              <button class="pbtn sm" id="p-genretry" data-i="genErrRetry">Try again</button>
+              <span class="gehint" data-i="genErrKeep">Your idea is still in the box above — edit it or retry as it is.</span>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -733,7 +759,7 @@ this is my whole personality now</div>
       <div class="pscr" id="p-studio">
         <div class="phead">
           <button class="pback" data-go="p-projects">&larr; <span data-i="backProjects">All projects</span></button>
-          <h4><svg class="orbi orbav" style="width:22px;height:22px" role="img" aria-label="Social-self avatar"><use href="#orb"/></svg><span class="rn">Rain</span> · <span data-i="drafts3">3 drafts</span></h4>
+          <h4><svg class="orbi orbav" style="width:22px;height:22px" role="img" aria-label="Social-self avatar"><use href="#orb"/></svg><span class="rn">Rain</span> · <span id="p-draftcount">3 drafts</span></h4>
           <span class="psub" data-i="studioSub">three registers of the same idea</span>
           <div class="headright"><span class="edithint" data-i="editHint">tap any title, body, or tags to edit</span><button class="plink" id="save-studio" data-i="saveNow">Save</button><button class="plink" id="undo-studio" data-i="undo">Undo</button></div>
         </div>
@@ -916,7 +942,7 @@ this is my whole personality now</div>
       gateSub:"Keep this social-self, unlock the other two notes, and pick your work back up later.",
       gTakeBtn:"Copy this note", gTakeNote:"yours to post right now, no account needed",
       gTrust:"Free · only used to save your work · no marketing email", gUnlock:"unlocks when you register →",
-      drafts3:"3 drafts", studioSub:"three registers of the same idea",
+      studioSub:"three registers of the same idea",
       editHint:"tap any title, body, or tags to edit",
       pagePrev:"Your RedNote page preview", pagePrevSub:"your RedNote page, with this note placed in it",
       shotBtn:"upload a RedNote page screenshot - titles and photos are extracted into the blocks",
@@ -951,7 +977,18 @@ this is my whole personality now</div>
       tCopied:"copied to clipboard, paste into RedNote", tCopyFail:"clipboard blocked here, select the draft text manually",
       tDl:"downloaded nomi-note.txt", tDlFail:"download blocked here, use copy instead",
       tShotSim:"reading your page layout…", tShotSimDone:"extracted into the blocks below - titles and images are editable", tShotSimFail:"could not read notes from that screenshot - try a clearer one",
-      tOffline:"backend not reachable, showing an offline sample. Run: node server.js",
+      tOffline:"could not reach Nomi — nothing was changed. Check your connection and try again.",
+      tGenFailed:"generation failed — nothing was written",
+      genErrTitle:"Nomi could not write your notes",
+      genErrNet:"Nomi could not reach the writing service, so nothing was generated and nothing was saved to your shelf. Check your connection, then try again.",
+      genErrBad:"The writing service answered, but did not return three notes. Nothing was generated and nothing was saved to your shelf.",
+      genErrRate:"Too many generations in a short time. Wait about a minute, then try again.",
+      genErrRetry:"Try again",
+      genErrKeep:"Your idea is still in the box above — edit it or retry as it is.",
+      noDraftsHead:"no drafts yet",
+      noDraftsTitle:"No notes in this project yet",
+      noDraftsCopy:"Nothing has been generated here. Write an idea and generate three notes — this space only ever shows drafts written for you.",
+      noDraftsCTA:"Write a note",
       tRefining:"refining this draft…", tRefined:"draft refined", tNeedGen:"write your idea first, then Generate 3 notes",
       tEdited:"edit saved", tTaught:"learned: your next drafts will reflect this",
       tSignedIn:"signed in", tRegistered:"account created. Your social-self, idea, and drafts came with you.",
@@ -1041,7 +1078,7 @@ this is my whole personality now</div>
       gateSub:"保存这个 social-self，解锁另外两篇，随时回来继续。",
       gTakeBtn:"复制这篇", gTakeNote:"现在就能拿去发，不用注册",
       gTrust:"免费 · 只用于保存你的内容 · 不发营销邮件", gUnlock:"注册后解锁 →",
-      drafts3:"3 篇草稿", studioSub:"同一个想法的三种写法",
+      studioSub:"同一个想法的三种写法",
       editHint:"点击任意标题、正文或标签即可编辑",
       pagePrev:"你的小红书主页预览", pagePrevSub:"你的小红书主页，这篇笔记已放入其中",
       shotBtn:"上传小红书主页截图，自动提取笔记标题和图片到格子里",
@@ -1076,7 +1113,18 @@ this is my whole personality now</div>
       tCopied:"已复制到剪贴板，去小红书粘贴吧", tCopyFail:"剪贴板被拦截，请手动选择文字复制",
       tDl:"已下载 nomi-note.txt", tDlFail:"下载被拦截，请使用复制",
       tShotSim:"正在读取你的主页布局…", tShotSimDone:"已提取到下方格子，标题和图片都可编辑", tShotSimFail:"未能从截图中识别出笔记，请换一张更清晰的",
-      tOffline:"无法连接后端，显示离线示例。请运行：node server.js",
+      tOffline:"无法连接 Nomi——什么都没有改动。请检查网络后重试。",
+      tGenFailed:"生成失败——没有写出任何内容",
+      genErrTitle:"Nomi 没能写出你的笔记",
+      genErrNet:"Nomi 连不上写作服务，因此没有生成任何内容，也没有保存到你的书架。请检查网络后重试。",
+      genErrBad:"写作服务有回应，但没有返回三篇笔记。没有生成任何内容，也没有保存到你的书架。",
+      genErrRate:"短时间内生成次数过多。请等约一分钟后重试。",
+      genErrRetry:"重试",
+      genErrKeep:"你的想法还在上面的输入框里——可以修改后重试，也可以原样重试。",
+      noDraftsHead:"还没有草稿",
+      noDraftsTitle:"这个项目还没有笔记",
+      noDraftsCopy:"这里还没有生成过内容。写下一个想法，生成三篇笔记——这里只会出现为你写的草稿。",
+      noDraftsCTA:"去写一篇笔记",
       tRefining:"正在润色这篇草稿…", tRefined:"草稿已润色", tNeedGen:"先写下想法，再点生成 3 篇笔记",
       tEdited:"修改已保存", tTaught:"已学习：之后的草稿会体现这一点",
       tSignedIn:"登录成功", tRegistered:"账户已创建。你的 social-self、想法和草稿都保留了。",
@@ -1708,7 +1756,7 @@ this is my whole personality now</div>
       });
       var meta=document.createElement("span");
       meta.className="pjmeta";
-      meta.textContent=((p.drafts||[]).length||3)+" "+t("draftsWord")+(p.createdAt?(" · "+String(p.createdAt).slice(0,10)):"");
+      meta.textContent=(p.drafts||[]).length+" "+t("draftsWord")+(p.createdAt?(" · "+String(p.createdAt).slice(0,10)):"");
       var open=document.createElement("span");
       open.className="pjopen";open.textContent=t("projOpen");
       row.appendChild(nm);row.appendChild(meta);row.appendChild(open);
@@ -2207,19 +2255,40 @@ this is my whole personality now</div>
     e.target.value="";
   });
 
-  var FALLBACK=[
-    {register:"guide",title:"5 matcha stores in Japan worth the flight",body:"I planned a whole trip around matcha and regret nothing.\n1. Nakamura Tokichi, Uji. the fresh mochi arrives still warm\n2. Ippodo, Kyoto. buy the koicha, thank me later\n3. Suzukien, Tokyo. gelato in seven intensities, take level six\nqueue times and what to order first are in the last image.\nsave this before your Japan trip disappears into a screenshot folder.",tags:["#japantravel","#matcha","#kyotofood","#美食探店"],coverConcept:"tasting flight on a wooden tray, Uji storefront",firstComment:"",bestTime:{label:"Sat, Sun, 10am-12pm PT",reason:"weekend planning mode converts saves to action"}},
-    {register:"review",title:"I tried 12 matcha desserts in Kyoto",body:"the criteria: grind, sweetness honesty, texture, price. I queued so you can skip.\nnumber 4 will start fights in the comments.\nfull scores below.",tags:["#kyotofood","#matchareview","#日本旅行"],coverConcept:"twelve desserts in a scored flat lay",firstComment:"",bestTime:{label:"Sun to Thu, 7-10pm PT",reason:"evening browse is decision mode"}},
-    {register:"diary",title:"a slow morning in Uji before the crowds",body:"no list today. one street in Uji before the shops opened, one warm mochi, and the small routine I brought home with me.",tags:["#slowtravel","#diary","#日记"],coverConcept:"empty street, first light, one cup",firstComment:"",bestTime:{label:"Sun to Thu, 7-10pm PT",reason:"wind-down reading hours"}},
-  ];
-
   function currentCategory(){
     var c=selectedCats("p-catsnow");
     return c.length?c[0]:"lifestyle";
   }
+  // A failed generation shows the failure. It never stands in demo notes for
+  // the creator's own idea - seeing someone else's matcha guide under your
+  // prompt is worse than seeing nothing, because it looks like it worked.
+  var genErrBox=document.getElementById("p-generr");
+  function showGenError(msgKey,detail){
+    var msg=document.getElementById("p-generrmsg");
+    // data-i so applyLang() re-translates the live error on a language switch
+    msg.dataset.i=msgKey; msg.textContent=t(msgKey);
+    document.getElementById("p-generrdet").textContent=detail?String(detail).slice(0,200):"";
+    genErrBox.hidden=false;
+    pGoDirect("p-compose");
+    try{genErrBox.scrollIntoView({block:"nearest",behavior:"smooth"})}catch(e){}
+  }
+  function clearGenError(){
+    var msg=document.getElementById("p-generrmsg");
+    genErrBox.hidden=true;
+    msg.textContent=""; delete msg.dataset.i;
+    document.getElementById("p-generrdet").textContent="";
+  }
+  function failGenerate(msgKey,detail){
+    // nothing was generated, so nothing should be on the undo stack either
+    undoStack.pop();
+    showGenError(msgKey,detail);
+    toast(t("tGenFailed"));
+    track("generate_failed",{reason:msgKey});
+  }
   function doGenerate(){
     var idea=document.getElementById("p-idea").value.trim();
     if(!idea){toast(t("tNeedGen"));pGoDirect("p-compose");return;}
+    clearGenError();
     mut();
     loading(true,"loadGen");
     fetch(API+"/api/generate",{
@@ -2227,24 +2296,32 @@ this is my whole personality now</div>
       headers:Object.assign({"Content-Type":"application/json"},S.token?{Authorization:"Bearer "+S.token}:{}),
       body:JSON.stringify({idea:idea,self:collectSelf(),contentLang:S.contentLang,category:currentCategory(),uid:uid(),internal:INTERNAL})
     })
-    .then(function(r){return r.json()})
-    .then(function(d){
+    .then(function(r){
+      return r.json().catch(function(){return null}).then(function(d){return {status:r.status,body:d}});
+    })
+    .then(function(res){
       loading(false);
+      var d=res.body;
       if(d && Array.isArray(d.drafts) && d.drafts.length===3){
         newProject(idea,d.drafts,d.projectName,d.projectId);
-      } else {
-        newProject(idea,JSON.parse(JSON.stringify(FALLBACK)),idea.slice(0,40),null);
-        toast(t("tOffline"));
+        afterGenerate();
+        return;
       }
-      afterGenerate();
+      var rate=(res.status===429)||(d&&d.error==="rate_limited");
+      // only the server's own explanation, never a bare error code the
+      // creator cannot act on
+      failGenerate(rate?"genErrRate":"genErrBad",d&&d.detail);
     })
     .catch(function(){
       loading(false);
-      newProject(idea,JSON.parse(JSON.stringify(FALLBACK)),idea.slice(0,40),null);
-      toast(t("tOffline"));
-      afterGenerate();
+      failGenerate("genErrNet",null);
     });
   }
+  document.getElementById("p-genretry").addEventListener("click",doGenerate);
+  // typing a new idea clears a stale failure notice
+  document.getElementById("p-idea").addEventListener("input",function(){
+    if(!genErrBox.hidden)clearGenError();
+  });
   function newProject(idea,drafts3,name,id){
     S.projects.unshift({
       id:id||("p_"+Date.now().toString(36)+Math.random().toString(36).slice(2,7)),
@@ -2268,9 +2345,12 @@ this is my whole personality now</div>
 
   /* ---------------- gate ---------------- */
   function renderGate(){
-    var d=drafts()[0]||FALLBACK[0];
+    var d=drafts()[0];
     var g=document.getElementById("g-note");
     g.innerHTML="";
+    // the gate only exists to show real generated work; with nothing to show
+    // it stays empty rather than borrowing a sample note
+    if(!d){document.getElementById("g-locked").innerHTML="";return;}
     var reg=document.createElement("div");reg.style.cssText="font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim)";reg.textContent=d.register;
     var tt=document.createElement("div");tt.className="gt";tt.textContent=d.title;
     var bd=document.createElement("div");bd.className="gb";bd.textContent=d.body;
@@ -2319,9 +2399,10 @@ this is my whole personality now</div>
   var KEPT=[];
   var LIKES=["1.2k","864","3.4k","921","640","512","208","96","1.1k","77"];
   function curProject(){return S.projects[S.cur]||null}
-  function drafts(){var p=curProject();return (p&&p.drafts)||FALLBACK}
+  // No project, no drafts. Studio shows its empty state instead of demo notes.
+  function drafts(){var p=curProject();return (p&&p.drafts)||[]}
   function selfName(){return nameEl.textContent}
-  function trayTitle(id){return id<3?drafts()[id].title:KEPT[id-3].title}
+  function trayTitle(id){var n=drafts().length;var d=id<n?drafts()[id]:KEPT[id-n];return (d&&d.title)||""}
   // View state (pstate, ordList) is loaded from the current project and written
   // back through syncProject() so every project keeps its own covers and order.
   var guestCovers=[null,null,null];
@@ -2331,7 +2412,8 @@ this is my whole personality now</div>
   function covers(){
     var p=curProject();
     if(p){
-      if(!Array.isArray(p.covers)||p.covers.length<p.drafts.length)p.covers=p.drafts.map(function(){return null});
+      var n=(p.drafts||[]).length;
+      if(!Array.isArray(p.covers)||p.covers.length<n)p.covers=(p.drafts||[]).map(function(){return null});
       return p.covers;
     }
     return guestCovers;
@@ -2340,6 +2422,7 @@ this is my whole personality now</div>
     var p=S.projects[ix];
     if(!p)return;
     S.cur=ix;
+    if(!Array.isArray(p.drafts))p.drafts=[];
     if(!Array.isArray(p.ordList)||!p.ordList.length)p.ordList=[0,1,2];
     pstate=p.drafts.map(function(_,i){
       var m=(Array.isArray(p.marks)&&p.marks[i])||{};
@@ -2389,8 +2472,8 @@ this is my whole personality now</div>
     cell.tabIndex=0;
     cell.setAttribute("role","listitem");
     cell.setAttribute("aria-label",trayTitle(id)+". Drag, or use arrow keys, to reorder.");
-    var cov=natCov(id<3?covers()[id]:null,id%2);
-    if(id<3){
+    var cov=natCov(id<drafts().length?covers()[id]:null,id%2);
+    if(id<drafts().length){
       cov.classList.add("clickable");
       cov.setAttribute("role","button");
       cov.setAttribute("aria-label","Change this note's cover image");
@@ -2539,7 +2622,9 @@ this is my whole personality now</div>
     feedRender();saveState();
   }
   function feedRender(){
-    ordList=ordList.filter(function(x){return x>=0&&x<3});
+    // bounded by the drafts that actually exist - with none, the page preview
+    // holds only the creator's own placeholder blocks
+    ordList=ordList.filter(function(x){return x>=0&&x<drafts().length});
     var host=document.getElementById("p-feedhost");
     host.innerHTML="";
     var grid=document.createElement("div");grid.className="pgridwrap cols"+(S.cols||"2");
@@ -2570,7 +2655,7 @@ this is my whole personality now</div>
     var host=document.getElementById("p-trayitems");
     host.innerHTML="";
     var shown=ordList.slice();
-    for(var i=0;i<3+KEPT.length;i++)if(shown.indexOf(i)<0)shown.push(i);
+    for(var i=0;i<drafts().length+KEPT.length;i++)if(shown.indexOf(i)<0)shown.push(i);
     var browse=(trayMode==="browse");
     shown.forEach(function(id,ix){
       var sel=!browse&&ordList.indexOf(id)>=0;
@@ -2582,7 +2667,7 @@ this is my whole personality now</div>
         cell.setAttribute("aria-pressed",sel?"true":"false");
         cell.setAttribute("aria-label",trayTitle(id));
       }
-      var cov=natCov(id<3?covers()[id]:null,ix%2);
+      var cov=natCov(id<drafts().length?covers()[id]:null,ix%2);
       if(!browse&&id===psel){var tg=document.createElement("span");tg.className="curtag";tg.textContent=t("curTag");cov.appendChild(tg);}
       if(!browse){var bd=document.createElement("span");bd.className="selbadge";cov.appendChild(bd);}
       var txt=document.createElement("div");txt.className="rntxt";
@@ -2754,9 +2839,10 @@ this is my whole personality now</div>
     el.addEventListener("blur",function(){
       var v=el.innerText;
       if(v===el.dataset.before)return;
+      var p=curProject();
+      if(!p||!Array.isArray(p.drafts)||!p.drafts[ix]){el.innerText=el.dataset.before||"";return;}
       mut();
-      ensureProject();
-      var d=curProject().drafts[ix];
+      var d=p.drafts[ix];
       if(field==="title"){ d.title=v.replace(/\n+/g," ").trim().slice(0,120); el.innerText=d.title; }
       else if(field==="body"){ d.body=v.trim().slice(0,4000); }
       else if(field==="tags"){
@@ -2789,9 +2875,27 @@ this is my whole personality now</div>
     var w=WIN_ZH[win]||win||"";
     return (d+" "+w+"（"+(bt.timezone||"PT")+"）").trim()+" · "+(REASON_ZH[register]||REASON_ZH.guide);
   }
+  // the header counts what is actually there - never a standing "3 drafts"
+  function setDraftCount(){
+    var n=drafts().length;
+    document.getElementById("p-draftcount").textContent = n ? (n+" "+t("draftsWord")) : t("noDraftsHead");
+  }
   function drawDrafts(){
     var host=document.getElementById("p-drafts");
     host.innerHTML="";
+    setDraftCount();
+    if(!drafts().length){
+      var em=document.createElement("div");em.className="pnodrafts";
+      var e1=document.createElement("div");e1.className="nd1";e1.textContent=t("noDraftsTitle");
+      var e2=document.createElement("div");e2.className="nd2";e2.textContent=t("noDraftsCopy");
+      var ec=document.createElement("button");ec.className="pbtn sm";ec.textContent=t("noDraftsCTA");
+      ec.addEventListener("click",function(){pGoDirect("p-compose")});
+      em.appendChild(e1);em.appendChild(e2);em.appendChild(ec);
+      host.appendChild(em);
+      document.getElementById("p-besttime").textContent=t("bestTimeDefault");
+      feedRender();
+      return;
+    }
     drafts().forEach(function(d,ix){
       var st=pstate[ix]||{kept:false,discarded:false};
       var cvr=covers()[ix];
@@ -2878,19 +2982,19 @@ this is my whole personality now</div>
 
   // Refine acts on the SELECTED draft only, through /api/refine, so "shorter"
   // visibly shortens this draft instead of regenerating all three.
-  // A refine or edit before any generation operates on the sample project.
-  function ensureProject(){
-    if(!curProject()){
-      newProject("sample",JSON.parse(JSON.stringify(FALLBACK)),"Sample project",null);
-    }
+  // With nothing generated there is nothing to refine - say so, rather than
+  // conjuring a sample project the creator would read as their own work.
+  function selectedDraft(){
+    var p=curProject();
+    return (p&&Array.isArray(p.drafts)&&p.drafts[psel])||null;
   }
   var refining=false;
   function refineSelected(instruction){
     if(refining)return;
+    if(!selectedDraft()){toast(t("tNeedGen"));return;}
     refining=true;
     document.querySelectorAll(".pechip").forEach(function(c){c.disabled=true});
     toast(t("tRefining"));
-    ensureProject();
     mut();
     var proj=curProject();
     fetch(API+"/api/refine",{
@@ -2963,6 +3067,7 @@ this is my whole personality now</div>
   // Copy one specific note - every draft carries its own copy action.
   function copyDraft(ix,btn){
     var txt=draftTextFor(ix);
+    if(!txt){toast(t("tNeedGen"));return;}
     function ok(){
       toast(t("tCopied"));
       if(btn){
@@ -2989,8 +3094,10 @@ this is my whole personality now</div>
     copyDraft(activeDraftIdx(),null);
   });
   document.getElementById("p-dl").addEventListener("click",function(){
+    var txt=draftText();
+    if(!txt){toast(t("tNeedGen"));return;}
     try{
-      var blob=new Blob([draftText()],{type:"text/plain"});
+      var blob=new Blob([txt],{type:"text/plain"});
       var a=document.createElement("a");
       a.href=URL.createObjectURL(blob);
       a.download="nomi-note.txt";
