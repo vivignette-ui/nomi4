@@ -951,7 +951,7 @@ this is my whole personality now</div>
       tCopied:"copied to clipboard, paste into RedNote", tCopyFail:"clipboard blocked here, select the draft text manually",
       tDl:"downloaded nomi-note.txt", tDlFail:"download blocked here, use copy instead",
       tShotSim:"reading your page layout…", tShotSimDone:"extracted into the blocks below - titles and images are editable", tShotSimFail:"could not read notes from that screenshot - try a clearer one",
-      tOffline:"connection hiccup - showing a sample. Check your network and try again.",
+      tOffline:"backend not reachable, showing an offline sample. Run: node server.js",
       tRefining:"refining this draft…", tRefined:"draft refined", tNeedGen:"write your idea first, then Generate 3 notes",
       tEdited:"edit saved", tTaught:"learned: your next drafts will reflect this",
       tSignedIn:"signed in", tRegistered:"account created. Your social-self, idea, and drafts came with you.",
@@ -1076,7 +1076,7 @@ this is my whole personality now</div>
       tCopied:"已复制到剪贴板，去小红书粘贴吧", tCopyFail:"剪贴板被拦截，请手动选择文字复制",
       tDl:"已下载 nomi-note.txt", tDlFail:"下载被拦截，请使用复制",
       tShotSim:"正在读取你的主页布局…", tShotSimDone:"已提取到下方格子，标题和图片都可编辑", tShotSimFail:"未能从截图中识别出笔记，请换一张更清晰的",
-      tOffline:"网络连接不稳定，正在显示示例内容。请检查网络后重试。",
+      tOffline:"无法连接后端，显示离线示例。请运行：node server.js",
       tRefining:"正在润色这篇草稿…", tRefined:"草稿已润色", tNeedGen:"先写下想法，再点生成 3 篇笔记",
       tEdited:"修改已保存", tTaught:"已学习：之后的草稿会体现这一点",
       tSignedIn:"登录成功", tRegistered:"账户已创建。你的 social-self、想法和草稿都保留了。",
@@ -1162,13 +1162,24 @@ this is my whole personality now</div>
       try{sessionStorage.setItem("nomiSid",sid);sessionStorage.setItem("nomiSidStart",String(start));}catch(e){}
     }
     try{sessionStorage.setItem("nomiSidLast",String(now));}catch(e){}
-    return {sid:sid,minutes:Math.round(((now-start)/60000)*10)/10,isNew:start===now};
+    return {sid:sid,minutes:Math.round(((now-start)/60000)*10)/10,
+            seconds:Math.round((now-start)/1000),isNew:start===now};
   }
-  function track(event,meta){
+  function track(event,meta,beacon){
     try{
+      var payload=JSON.stringify({uid:uid(),internal:INTERNAL,session:session(),
+        token:beacon&&S.token?S.token:undefined,
+        events:[{event:event,meta:meta||undefined}]});
+      // On the way out the door only sendBeacon is reliable - iOS webviews kill
+      // in-flight fetches when the page is dismissed, which is exactly the case
+      // we most need measured (how long someone actually stayed).
+      if(beacon&&navigator.sendBeacon){
+        navigator.sendBeacon(API+"/api/track",new Blob([payload],{type:"application/json"}));
+        return;
+      }
       fetch(API+"/api/track",{method:"POST",keepalive:true,
         headers:Object.assign({"Content-Type":"application/json"},S.token?{Authorization:"Bearer "+S.token}:{}),
-        body:(function(){var ss=session();return JSON.stringify({uid:uid(),internal:INTERNAL,session:ss,events:[{event:event,meta:meta||undefined}]})})()}).catch(function(){});
+        body:payload}).catch(function(){});
     }catch(e){}
   }
   function applyLang(){
@@ -3014,6 +3025,21 @@ this is my whole personality now</div>
       S.emailDelivery=d.emailDelivery||"console";
     }).catch(function(){});
     setInterval(function(){ if(document.visibilityState==="visible") track("heartbeat",{}); },120000);
+    // One last ping as the page is dismissed, carrying the true elapsed time.
+    // Without it a visitor who reads for 40s and leaves is recorded as 0 minutes,
+    // because nothing else fires between load and departure.
+    (function(){
+      var lastExit=0;
+      function bye(){
+        var now=Date.now();
+        if(now-lastExit<3000)return; lastExit=now;
+        track("exit",{s:session().seconds},true);
+      }
+      window.addEventListener("pagehide",bye);
+      document.addEventListener("visibilitychange",function(){
+        if(document.visibilityState==="hidden")bye();
+      });
+    })();
     track("visit",{
       source:document.referrer?document.referrer.slice(0,80):"direct",
       lang:S.lang,

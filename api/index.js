@@ -170,6 +170,8 @@ async function track(uid, email, events, internal, ua, session) {
     day, ts: nowIso, local_time: localStamp(now),
     session_id: (session && session.sid) ? String(session.sid).slice(0, 32) : undefined,
     session_minutes: (session && typeof session.minutes === "number") ? session.minutes : undefined,
+    // seconds gives sub-minute resolution, which is what a bounce looks like
+    session_seconds: (session && typeof session.seconds === "number") ? session.seconds : undefined,
     internal: isInternal || undefined,
     bot: isBot || undefined,
   } }));
@@ -219,6 +221,7 @@ async function track(uid, email, events, internal, ua, session) {
       }
     }
     userFields.last_session_id = session.sid;
+    if (typeof session.seconds === "number") userFields.last_session_seconds = session.seconds;
     const sess = userFields.sessions != null ? userFields.sessions : (Number(prev.sessions) || 1);
     const tot = userFields.total_minutes != null ? userFields.total_minutes : (Number(prev.total_minutes) || 0);
     userFields.avg_session_minutes = Math.round((tot / Math.max(1, sess)) * 10) / 10;
@@ -907,7 +910,9 @@ Signing you in… you can close this window.</body>`);
     }
 
     if (req.method === "POST" && p === "/api/track") {
-      const sess = sessionFromToken(tokenFrom(req));
+      // sendBeacon (used by the exit ping) cannot set an Authorization header,
+      // so accept the token in the body as a fallback.
+      const sess = sessionFromToken(tokenFrom(req) || body.token);
       await track(body.uid, sess ? sess.identity : null, Array.isArray(body.events) ? body.events : [], body.internal, req.headers["user-agent"], body.session);
       return res.status(200).json({ ok: true });
     }
