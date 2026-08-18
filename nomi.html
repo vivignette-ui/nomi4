@@ -76,6 +76,9 @@
     html[lang^="zh"] .wl .wpick{margin-top:18px}
   }
   .wpick{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim)}
+  /* .1em tracking is tuned for Latin small caps; CJK is already monospaced and
+     full-width, so the same value reads as gaps between characters. */
+  html[lang^="zh"] .wpick{font-family:var(--body);font-size:12px;letter-spacing:.02em;text-transform:none}
   .wchoice{background:var(--panel);border:2px solid var(--line);border-radius:14px;padding:16px 18px;min-height:64px;text-align:left;cursor:pointer;font-family:var(--body);
     display:flex;align-items:center;gap:14px;position:relative;
     box-shadow:0 2px 0 rgba(30,42,56,.04);
@@ -429,11 +432,21 @@
     .phead h4{font-size:16.5px}
     .phead .headright{margin-left:auto;gap:10px}
     .pchrome .dots3{display:none}
-    .wl h2{font-size:24px}
-    .wl .wsupport{font-size:15px;margin-top:14px}
-    .wl .wpick{margin-top:22px}
-    .wchoices{grid-template-columns:1fr;gap:12px;margin-top:14px}
-    .wchoice{padding:16px 18px}
+    /* Cover page leading: the headline sat at 1.2 and the card copy at 13px/1.5,
+       which reads as a dense block on a phone. Opened up so each line has air -
+       Chinese gets more again, since CJK glyphs are full-height. */
+    .wl h2{font-size:24px;line-height:1.34}
+    .wl .wsupport{font-size:15px;line-height:1.72;margin-top:16px}
+    .wl .wpick{margin-top:24px;line-height:1.7}
+    .wchoices{grid-template-columns:1fr;gap:14px;margin-top:16px}
+    .wchoice{padding:17px 18px}
+    .wchoice .wt{line-height:1.36;margin-bottom:7px}
+    .wchoice .wd{font-size:14px;line-height:1.66}
+    .wsignin{margin-top:22px;line-height:1.7}
+    html[lang^="zh"] .wl h2{line-height:1.5}
+    html[lang^="zh"] .wl .wsupport{line-height:1.9}
+    html[lang^="zh"] .wchoice .wt{line-height:1.5}
+    html[lang^="zh"] .wchoice .wd{line-height:1.85}
     .pshelf{grid-template-columns:1fr;gap:16px}
     .pbuild{grid-template-columns:1fr;gap:24px}
     .pfoot{flex-direction:column;align-items:stretch;gap:12px}
