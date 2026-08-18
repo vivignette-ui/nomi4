@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Nomi</title>
 <style>
   :root{
@@ -15,7 +15,10 @@
     --body:system-ui,-apple-system,"Helvetica Neue","PingFang SC","Hiragino Sans GB",sans-serif;
     --mono:ui-monospace,"SF Mono",Menlo,monospace;
   }
-  *{box-sizing:border-box;margin:0;padding:0}
+  /* iOS paints a grey rectangle over every tapped control, which on rounded
+     pills lands as a square flash. Suppressed here, compensated with real
+     :active states on the controls that need press feedback. */
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
   @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
   body{background:var(--tint);color:var(--text);font-family:var(--body);font-size:15.5px;line-height:1.65;font-weight:400;-webkit-font-smoothing:antialiased;padding:24px 16px}
   .wrap{max-width:1080px;margin:0 auto}
@@ -101,7 +104,7 @@
   .adiv::before,.adiv::after{content:"";flex:1;height:1px;background:var(--line)}
   .ain{border:1px solid var(--line);border-radius:10px;padding:11px 14px;font-size:13.5px;font-family:var(--body);color:var(--text);width:100%}
   .amsg{font-size:12px;color:var(--blue);min-height:1.2em}
-  .amodal{position:fixed;inset:0;background:rgba(30,42,56,.4);backdrop-filter:blur(3px);display:none;align-items:center;justify-content:center;z-index:34;padding:20px}
+  .amodal{position:fixed;inset:0;background:rgba(30,42,56,.4);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);display:none;align-items:center;justify-content:center;z-index:34;padding:20px}
   .amodal.show{display:flex;animation:pfade .25s ease}
 
   /* gate */
@@ -183,7 +186,10 @@
   /* shape */
   .pbuild{display:grid;grid-template-columns:1.1fr 1fr 1.2fr;gap:20px;flex:1;min-height:0}
   .pcol{display:flex;flex-direction:column;gap:8px;min-height:0}
-  .pcol .ph2{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim)}
+  /* line-height:1.2 kills the phantom leading a 10px label inherits from the
+     1.65 body: without it a section label sits 8px from its own card but only
+     14px from the next section, so the grouping reads backwards. */
+  .pcol .ph2{font-family:var(--mono);font-size:10px;line-height:1.2;letter-spacing:.12em;text-transform:uppercase;color:var(--dim)}
   .pseed{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px;flex:1;display:flex;flex-direction:column;gap:10px}
   .pseedtabs{display:flex;gap:4px;background:var(--tint2);border-radius:8px;padding:3px}
   .pseedtab{flex:1;border:0;background:transparent;border-radius:6px;padding:7px 4px;font-size:10.5px;color:var(--mut);cursor:pointer;font-family:var(--body);white-space:nowrap}
@@ -194,6 +200,7 @@
   .pupl{font-size:11px;border:1px dashed #B9C6D6;border-radius:7px;padding:4px 10px;color:var(--mut);background:none;cursor:pointer;font-family:var(--body);margin-top:8px;display:block;width:100%;text-align:center}
   .pupl:hover{color:var(--ind);border-color:var(--ind)}
   .seedchips{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+  .seedchips:empty{display:none}
   .seedchip{font-size:10.5px;background:var(--tint);border:1px solid var(--line);border-radius:999px;padding:3px 10px;color:var(--mut);cursor:pointer;font-family:var(--body)}
   .catlbl{font-size:11px;color:var(--text);margin:10px 0 4px;display:block}
   .parchs{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
@@ -390,7 +397,7 @@
   .ptraycard .tsub{font-size:11.5px;color:var(--mut);margin-bottom:4px}
   .traygrid{columns:2 150px;column-gap:10px;max-height:420px;overflow:auto;padding:2px}
   .traygrid .rncell{break-inside:avoid;margin-bottom:10px}
-  .pmodal{position:fixed;inset:0;background:rgba(30,42,56,.4);backdrop-filter:blur(3px);display:none;align-items:center;justify-content:center;z-index:30;padding:16px}
+  .pmodal{position:fixed;inset:0;background:rgba(30,42,56,.4);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);display:none;align-items:center;justify-content:center;z-index:30;padding:16px}
   .pmodal.show{display:flex;animation:pfade .25s ease}
   .pmcard{background:var(--panel);border-radius:16px;padding:34px 38px;max-width:420px;text-align:center;display:none;flex-direction:column;gap:12px;align-items:center;box-shadow:0 24px 60px rgba(30,42,56,.25)}
   .pmcard.on{display:flex}
@@ -411,15 +418,15 @@
 
   /* phone */
   @media (max-width:640px){
-    body{padding:8px 5px;font-size:15px}
-    .pscr{padding:18px 13px 24px;min-height:0}
+    body{padding:8px 8px calc(8px + env(safe-area-inset-bottom,0px));font-size:15px}
+    .pscr{padding:20px 16px 24px;min-height:0}
     .pstage{min-height:0}
-    .pchrome{flex-wrap:wrap;gap:8px;padding:10px 12px}
+    .pchrome{flex-wrap:wrap;gap:6px;padding:8px 12px}
     .psteps{order:3;width:100%;overflow-x:auto;margin-left:0;padding-bottom:2px}
     .pstep{flex:none;padding:6px 12px;font-size:10.5px}
     .langtog{margin-left:auto}
-    .phead{flex-wrap:wrap;gap:8px;margin-bottom:18px}
-    .phead h4{font-size:17px}
+    .phead{flex-wrap:wrap;gap:8px;margin-bottom:14px}
+    .phead h4{font-size:16.5px}
     .phead .headright{margin-left:auto;gap:10px}
     .pchrome .dots3{display:none}
     .wl h2{font-size:24px}
@@ -427,19 +434,21 @@
     .wl .wpick{margin-top:22px}
     .wchoices{grid-template-columns:1fr;gap:12px;margin-top:14px}
     .wchoice{padding:16px 18px}
-    .pshelf{grid-template-columns:1fr;gap:14px}
-    .pbuild{grid-template-columns:1fr;gap:14px}
+    .pshelf{grid-template-columns:1fr;gap:16px}
+    .pbuild{grid-template-columns:1fr;gap:24px}
     .pfoot{flex-direction:column;align-items:stretch;gap:12px}
     .pfoot .pbtn{width:100%;padding:13px}
-    .attachbtn{justify-content:center}
+    .attachbtn{justify-content:center;min-height:44px;padding:7px 18px}
     .clangrow{justify-content:space-between}
     /* Studio on a phone: the three drafts come FIRST, the page-layout
        preview sits below them - you read your content, then scroll to see
        how it lands on the page. */
-    .pstudio{display:flex;flex-direction:column}
-    .pstudio .prail{order:1}
+    /* one spacing ladder instead of four equal 14px gaps: draft->draft 12,
+       group->group 24, rail->page-preview 32. */
+    .pstudio{display:flex;flex-direction:column;gap:32px}
+    .pstudio .prail{order:1;gap:24px}
     .pstudio .pfeed{order:2}
-    .pdrafts{grid-template-columns:1fr}
+    .pdrafts{grid-template-columns:1fr;gap:12px}
     .pfeed .fh2{font-size:10px}
     /* an empty cover slot must not push the writing off the first screen */
     .pdraft .pcov:not(.hasimg){aspect-ratio:auto;min-height:56px;max-height:56px}
@@ -447,25 +456,57 @@
     .pdraft{padding:13px}
     .pdraft .pconcept{display:none}
     .pdraft.sel .pconcept{display:block}
-    #p-studio .phead .psub{display:none}
-    #p-studio .edithint{font-size:10.5px}
+    /* the header subtitle wrapped to two lines on p-projects and p-shape and
+       behaved differently on each screen; on a phone it is chrome, not content */
+    .phead .psub{display:none}
     .pfeed{height:auto;min-height:0;overflow:visible}
     /* no nested scroll on phones: the page scrolls, cells are never clipped */
     #p-feedhost{flex:none;max-height:none;overflow:visible}
     .pgridwrap{max-width:none}
-    /* comfortable touch targets */
-    .phead .plink,.headright .plink{min-height:34px;display:inline-flex;align-items:center;gap:4px;padding:0 6px}
-    .phead .pback{min-height:34px;padding:6px 10px}
-    .pfeedbar .langtog button{min-width:34px;min-height:32px;font-size:12px}
-    .langtog button{min-height:32px;padding:6px 14px}
-    .pboxbtn{width:34px;height:34px}
-    .pboxbtn svg{width:16px;height:16px}
+    /* ---- touch targets ----------------------------------------------------
+       Apple's minimum is 44x44. Controls that carry their own visual weight
+       grow to 44; quiet text links keep their size and gain an invisible
+       44px hit box via ::after, so the layout does not inflate. */
+    .plink{min-height:44px;display:inline-flex;align-items:center;justify-content:center;gap:4px;padding:0 8px}
+    /* header links stay visually compact - the row already sets the rhythm -
+       but the strike zone is expanded past the visible box */
+    .phead .plink,.headright .plink{position:relative;min-height:34px;padding:0 6px}
+    .phead .plink::after,.headright .plink::after{content:"";position:absolute;inset:-5px -6px}
+    .phead .pback{min-height:44px;min-width:44px;padding:10px 10px 10px 12px;margin-left:-8px;font-size:13.5px;display:inline-flex;align-items:center;justify-content:flex-start;gap:5px}
+    .pfeedbar .langtog button{min-width:44px;min-height:44px;font-size:12px}
+    .langtog button{min-height:44px;min-width:44px;padding:0 14px;display:inline-flex;align-items:center;justify-content:center}
+    .pboxbtn{width:44px;height:44px}
+    .pboxbtn svg{width:18px;height:18px}
+    /* the remove-post x sits inside a larger cover button, so a miss deletes
+       nothing but a near-miss opens the file picker: give it a real hit box */
     .rmpost{width:26px;height:26px;line-height:26px;font-size:15px;opacity:.9}
+    .rmpost::after{content:"";position:absolute;top:-5px;right:-5px;bottom:-13px;left:-13px}
     .pstep{min-height:32px;display:inline-flex;align-items:center;gap:4px}
     .psteps{padding-right:14px;scroll-padding-right:14px}
-    .pdraft .ptri button{min-height:30px;padding:4px 13px}
-    .pechip{min-height:32px;display:inline-flex;align-items:center;gap:4px}
-    .peditlook{min-height:30px;display:inline-flex;align-items:center;gap:4px}
+    .pdraft .ptri{gap:8px}
+    .pdraft .ptri button{min-height:44px;min-width:44px;padding:0 12px}
+    .pechip{min-height:44px;min-width:44px;padding:0 14px;display:inline-flex;align-items:center;justify-content:center;gap:4px}
+    .actrow{gap:16px}
+    .peditlook{min-height:44px;min-width:44px;padding:0 4px;margin:0 -4px;display:inline-flex;align-items:center;gap:4px}
+    .pbtn{min-height:44px;font-size:14.5px;display:inline-flex;align-items:center;justify-content:center}
+    .pbtn.sm{min-height:44px;padding:10px 20px}
+    /* category chips change what the social-self is about and sit in a wrapping
+       cloud of nine - the densest mis-tap field in the app */
+    .parchs{gap:8px}
+    .parch{min-height:44px;min-width:44px;padding:0 16px;font-size:13px;display:inline-flex;align-items:center;justify-content:center}
+    .pseedtabs{gap:6px;padding:4px}
+    .pseedtab{min-height:44px;padding:0 8px;display:inline-flex;align-items:center;justify-content:center}
+    .pupl{min-height:44px;padding:10px 14px;font-size:12.5px;line-height:1.35;display:flex;align-items:center;justify-content:center}
+    .seedchip{min-height:36px;padding:0 12px;font-size:12px;display:inline-flex;align-items:center}
+    .sugg{gap:8px}
+    .sugg button{min-height:36px;min-width:44px;padding:0 12px;font-size:12.5px;display:inline-flex;align-items:center;justify-content:center}
+    /* a 16px-tall drag track means the thumb scrolls the page instead */
+    .pdial input[type=range]{display:block;height:44px}
+    .pteach{min-height:44px;padding:6px 0}
+    .clseg{gap:6px;padding:4px}
+    .clseg button{min-height:44px;min-width:44px;padding:0 14px}
+    .pstarts{gap:10px}
+    .pstart{min-height:44px;padding:11px 16px}
     .addtile{min-height:120px}
     .authbox{width:100%;padding:20px}
     .projrow{padding:13px 14px;flex-wrap:wrap}
@@ -474,7 +515,93 @@
     .pbottom{flex-direction:column;align-items:stretch}
     .pbottom .endrow{margin-left:0;justify-content:space-between}
     .shapefoot .pbtn{width:100%}
-    .traygrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+
+    /* ---- iOS auto-zoom -----------------------------------------------------
+       Focusing any field under 16px makes iOS zoom the whole page and it does
+       not zoom back out; the user is left horizontally panned mid-task. 16px is
+       the exact threshold. Desktop keeps its smaller sizes - this is phone only.
+       The five hidden file inputs are deliberately excluded. */
+    .pseedtext,.pline,.catin,.ain,.pomni textarea,.refrow input{font-size:16px}
+    .pseedtext{min-height:84px;line-height:1.5}
+    .pline{min-height:44px}
+    .catin{width:132px}
+    .ain{padding:12px 14px}
+    .refrow input{min-height:44px;padding:9px 14px;min-width:0}
+
+    /* ---- reading sizes -----------------------------------------------------
+       The generated note is the product; it was set at 11px, smaller than the
+       chrome around it. Chinese needs more leading than English at the same
+       size - CJK glyphs are full-height with no ascender relief. */
+    .pdraft .pdt{font-size:17px;line-height:1.4}
+    .pdraft .pdb{font-size:15px;line-height:1.6}
+    .pdraft .pdg{font-size:12px}
+    html[lang^="zh"] .pdraft .pdt{line-height:1.5}
+    html[lang^="zh"] .pdraft .pdb{line-height:1.85}
+    /* the gate's whole argument is "here is a real note we wrote for you" -
+       the proof must not be quieter than the chrome around it */
+    .gnote .gt{font-size:17px;line-height:1.35}
+    .gnote .gb{font-size:15px;line-height:1.65}
+    html[lang^="zh"] .gnote .gb{line-height:1.85}
+    .pseedpane{font-size:13.5px;line-height:1.6}
+    .pdial label,.slbl,.catlbl{font-size:13px}
+    .pdial .ends{font-size:11.5px}
+    #p-studio .edithint{font-size:13px;line-height:1.5}
+    .pmcard p{font-size:14.5px}
+    html[lang^="zh"] .pseedpane,html[lang^="zh"] .pmcard p{line-height:1.85}
+    /* the page preview was drawn as a desktop miniature of a phone; on an
+       actual phone those sizes fall under the legibility floor */
+    #p-feedhost .rntitle{font-size:11.5px;line-height:1.4}
+    #p-feedhost .rnrow{font-size:9.5px}
+    html[lang^="zh"] #p-feedhost .rntitle{line-height:1.55}
+
+    /* ---- seed card rhythm --------------------------------------------------
+       was 10/8/8/10/6 for five siblings at the same level; one step between
+       peers, a bigger step at the labelled sub-group. */
+    .pseedtext{margin-top:12px}
+    .pupl{margin-top:8px}
+    .catlbl{margin-top:16px;margin-bottom:0}
+    .parchs{margin-top:8px}
+
+    /* ---- card padding ------------------------------------------------------
+       nine containers used five different values (26/22/20/16); on a 337px
+       column, 26px each side leaves 285px of usable width. */
+    .pself,.pcreate,.plock,.precents,.pdials,.pseed,.phear,.gnote,.ppreview{padding:16px}
+    .pmcard{padding:26px 20px}
+
+    /* ---- overlays and the on-screen keyboard -------------------------------
+       position:fixed resolves against the LAYOUT viewport, which the iOS
+       keyboard does not shrink - a centred card ends up behind the keyboard. */
+    .amodal,.pmodal{align-items:flex-start;padding-top:24px}
+    .ptraycard{max-height:88vh;overflow:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;width:min(460px,96%)}
+    /* .traygrid is a MULTICOL element, not a grid - grid-template-columns on it
+       was dead CSS, and a height-capped multicol spills sideways. */
+    .traygrid{columns:auto;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;max-height:none;overflow:visible}
+    .traygrid .rncell{margin-bottom:0}
+    /* the toast sat 26px up, behind the in-app browser's bottom toolbar */
+    .ptoast{bottom:calc(76px + env(safe-area-inset-bottom,0px))}
+
+    /* ---- page preview order ------------------------------------------------
+       multicol fills column 1 top-to-bottom before starting column 2, so the
+       preview showed the notes in the wrong order. RedNote reads row-major. */
+    .pgridwrap,.pgridwrap.cols1,.pgridwrap.cols2{columns:auto;display:grid;gap:8px;align-items:start}
+    .pgridwrap.cols1{grid-template-columns:minmax(0,1fr)}
+    .pgridwrap.cols2{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .pgridwrap .rncell{margin-bottom:0}
+    #p-feedhost .rntxt{padding:11px 8px 8px}
+
+    /* the gate is where the funnel dies: inside an in-app browser only ~620px
+       is visible, so every gap above the auth box costs a sign-up. Tightened
+       so "Continue with Google" - the one-tap path - clears the fold. */
+    .gate{gap:20px}
+    .gtakenote{font-size:12.5px}
+    .gtrust{font-size:12px}
+
+    /* the empty shelf's only action was the smallest text on the screen */
+    #self-create{font-size:16px;font-weight:500;padding:14px 22px;width:100%;min-height:48px}
+
+    /* press feedback, since the native tap highlight is suppressed globally */
+    .pbtn:active,.wchoice:active,.parch:active,.pstart:active,.pechip:active,
+    .pseedtab:active,.pupl:active,.sugg button:active,.clseg button:active{opacity:.72}
   }
 </style>
 </head>
@@ -1412,10 +1539,10 @@ this is my whole personality now</div>
     return '<div style="display:flex;flex-direction:column;gap:10px">' +
       '<button class="abtn" data-oauth="google" data-ctx="'+ctx+'">'+t("aGoogle")+'</button>' +
       '<div class="adiv">'+t("aEmail")+'</div>' +
-      '<input class="ain" type="email" id="'+ctx+'-email" placeholder="'+t("aEmailPh")+'" aria-label="Email">' +
+      '<input class="ain" type="email" id="'+ctx+'-email" autocomplete="email" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="send" placeholder="'+t("aEmailPh")+'" aria-label="Email">' +
       '<button class="abtn" data-sendcode="'+ctx+'">'+t("aSend")+'</button>' +
       '<div id="'+ctx+'-codewrap" style="display:none;flex-direction:column;gap:10px">' +
-        '<input class="ain" id="'+ctx+'-code" inputmode="numeric" placeholder="'+t("aCodePh")+'" aria-label="Verification code">' +
+        '<input class="ain" id="'+ctx+'-code" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="done" placeholder="'+t("aCodePh")+'" aria-label="Verification code">' +
         '<button class="pbtn" data-verify="'+ctx+'">'+t("aVerify")+'</button>' +
       '</div>' +
       '<div class="amsg" id="'+ctx+'-msg"></div>' +
