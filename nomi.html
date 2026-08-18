@@ -577,8 +577,11 @@
        was dead CSS, and a height-capped multicol spills sideways. */
     .traygrid{columns:auto;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;max-height:none;overflow:visible}
     .traygrid .rncell{margin-bottom:0}
-    /* the toast sat 26px up, behind the in-app browser's bottom toolbar */
-    .ptoast{bottom:calc(76px + env(safe-area-inset-bottom,0px))}
+    /* 26px put the toast behind the in-app browser's bottom toolbar; 76px
+       cleared it but covered the welcome CTAs. 52px clears the home indicator
+       and most toolbars, and the tighter line-height keeps it to two lines so
+       it stops short of the buttons underneath. */
+    .ptoast{bottom:calc(52px + env(safe-area-inset-bottom,0px));max-width:86%;padding:9px 18px;font-size:12.5px;line-height:1.45}
 
     /* ---- page preview order ------------------------------------------------
        multicol fills column 1 top-to-bottom before starting column 2, so the
