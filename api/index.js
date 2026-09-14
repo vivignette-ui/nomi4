@@ -126,7 +126,7 @@ async function atPost(path, payload) {
 }
 // Milestone timestamp columns, stamped ONCE at first occurrence, plus the
 // elapsed-minutes columns that make funnel timing a one-click pivot.
-const STAMP_BY_EVENT = { self_saved: "profile_completed_at", generate: "generated_first_at", export: "exported_first_at", waitlist_join: "waitlist_at", register: "registered_at" };
+const STAMP_BY_EVENT = { self_saved: "profile_completed_at", generate: "generated_first_at", export: "exported_first_at", waitlist_join: "waitlist_at", register: "registered_at", exposed: "exposed_at", first_output: "first_output_at" };
 const ELAPSED_BY_STAMP = { profile_completed_at: "mins_to_profile", generated_first_at: "mins_to_generate", exported_first_at: "mins_to_export", registered_at: "mins_to_register" };
 
 async function atGetUser(uid) {
@@ -142,6 +142,67 @@ async function atGetUser(uid) {
   } catch { return null; }
 }
 
+/* ---------- analytics store: Supabase primary, Airtable archive ----------
+   Once SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY exist, every new row goes to
+   Supabase; Airtable is left untouched as the archive of pre-migration data.
+   Table and column names mirror the Airtable schema 1:1 (nomi_users,
+   nomi_events, nomi_prompts) so cross-store comparison stays trivial. */
+const SB_URL = (process.env.SUPABASE_URL || "").replace(/\/$/, "");
+const SB_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+const useSupabase = !!(SB_URL && SB_KEY);
+async function sbFetch(path, method, body, headers) {
+  try {
+    const ctl = new AbortController();
+    const to = setTimeout(() => ctl.abort(), 6000);
+    const r = await fetch(`${SB_URL}/rest/v1/${path}`, {
+      method, signal: ctl.signal,
+      headers: Object.assign({
+        apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}`,
+        "Content-Type": "application/json",
+      }, headers || {}),
+      body: body ? JSON.stringify(body) : undefined,
+    });
+    clearTimeout(to);
+    if (!r.ok) { console.error("[sb]", path, r.status, (await r.text().catch(() => "")).slice(0, 180)); return null; }
+    const t = await r.text();
+    return t ? JSON.parse(t) : true;
+  } catch (e) { console.error("[sb]", path, e.message); return null; }
+}
+function sbClean(o) { const out = {}; for (const k in o) { if (o[k] !== undefined) out[k] = o[k]; } return out; }
+async function storeGetUser(uid) {
+  if (!useSupabase) return atGetUser(uid);
+  const rows = await sbFetch(`nomi_users?uid=eq.${encodeURIComponent(String(uid))}&limit=1`, "GET");
+  if (Array.isArray(rows) && rows[0]) return rows[0];
+  // Not in Supabase yet (or Supabase errored): carry the Airtable history
+  // forward so a returning user's counters and once-only milestones survive
+  // the cutover - the next upsert persists them into Supabase.
+  return atGetUser(uid);
+}
+async function storeUpsertUser(fields) {
+  if (useSupabase) {
+    const r = await sbFetch("nomi_users?on_conflict=uid", "POST", [sbClean(fields)],
+      { Prefer: "resolution=merge-duplicates,return=minimal" });
+    if (r) return r;
+    // Supabase write failed: land the row in Airtable rather than losing it
+  }
+  return atPost("Nomi%20Users", { performUpsert: { fieldsToMergeOn: ["uid"] }, records: [{ fields }] });
+}
+async function storeInsertEvents(rows) {
+  if (!rows || !rows.length) return;
+  if (useSupabase) {
+    const r = await sbFetch("nomi_events", "POST", rows.map(sbClean), { Prefer: "return=minimal" });
+    if (r) return r;
+  }
+  return atPost("Nomi%20Events", { records: rows.map(f => ({ fields: f })) });
+}
+async function storeInsertPrompt(fields) {
+  if (useSupabase) {
+    const r = await sbFetch("nomi_prompts", "POST", [sbClean(fields)], { Prefer: "return=minimal" });
+    if (r) return r;
+  }
+  return atPost("Nomi%20Prompts", { records: [{ fields }] });
+}
+
 // uid: anonymous browser id that NEVER changes for a returning user; once the
 // user registers, the same row also carries their email (registered=true).
 // Link-preview crawlers and prefetchers hit the page with a fresh context each
@@ -149,7 +210,7 @@ async function atGetUser(uid) {
 const BOT_UA = /bot|crawler|spider|crawling|preview|facebookexternalhit|meta-externalagent|whatsapp|slackbot|telegram|discord|twitterbot|linkedinbot|bingpreview|headless|lighthouse|pagespeed|gtmetrix|python-requests|curl\/|wget|axios|node-fetch|go-http/i;
 // Nothing is suppressed: internal test traffic and crawler hits are RECORDED
 // and flagged, so the pilot numbers can be filtered at analysis time.
-async function track(uid, email, events, internal, ua, session) {
+async function track(uid, email, events, internal, ua, session, exp) {
   if (!uid && !email) return;
   // Known team/friend accounts are always treated as internal, however they
   // arrive, so the pilot funnel stays clean without deleting anything.
@@ -162,7 +223,12 @@ async function track(uid, email, events, internal, ua, session) {
   const nowIso = now.toISOString();
   const day = localDay(now);
   const registered = !!email;
-  const evs = (events || []).slice(0, 10).map(e => ({ fields: {
+  // Experiment context: name + variant + QA-override flag ride on every event
+  // so any slice of the funnel can be split by arm and cleaned of test traffic.
+  const expName = (exp && exp.e) ? String(exp.e).slice(0, 60) : undefined;
+  const expVariant = (exp && (exp.v === "explicit_shape" || exp.v === "learned_create")) ? exp.v : undefined;
+  const expOverride = !!(exp && exp.o);
+  const evs = (events || []).slice(0, 10).map(e => ({
     event: String(e.event || "").slice(0, 50), uid,
     email: email || undefined,
     registered: registered || undefined,
@@ -174,9 +240,12 @@ async function track(uid, email, events, internal, ua, session) {
     session_seconds: (session && typeof session.seconds === "number") ? session.seconds : undefined,
     internal: isInternal || undefined,
     bot: isBot || undefined,
-  } }));
+    experiment: expName,
+    variant: expVariant,
+    exp_override: expOverride || undefined,
+  }));
 
-  const prev = (await atGetUser(uid)) || {};
+  const prev = (await storeGetUser(uid)) || {};
   const userFields = { uid, last_seen: nowIso };
   if (isInternal) userFields.internal = true;
   if (isBot) userFields.bot = true;
@@ -186,6 +255,13 @@ async function track(uid, email, events, internal, ua, session) {
   const firstSeen = new Date(prev.first_seen || nowIso);
   const minsSinceFirst = Math.max(0, Math.round(((now - firstSeen) / 60000) * 10) / 10);
 
+  // The variant sticks to the row the first time it is seen and is never
+  // overwritten - registering attaches the email to the SAME uid row, so the
+  // original anonymous assignment survives authentication by construction.
+  if (expName && !prev.experiment) userFields.experiment = expName;
+  if (expVariant && !prev.variant) userFields.variant = expVariant;
+  if (expOverride) userFields.exp_override = true;
+
   for (const e of (events || [])) {
     const flag = USER_FLAG_BY_EVENT[e.event]; if (flag) userFields[flag] = true;
     // stamp each milestone exactly once, and record how long it took
@@ -194,6 +270,17 @@ async function track(uid, email, events, internal, ua, session) {
       userFields[stamp] = nowIso;
       const elapsed = ELAPSED_BY_STAMP[stamp];
       if (elapsed) userFields[elapsed] = minsSinceFirst;
+      // time-to-value: exposure -> first output viewed, the experiment's
+      // primary timing comparison
+      if (stamp === "first_output_at") {
+        const expAt = prev.exposed_at || userFields.exposed_at;
+        if (expAt) userFields.mins_to_first_output = Math.max(0, Math.round(((now - new Date(expAt)) / 60000) * 10) / 10);
+      }
+      // the exposed ping can be lost and arrive later than first_output; fill
+      // the metric in whichever order the two stamps land
+      if (stamp === "exposed_at" && prev.first_output_at && prev.mins_to_first_output == null) {
+        userFields.mins_to_first_output = Math.max(0, Math.round(((new Date(prev.first_output_at) - now) / 60000) * 10) / 10);
+      }
     }
     if (e.event === "welcome_choice" && e.meta && e.meta.exp) userFields.rednote_experience = e.meta.exp === "experienced" ? "experienced" : "new";
     if ((e.event === "register" || e.event === "sign_in") && e.meta && e.meta.method) userFields.auth_method = e.meta.method;
@@ -228,8 +315,8 @@ async function track(uid, email, events, internal, ua, session) {
   }
 
   await Promise.all([
-    evs.length ? atPost("Nomi%20Events", { records: evs }) : null,
-    atPost("Nomi%20Users", { performUpsert: { fieldsToMergeOn: ["uid"] }, records: [{ fields: userFields }] }),
+    storeInsertEvents(evs),
+    storeUpsertUser(userFields),
   ]);
 }
 
@@ -237,7 +324,10 @@ async function track(uid, email, events, internal, ua, session) {
 // shaped it) so the pilot can read what people actually ask for.
 async function logPrompt(row) {
   const now = new Date();
-  await atPost("Nomi%20Prompts", { records: [{ fields: {
+  await storeInsertPrompt({
+    experiment: (row.exp && row.exp.e) ? String(row.exp.e).slice(0, 60) : undefined,
+    variant: (row.exp && (row.exp.v === "explicit_shape" || row.exp.v === "learned_create")) ? row.exp.v : undefined,
+    exp_override: !!(row.exp && row.exp.o) || undefined,
     uid: row.uid ? String(row.uid).slice(0, 64) : undefined,
     email: row.email || undefined,
     idea: String(row.idea || "").slice(0, 4000),
@@ -254,7 +344,7 @@ async function logPrompt(row) {
     day: localDay(now),
     ts: now.toISOString(),
     local_time: localStamp(now),
-  } }] });
+  });
 }
 
 /* ---------- email delivery ---------- */
@@ -682,9 +772,11 @@ function localShorten(body, cap) {
 function clamp01(v) { const n = Number(v); return isFinite(n) ? Math.max(0, Math.min(1, n)) : 0; }
 
 /* ---------- google oauth (stateless state param) ---------- */
-function makeOauthState(ctx, uid, internal) {
+function makeOauthState(ctx, uid, internal, ev, eo) {
   const exp = Date.now() + 10 * 60 * 1000;
-  const body = (ctx === "g" ? "g" : "m") + (internal ? "I" : "") + "|" + String(uid || "").replace(/[^\w-]/g, "").slice(0, 40) + "." + exp;
+  // flag chars ride in the first segment: I internal, A/B variant, O override
+  const flags = (internal ? "I" : "") + (ev === "A" || ev === "B" ? ev : "") + (eo ? "O" : "");
+  const body = (ctx === "g" ? "g" : "m") + flags + "|" + String(uid || "").replace(/[^\w-]/g, "").slice(0, 40) + "." + exp;
   return body + "." + hmac("state:" + body);
 }
 function checkOauthState(state) {
@@ -693,7 +785,10 @@ function checkOauthState(state) {
   if (hmac("state:" + parts[0] + "." + parts[1]) !== parts[2]) return null;
   if (Number(parts[1]) < Date.now()) return null;
   const seg = parts[0].split("|");
-  return { ctx: seg[0].charAt(0), internal: seg[0].indexOf("I") > 0, uid: seg[1] || null };
+  const flags = seg[0].slice(1);
+  const ev = flags.indexOf("A") >= 0 ? "explicit_shape" : (flags.indexOf("B") >= 0 ? "learned_create" : null);
+  return { ctx: seg[0].charAt(0), internal: flags.indexOf("I") >= 0, uid: seg[1] || null,
+           exp: ev ? { e: "nomi_personalization_onboarding_v2", v: ev, o: flags.indexOf("O") >= 0 } : null };
 }
 function originOf(req) {
   const proto = req.headers["x-forwarded-proto"] || "https";
@@ -808,7 +903,7 @@ export default async function handler(req, res) {
       const session = makeSession(email);
       const existed = !!(await kvGet("state:" + session.userId));
       await migrateGuestState(session.userId, body.guestState);
-      await track(body.uid, email, [{ event: existed ? "sign_in" : "register", meta: { method: "email" } }], body.internal, req.headers["user-agent"], body.session);
+      await track(body.uid, email, [{ event: existed ? "sign_in" : "register", meta: { method: "email" } }], body.internal, req.headers["user-agent"], body.session, body.exp);
       return res.status(200).json({ ok: true, session });
     }
 
@@ -819,7 +914,7 @@ export default async function handler(req, res) {
       const qp = new URLSearchParams({
         client_id: clientId, redirect_uri: redirect, response_type: "code",
         scope: "openid email profile", prompt: "select_account",
-        state: makeOauthState(q.get("ctx"), q.get("uid"), q.get("internal") === "1"),
+        state: makeOauthState(q.get("ctx"), q.get("uid"), q.get("internal") === "1", q.get("ev"), q.get("eo") === "1"),
       });
       res.statusCode = 302;
       res.setHeader("Location", "https://accounts.google.com/o/oauth2/v2/auth?" + qp.toString());
@@ -860,7 +955,7 @@ export default async function handler(req, res) {
             const gmail = String(claims.email).toLowerCase();
             const session = makeSession(gmail);
             const existed = !!(await kvGet("state:" + session.userId));
-            await track(st.uid, gmail, [{ event: existed ? "sign_in" : "register", meta: { method: "google" } }], st.internal, req.headers["user-agent"]);
+            await track(st.uid, gmail, [{ event: existed ? "sign_in" : "register", meta: { method: "google" } }], st.internal, req.headers["user-agent"], null, st.exp);
             payload = { type: "nomi-gauth", token: session.token, identity: session.identity, ctx };
           }
         }
@@ -913,7 +1008,7 @@ Signing you in… you can close this window.</body>`);
       // sendBeacon (used by the exit ping) cannot set an Authorization header,
       // so accept the token in the body as a fallback.
       const sess = sessionFromToken(tokenFrom(req) || body.token);
-      await track(body.uid, sess ? sess.identity : null, Array.isArray(body.events) ? body.events : [], body.internal, req.headers["user-agent"], body.session);
+      await track(body.uid, sess ? sess.identity : null, Array.isArray(body.events) ? body.events : [], body.internal, req.headers["user-agent"], body.session, body.exp);
       return res.status(200).json({ ok: true });
     }
 
@@ -958,8 +1053,8 @@ Signing you in… you can close this window.</body>`);
         cur.projects = projects.slice(0, 30);
         await kvSet("state:" + sess.userId, cur);
       }
-      await track(body.uid, sess ? sess.identity : null, [{ event: "generate", meta: { researched, category: cat, lang: body.contentLang || "en" } }], body.internal, req.headers["user-agent"], body.session);
-      await logPrompt({ uid: body.uid, email: sess ? sess.identity : null, idea: body.idea, kind: "generate",
+      await track(body.uid, sess ? sess.identity : null, [{ event: "generate", meta: { researched, category: cat, lang: body.contentLang || "en" } }], body.internal, req.headers["user-agent"], body.session, body.exp);
+      await logPrompt({ exp: body.exp, uid: body.uid, email: sess ? sess.identity : null, idea: body.idea, kind: "generate",
         contentLang: body.contentLang || "en", category: cat, self: body.self, projectName,
         titles: drafts.map(d => d.title), researched, internal: body.internal });
       return res.status(200).json({ drafts, projectName, projectId, model, usage, researched, brief: body.internal ? brief : undefined });
@@ -993,10 +1088,10 @@ Signing you in… you can close this window.</body>`);
         out = { ...out, ...(await repairLanguage(out, body.contentLang || "en", body.self).catch(() => out)) };
       }
       const sessR = sessionFromToken(tokenFrom(req));
-      await logPrompt({ uid: body.uid, email: sessR ? sessR.identity : null, idea: body.instruction, kind: "refine",
+      await logPrompt({ exp: body.exp, uid: body.uid, email: sessR ? sessR.identity : null, idea: body.instruction, kind: "refine",
         contentLang: body.contentLang || "en", category: body.category, self: body.self,
         titles: [out.title], internal: body.internal });
-      await track(body.uid, sessR ? sessR.identity : null, [{ event: "refine", meta: { instruction: String(body.instruction).slice(0, 60) } }], body.internal, req.headers["user-agent"], body.session);
+      await track(body.uid, sessR ? sessR.identity : null, [{ event: "refine", meta: { instruction: String(body.instruction).slice(0, 60) } }], body.internal, req.headers["user-agent"], body.session, body.exp);
       return res.status(200).json({ draft: out, usage });
     }
 
@@ -1082,7 +1177,7 @@ Signing you in… you can close this window.</body>`);
       await kvSet("waitlist", list);
       console.log(`[waitlist] ${email}`);
       const sessW = sessionFromToken(tokenFrom(req));
-      await track(body.uid, (sessW && sessW.identity) || email, [{ event: "waitlist_join" }], body.internal, req.headers["user-agent"], body.session);
+      await track(body.uid, (sessW && sessW.identity) || email, [{ event: "waitlist_join" }], body.internal, req.headers["user-agent"], body.session, body.exp);
       return res.status(200).json({ ok: true });
     }
 
