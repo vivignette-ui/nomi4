@@ -69,6 +69,14 @@
   .wl .wsupport{color:var(--mut);max-width:46ch;line-height:1.6;margin-top:16px}
   .wl .wpick{margin-top:24px}
   .wchoices{display:grid;grid-template-columns:1fr 1fr;gap:12px;width:100%;margin-top:14px}
+  .wstart{display:inline-flex;align-items:center;justify-content:center;gap:12px;margin-top:22px;
+    background:var(--ind);color:#FFFFFF;border:0;border-radius:999px;padding:16px 40px;
+    font-family:var(--disp);font-weight:500;font-size:17px;cursor:pointer;
+    box-shadow:0 10px 26px rgba(51,47,166,.26);transition:filter .15s ease,transform .15s ease}
+  .wstart:hover{filter:brightness(1.1);transform:translateY(-1px)}
+  .wstart:active{opacity:.85;transform:translateY(0)}
+  .wstart .wgo{flex:none;width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,.18);color:#FFFFFF;
+    display:inline-flex;align-items:center;justify-content:center;font-size:14px}
   /* Chinese needs a shorter measure and more leading than Latin */
   html[lang^="zh"] .wl h2{max-width:12em;line-height:1.35}
   html[lang^="zh"] .wl .wsupport{max-width:22em;line-height:1.75}
@@ -696,22 +704,7 @@
           <h2 data-i="wHead">Write RedNote notes that still sound like you.</h2>
           <div class="wsupport" data-i="wSupport">One idea in, three drafts out — a guide, a review, a diary. In Chinese, English, or both.</div>
           <div class="wpick" data-i="wPick">Two ways in · about 90 seconds</div>
-          <div class="wchoices">
-            <button class="wchoice" data-exp="new">
-              <span class="wtxt">
-                <span class="wt" data-i="wC1t">Write my first note</span>
-                <span class="wd" data-i="wC1d">New to RedNote — see what works here, then write one with you.</span>
-              </span>
-              <span class="wgo" aria-hidden="true">&rarr;</span>
-            </button>
-            <button class="wchoice" data-exp="experienced">
-              <span class="wtxt">
-                <span class="wt" data-i="wC2t">Keep my posting consistent</span>
-                <span class="wd" data-i="wC2d">Already on RedNote — save how you sound once, then draft faster every time.</span>
-              </span>
-              <span class="wgo" aria-hidden="true">&rarr;</span>
-            </button>
-          </div>
+          <button class="wstart" id="w-start"><span data-i="wStart">Start now</span><span class="wgo" aria-hidden="true">&rarr;</span></button>
           <div class="wsignin">
             <button class="plink" id="w-signin" data-i="wSignin">Sign in</button>
             <span class="wdot" aria-hidden="true">·</span>
@@ -1076,7 +1069,8 @@ this is my whole personality now</div>
       wC1t:"Write my first note", wC1d:"New to RedNote — see what works here, then write one with you.",
       wC2t:"Keep my posting consistent", wC2d:"Already on RedNote — save how you sound once, then draft faster every time.",
       wSignin:"Sign in", wRegister:"Create an account",
-      wPick:"Two ways in · about 90 seconds",
+      wPick:"about 90 seconds",
+      wStart:"Start now",
       selfHead:"Your shelf", signOut:"Sign out",
       selfExplain:"A social-self is your saved RedNote voice. It remembers how you sound, so every note starts from you. Nomi holds one; Nyla will hold as many as you need.",
       emptyTitle:"No social-self yet",
@@ -1230,7 +1224,8 @@ this is my whole personality now</div>
       wC1t:"写出我的第一篇笔记", wC1d:"小红书新手：先看懂这里什么内容有人看，再一起写第一篇。",
       wC2t:"让我的更新更稳定", wC2d:"已经在发笔记：把你的语感存下来，写得更快，也不容易断更。",
       wSignin:"登录", wRegister:"注册账号",
-      wPick:"两种开始方式 · 大约 90 秒",
+      wPick:"大约 90 秒",
+      wStart:"现在开始",
       selfHead:"我的书架", signOut:"退出登录",
       selfExplain:"social-self 是你保存下来的小红书声音。它记得你的表达方式，让每篇笔记都从你出发。Nomi 保存一个；Nyla 将保存你需要的每一个。",
       emptyTitle:"还没有 social-self",
@@ -1749,10 +1744,8 @@ this is my whole personality now</div>
   document.getElementById("chrome-shelf").addEventListener("click",function(){pGoDirect("p-self")});
 
   /* ---------------- welcome ---------------- */
-  document.querySelectorAll(".wchoice").forEach(function(c){
-    c.addEventListener("click",function(){
-      S.experience=c.dataset.exp;
-      track("welcome_choice",{exp:c.dataset.exp});
+  document.getElementById("w-start").addEventListener("click",function(){
+      track("welcome_choice",{});
       // The flows diverge here, so this is the exposure point: an eligible
       // first-time user enters their assigned variant; everyone else gets
       // the unchanged flow through the shelf.
@@ -1777,7 +1770,6 @@ this is my whole personality now</div>
         return;
       }
       pGoDirect("p-self");
-    });
   });
   document.getElementById("w-signin").addEventListener("click",function(){ openAuth("signin"); });
   document.getElementById("w-register").addEventListener("click",function(){ openAuth("register"); });
