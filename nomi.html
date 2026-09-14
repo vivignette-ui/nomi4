@@ -1400,8 +1400,12 @@ this is my whole personality now</div>
       if(m[1]==="off")localStorage.removeItem("nomiVariantOverride");
       else localStorage.setItem("nomiVariantOverride",m[1]);
     }catch(e){}
-    // never let a QA link circulate with the override attached
-    try{history.replaceState(null,"",location.pathname+location.hash);}catch(e){}
+    // never let a QA link circulate with the override attached - but strip
+    // ONLY this parameter, so ?internal=1 (handled later) survives
+    try{
+      var qs=location.search.replace(/[?&]nomi_variant=[^&]*/,"").replace(/^&/,"?");
+      history.replaceState(null,"",location.pathname+(qs==="?"?"":qs)+location.hash);
+    }catch(e){}
   })();
   function expOverride(){try{return localStorage.getItem("nomiVariantOverride")||null}catch(e){return null}}
   function expVariant(){
