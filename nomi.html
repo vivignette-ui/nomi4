@@ -2557,7 +2557,9 @@ this is my whole personality now</div>
     var pvt=document.getElementById("p-pvt");
     if(pvt&&window.MutationObserver){
       new MutationObserver(function(){
-        if(aOn())once("a_voice_viewed",{});
+        // only counts when the preview is actually on screen (the Shape
+        // screen), not when the three-question screen writes the dials
+        if(aOn()&&document.getElementById("p-shape").classList.contains("on"))once("a_voice_viewed",{});
       }).observe(pvt,{childList:true,characterData:true,subtree:true});
     }
     var vcc=document.getElementById("vc-close"),vch=document.getElementById("vc-change");
