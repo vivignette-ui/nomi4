@@ -788,7 +788,7 @@ function checkOauthState(state) {
   const flags = seg[0].slice(1);
   const ev = flags.indexOf("A") >= 0 ? "explicit_shape" : (flags.indexOf("B") >= 0 ? "learned_create" : null);
   return { ctx: seg[0].charAt(0), internal: flags.indexOf("I") >= 0, uid: seg[1] || null,
-           exp: ev ? { e: "nomi_personalization_onboarding_v2", v: ev, o: flags.indexOf("O") >= 0 } : null };
+           exp: ev ? { e: "nomi_personalization_onboarding_v3", v: ev, o: flags.indexOf("O") >= 0 } : null };
 }
 function originOf(req) {
   const proto = req.headers["x-forwarded-proto"] || "https";
