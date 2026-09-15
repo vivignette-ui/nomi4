@@ -153,6 +153,20 @@ unchanged.
 - `signup_started` `{via}` — once; `register` from the server = completed
 - `shelf_view`, `second_generation`, `exp_completed` `{arm}`
 
+**First-screen interaction (both arms)**
+- `ob_tap` `{scr, el}` — one per distinct element tapped per screen per load
+  (`a-onboard`, `p-compose`, `r-gate`); fires on pointerdown so it lands
+  even when the tap leads nowhere. `el` is the element id or class
+  (`aq-e` = energy slider, `pdial` = slider label/ends, `aq-done`, `p-idea`,
+  `p-gen`, `pstart`, `clseg`, `attachbtn`, `lang-zh`/`lang-en`, `aq-signin`,
+  `gvcard`, `glchip`, `range` = calibration slider; the screen id itself means
+  a tap on non-interactive space)
+- `ob_scroll` `{scr}` — first scroll during onboarding
+- `a_slider_touched` `{dim}` / `compose_typed` — first real input before the
+  commit button
+- `engaged` is looser than all of these: any pointerdown, touch, key or
+  scroll. Use `ob_tap` to answer "did they try the control or just look".
+
 **A diagnostics**
 - `a_entry` — landed on the three questions
 - `a_tune_interacted` `{via}` — a real slider touch (programmatic writes excluded)

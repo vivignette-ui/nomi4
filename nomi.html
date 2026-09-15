@@ -2636,6 +2636,39 @@ this is my whole personality now</div>
     var si=document.getElementById("aq-signin");
     if(si)si.addEventListener("click",function(){openAuth("signin")});
   })();
+  /* ---- onboarding taps: what people actually touch on the first screens ----
+     One event per distinct element per screen per load (capped), fired on
+     pointerdown so it lands even when the tap goes nowhere. Answers "did they
+     try the slider / the box / the button, or just look?" for both arms. */
+  (function(){
+    var seen={},count=0;
+    function label(el){
+      var e=el;
+      for(var i=0;i<6&&e&&e!==document.body;i++,e=e.parentElement){
+        if(e.id)return e.id;
+        var c=(e.className&&typeof e.className==="string")?e.className.split(/\s+/)[0]:"";
+        if(/^(pstart|glchip|gvcard|clseg|pdial|pchip|plink|pbtn|attachbtn|pstep|langtog|wsignin|abtn|ain|pback|pupl|parch)$/.test(c))return c;
+        if(e.tagName==="INPUT"&&e.type==="range")return "range";
+        if(e.tagName==="TEXTAREA")return "textarea";
+        if(e.tagName==="BUTTON"||e.tagName==="A")return (e.tagName+"."+c).toLowerCase();
+      }
+      return (el.tagName||"?").toLowerCase();
+    }
+    document.addEventListener("pointerdown",function(ev){
+      if(!S.expActive||S.signedIn||count>=14)return;
+      var scr=(document.querySelector(".pscr.on")||{}).id||"";
+      if(scr!=="a-onboard"&&scr!=="p-compose"&&scr!=="r-gate")return;
+      var l=label(ev.target),k=scr+"|"+l;
+      if(seen[k])return;seen[k]=1;count++;
+      track("ob_tap",{scr:scr,el:l});
+    },{capture:true,passive:true});
+    var scrolled=false;
+    window.addEventListener("scroll",function(){
+      if(scrolled||!S.expActive||S.signedIn)return;scrolled=true;
+      track("ob_scroll",{scr:(document.querySelector(".pscr.on")||{}).id||""});
+    },{passive:true});
+  })();
+
   /* ---- variant A diagnostics: where does explicit shaping lose people ---- */
   (function(){
     function aOn(){return S.expActive&&S.expVariant==="explicit_shape"}
