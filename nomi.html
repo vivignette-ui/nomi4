@@ -1820,8 +1820,19 @@ this is my whole personality now</div>
     document.getElementById("a-modal").classList.remove("show");
     if(ctx==="g"){
       S.hasSelf=true;
-      toast(t("tRegistered")); drawDrafts(); pGoDirect("p-studio");
-      saveState();
+      // Pull the account FIRST: an existing user keeps the self and projects
+      // they built, and only this session's new project is folded in on top.
+      // (Previously the gate showed just the note made moments ago, so a
+      // returning user believed their earlier work was gone.)
+      var mine=(S.projects||[]).slice();
+      loadState().then(function(){
+        var ids={};(S.projects||[]).forEach(function(p){if(p&&p.id)ids[p.id]=1});
+        var fresh=mine.filter(function(p){return p&&p.id&&!ids[p.id]});
+        if(fresh.length){S.projects=fresh.concat(S.projects||[]);S.cur=0;loadProject(0);}
+        toast(authMode==="register"?t("tRegistered"):t("tSignedIn"));
+        drawDrafts(); pGoDirect("p-studio");
+        saveState();
+      });
     } else {
       loadState().then(function(){
         toast(authMode==="register"?t("tRegistered"):t("tSignedIn"));

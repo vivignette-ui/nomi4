@@ -818,18 +818,23 @@ async function externalizeImages(userId, obj) {
   if (ps && Array.isArray(ps.cells)) for (const c of ps.cells) if (c) c.img = await store(c.img);
   return dropped;
 }
-async function migrateGuestState(userId, guestState) {
+// atAuth: a guest session is being folded into an account at sign-in. A
+// brand-new account takes the guest's self; an EXISTING account keeps the
+// self and page it already built - onboarding defaults must never overwrite
+// a returning user's shaped voice. Regular saves (atAuth=false) replace.
+async function migrateGuestState(userId, guestState, atAuth) {
   if (!guestState || typeof guestState !== "object") return;
   const droppedImages = await externalizeImages(userId, guestState);
   const cur = (await kvGet("state:" + userId)) || {};
   const ps = guestState.pageSim;
   const psHasContent = ps && ((Array.isArray(ps.cells) && ps.cells.length) || (Array.isArray(ps.blocks) && ps.blocks.some(b => b && (b.title || b.img))) || (Array.isArray(ps.pageOrder) && ps.pageOrder.length));
+  const keepAccount = !!(atAuth && cur.self);
   const next = {
     ...cur,
-    self: guestState.self || cur.self || null,
-    contentLang: guestState.contentLang || cur.contentLang || "en",
+    self: keepAccount ? cur.self : (guestState.self || cur.self || null),
+    contentLang: (keepAccount && cur.contentLang) ? cur.contentLang : (guestState.contentLang || cur.contentLang || "en"),
     redNoteExperience: guestState.redNoteExperience || cur.redNoteExperience || null,
-    pageSim: psHasContent ? ps : (cur.pageSim || null),
+    pageSim: (keepAccount && cur.pageSim) ? cur.pageSim : (psHasContent ? ps : (cur.pageSim || null)),
     updatedAt: new Date().toISOString(),
   };
   if (Array.isArray(guestState.projects) && guestState.projects.length) {
@@ -902,7 +907,7 @@ export default async function handler(req, res) {
       if (!checkCode(email, body.code)) return res.status(400).json({ error: "wrong_code" });
       const session = makeSession(email);
       const existed = !!(await kvGet("state:" + session.userId));
-      await migrateGuestState(session.userId, body.guestState);
+      await migrateGuestState(session.userId, body.guestState, true);
       await track(body.uid, email, [{ event: existed ? "sign_in" : "register", meta: { method: "email" } }], body.internal, req.headers["user-agent"], body.session, body.exp);
       return res.status(200).json({ ok: true, session });
     }
