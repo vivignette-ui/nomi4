@@ -1114,9 +1114,9 @@ this is my whole personality now</div>
       tSessionExpired:"Your session expired - sign in again to pick up your work.",
       aqHead:"Who are you when you show up online?",
       aqSub:"Answer three questions. Meet your digital self.",
-      aq1:"How much of yourself do you let people see online?", aq1lo:"Keep some mystery", aq1hi:"Let people in",
-      aq2:"What kind of energy do you want to leave through a screen?", aq2lo:"Quiet, but magnetic", aq2hi:"Impossible to ignore",
-      aq3:"How composed should your digital self feel?", aq3lo:"Spontaneous", aq3hi:"Intentional",
+      aq1:"How much should my digital friends really know about me?", aq1lo:"A little mystery", aq1hi:"All of me",
+      aq2:"Am I a quiet artist or an outgoing influencer?", aq2lo:"Quiet artist", aq2hi:"Outgoing influencer",
+      aq3:"Do I think before I post, or just let it flow?", aq3lo:"Let it flow", aq3hi:"Think it through",
       aqDone:"That's me \u2192",
       aqSignin:"Sign in",
       aTransition:"Got it. Let's make something that feels like you.",
@@ -1270,9 +1270,9 @@ this is my whole personality now</div>
       tSessionExpired:"登录已过期——重新登录即可找回你的内容。",
       aqHead:"当你出现在网上时，你是谁？",
       aqSub:"回答三个问题，看看你的数字自我是什么样。",
-      aq1:"在网上，你愿意让别人看到多少真实的自己？", aq1lo:"留一点神秘感", aq1hi:"让别人走近我",
-      aq2:"隔着屏幕，你希望别人感受到怎样的你？", aq2lo:"安静，但有吸引力", aq2hi:"让人无法忽视",
-      aq3:"你的数字自我，应该有多「精心」？", aq3lo:"随性自然", aq3hi:"有意塑造",
+      aq1:"网上的朋友，应该了解我多少？", aq1lo:"留一点神秘", aq1hi:"完整的我",
+      aq2:"我是安静的艺术家，还是外向的博主？", aq2lo:"安静的艺术家", aq2hi:"外向的博主",
+      aq3:"我是想好了再发，还是想到就说？", aq3lo:"想到就说", aq3hi:"想好了再发",
       aqDone:"就是这样 \u2192",
       aqSignin:"登录",
       aTransition:"懂了。现在来做一点真正像你的东西。",
@@ -2912,9 +2912,19 @@ this is my whole personality now</div>
   }
   function bReadLine(dim,v){
     var L=(S.lang==="zh");
-    if(dim==="closeness")return v>=60?(L?"\u4f60\u613f\u610f\u8ba9\u4eba\u8d70\u8fd1\u3002":"You let people in."):(v<=40?(L?"\u4f60\u7559\u7740\u4e00\u70b9\u795e\u79d8\u611f\u3002":"You keep some mystery."):(L?"\u4f60\u8ba9\u4eba\u8d70\u8fd1\uff0c\u4f46\u7559\u4e86\u4e00\u70b9\u795e\u79d8\u611f\u3002":"You let people in, but keep a little mystery."));
-    if(dim==="energy")return v>=60?(L?"\u4f60\u7684\u5b58\u5728\u611f\u8ba9\u4eba\u6ca1\u6cd5\u5ffd\u89c6\u3002":"Your presence is impossible to ignore."):(v<=40?(L?"\u5b89\u9759\uff0c\u4f46\u6709\u5438\u5f15\u529b\u3002":"Quiet, but magnetic."):(L?"\u6bd4\u8d77\u5927\u58f0\uff0c\u4f60\u66f4\u6709\u78c1\u573a\u3002":"More magnetic than loud."));
-    return v>=60?(L?"\u4f60\u5728\u6709\u610f\u5730\u5851\u9020\u3002":"You shape things with intention."):(v<=40?(L?"\u4f60\u504f\u968f\u6027\u81ea\u7136\u3002":"You lean spontaneous."):(L?"\u4e00\u534a\u968f\u6027\uff0c\u4e00\u534a\u5fc3\u601d\u3002":"Half instinct, half intention."));
+    if(dim==="closeness"){
+      if(v>=60)return L?"你让网上的朋友走得很近。":"You let your digital friends all the way in.";
+      if(v<=40)return L?"你留着一点神秘感。":"You keep a little mystery.";
+      return L?"你让人走近，但留了一点神秘感。":"You let them in, but keep a little mystery.";
+    }
+    if(dim==="energy"){
+      if(v>=60)return L?"你有外向博主的能量。":"You've got outgoing-influencer energy.";
+      if(v<=40)return L?"安静的艺术家，藏不住。":"Quiet artist. It shows.";
+      return L?"一半安静艺术家，一半外向博主。":"Half quiet artist, half outgoing influencer.";
+    }
+    if(v>=60)return L?"你发之前会想清楚。":"You think it through before you post.";
+    if(v<=40)return L?"你想到就说。":"You let it flow.";
+    return L?"一半直觉，一半心思。":"Half instinct, half intention.";
   }
   function bCalVal(dim){
     return (S.bCal&&S.bCal[dim]!=null)?S.bCal[dim]:(S.bInferred?S.bInferred[dim]:50);
