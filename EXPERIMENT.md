@@ -188,6 +188,16 @@ Always filter: `experiment = 'nomi_personalization_onboarding_v3' AND
 coalesce(exp_override,false) = false AND coalesce(internal,false) = false
 AND coalesce(bot,false) = false`.
 
+Also exclude **pre-existing accounts** that arrived on a fresh browser and
+were enrolled before signing in (their first auth event is `sign_in`, not
+`register`): `uid NOT IN (select uid from nomi_events where event='sign_in')
+OR uid IN (select uid from nomi_events where event='register')`. Their
+account data is safe (the auth-time merge keeps an existing self and
+projects), but they are not new-user onboarding observations.
+
+Tables were emptied on 2026-09-15 after verification; everything in them is
+post-launch data. Airtable holds all history before that.
+
 ```sql
 -- funnel per arm
 select variant,
