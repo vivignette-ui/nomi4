@@ -1387,7 +1387,7 @@ this is my whole personality now</div>
     if(!m)return;
     try{
       if(m[1]==="off")localStorage.removeItem("nomiVariantOverride");
-      else localStorage.setItem("nomiVariantOverride",m[1]);
+      else{localStorage.setItem("nomiVariantOverride",m[1]);window.__ovFresh=true;}
     }catch(e){}
     // never let a QA link circulate with the override attached - but strip
     // ONLY this parameter, so ?internal=1 (handled later) survives
@@ -1426,6 +1426,19 @@ this is my whole personality now</div>
   // v3: there is no welcome page - an eligible visitor lands directly in
   // their variant's first screen; everyone else lands on the shelf.
   function enterFlow(){
+    // QA: a link that carries ?nomi_variant= means "show me this arm from the
+    // start" - on a signed-out browser, drop any saved guest session and the
+    // previous exposure so the tester sees exactly what a new visitor sees.
+    // A stored override without the param keeps normal rules, so reload
+    // persistence stays testable. Signed-in testers must sign out first.
+    if(window.__ovFresh&&!S.signedIn){
+      var hasTok=false;try{hasTok=!!localStorage.getItem("nomiToken")}catch(e){}
+      if(!hasTok){
+        clearGuestLocal();
+        try{localStorage.removeItem("nomiExposedV2");localStorage.removeItem("nomiExpOv");}catch(e){}
+        resetToFreshVisitor();
+      }
+    }
     var xv=null;try{xv=localStorage.getItem("nomiExposedV2")}catch(e){}
     var returning=(xv==="explicit_shape"||xv==="learned_create");
     if(returning||expEligible()){
@@ -2065,21 +2078,17 @@ this is my whole personality now</div>
   }
   document.getElementById("a-cancel").addEventListener("click",function(){document.getElementById("a-modal").classList.remove("show")});
   document.getElementById("a-modal").addEventListener("click",function(e){if(e.target===this)this.classList.remove("show")});
-  document.getElementById("p-signout").addEventListener("click",function(){
-    // Clear ALL account-scoped state so the next user of this browser starts
-    // clean and nothing migrates across accounts.
-    if(S.token)fetch(API+"/api/auth/signout",{method:"POST",headers:{Authorization:"Bearer "+S.token}}).catch(function(){});
-    try{localStorage.removeItem("nomiToken");localStorage.removeItem("nomiIdentity");}catch(e){}
-    clearGuestLocal();
-    S.signedIn=false;S.token=null;S.identity=null;
+  // Everything a fresh visitor starts without: projects, page, and the Shape
+  // screen itself (seed text, name, look, sliders, trait words) - otherwise
+  // the next person on this browser inherits the previous voice.
+  function resetToFreshVisitor(){
     S.projects=[];S.cur=-1;S.blocks=null;S.pageOrder=null;
     S.hasSelf=false;S.generated=false;S.learned=[];
     S.ownShotText="";S.admShotText="";
+    S.bInferred=null;S.bCal=null;S._bres=0;S._bcorrected=0;S._bacc=0;S._bis=0;S._fitVal=null;S.aPicked=false;S.bVerified=false;S.aJustDefined=false;
     pstate=[];ordList=[0];psel=0;
     undoStack.length=0;redoStack.length=0;
     document.getElementById("p-idea").value="";
-    // Wipe the Shape screen too: seed text, name, look, sliders, trait words -
-    // otherwise the next person on this browser sees the previous user's voice.
     document.getElementById("p-seedtext").value="";
     document.getElementById("p-admtext").value="";
     document.getElementById("p-ownshots").innerHTML="";
@@ -2091,6 +2100,16 @@ this is my whole personality now</div>
     setName("Rain");
     restoreCats("p-catsnow",["food"]);restoreCats("p-catsgoal",["slow living"]);
     chipDesc();pLast="";pRenderLocal();
+    ["aq-i","aq-e","aq-p"].forEach(function(id){var el=document.getElementById(id);if(el)el.value=50;});
+  }
+  document.getElementById("p-signout").addEventListener("click",function(){
+    // Clear ALL account-scoped state so the next user of this browser starts
+    // clean and nothing migrates across accounts.
+    if(S.token)fetch(API+"/api/auth/signout",{method:"POST",headers:{Authorization:"Bearer "+S.token}}).catch(function(){});
+    try{localStorage.removeItem("nomiToken");localStorage.removeItem("nomiIdentity");}catch(e){}
+    clearGuestLocal();
+    S.signedIn=false;S.token=null;S.identity=null;
+    resetToFreshVisitor();
     updateSaveLabel();
     toast(t("tSignedOut"));
     // sign-out returns this browser to a fresh-visitor state; enterFlow keeps

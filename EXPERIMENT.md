@@ -95,8 +95,13 @@ never carries it. Override traffic is stamped `exp_override=true` on every
 row it writes (users, events, prompts), and stays stamped after
 `?nomi_variant=off`. Always use `internal=1` on your own phone as well.
 
-To see the onboarding again on a browser that has already been through it,
-sign out (sign-out re-runs `enterFlow()`), or clear site data.
+Opening a link that carries `?nomi_variant=` on a **signed-out** browser
+starts a fresh run: the saved guest session, the previous exposure and the
+Shape screen are reset, so you see exactly what a new visitor sees — even on
+a browser that already has a guest self (which would otherwise be treated
+as already onboarded and land on the shelf). Reloading afterwards *without*
+the parameter keeps normal rules, so refresh persistence stays testable. On
+a signed-in browser, sign out first.
 
 ## 5. Turning it off / shipping an arm
 
