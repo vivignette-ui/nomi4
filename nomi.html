@@ -1426,6 +1426,13 @@ this is my whole personality now</div>
     try{localStorage.setItem("nomiCohort",m[1].toLowerCase())}catch(e){}
     try{history.replaceState(null,"",location.pathname+location.hash);}catch(e){}
   })();
+  // Maze opens the plain link from its own domain: label by referrer so
+  // recruited participants are tagged even without ?cohort= in the URL.
+  (function(){
+    try{
+      if(!localStorage.getItem("nomiCohort")&&/(^|\.)maze\.(co|design)\//.test(document.referrer||""))localStorage.setItem("nomiCohort","maze");
+    }catch(e){}
+  })();
   function cohort(){try{return localStorage.getItem("nomiCohort")||undefined}catch(e){return undefined}}
   function expVariant(){
     var ov=expOverride(); if(ov)return ov;
