@@ -76,6 +76,12 @@ with a lapsed token (they get the shelf plus a "sign in again" toast).
   per page load or per session.
 - Eligibility (`expEligible()`): not signed in, no self, no stored token,
   uid ≠ `u-nolocal`. Ineligible users are never exposed.
+- Flow version gate: `FLOW_VERSION` (`localStorage.nomiFlowVersion`). A guest
+  whose stored version differs never went through this onboarding, so they
+  are eligible once more on their next visit (projects and seed text are
+  kept; only the "already onboarded" judgement and any older exposure are
+  reset). Bump it whenever the onboarding flow changes so returning guests
+  from an earlier campaign see the current flow exactly once.
 - Exposure = landing in the arm's first screen (`enterFlow()` at boot).
   First landing emits `exposed`; later landings emit `exposure_reentered`.
 - Client-side, not middleware: the whole app is one static file with no

@@ -1382,6 +1382,11 @@ this is my whole personality now</div>
      A = explicit_shape : tell Nomi first (Shape, lightened, then Compose)
      B = learned_create : create first (Compose), then verify/change/add. */
   var EXP_NAME="nomi_personalization_onboarding_v3";
+  // Bumped whenever the onboarding flow itself changes. A guest whose stored
+  // version differs never went through THIS onboarding, so they are eligible
+  // once more (their projects and seed text are kept; only the "already
+  // onboarded" judgement and any older exposure are reset).
+  var FLOW_VERSION="v3";
   (function(){
     var m=location.search.match(/[?&]nomi_variant=(explicit_shape|learned_create|off)/);
     if(!m)return;
@@ -3857,7 +3862,13 @@ this is my whole personality now</div>
     try{saved=localStorage.getItem("nomiToken");savedId=localStorage.getItem("nomiIdentity")||"";}catch(e){}
     if(!saved){
       // Restore any unfinished guest work, but ALWAYS enter through welcome.
-      if(restoreGuestLocal()) toast(t("tGuestRestored"));
+      var fv=null;try{fv=localStorage.getItem("nomiFlowVersion")}catch(e){}
+      if(restoreGuestLocal()&&fv===FLOW_VERSION) toast(t("tGuestRestored"));
+      if(fv!==FLOW_VERSION){
+        S.hasSelf=false;
+        try{localStorage.removeItem("nomiExposedV2");localStorage.removeItem("nomiExpOv");}catch(e){}
+      }
+      try{localStorage.setItem("nomiFlowVersion",FLOW_VERSION)}catch(e){}
       enterFlow();
       return;
     }
