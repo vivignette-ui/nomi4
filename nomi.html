@@ -1980,9 +1980,16 @@ this is my whole personality now</div>
       var d=JSON.parse(raw);
       if(d.self){
         applySelfToControls(d.self);
-        // old blobs (pre-experiment) have no flag: treat them as having a
-        // self, which keeps every pre-experiment guest out of the experiment
-        S.hasSelf=(typeof d.hasSelf==="boolean")?d.hasSelf:true;
+        // Old blobs (pre-experiment) carry no flag, and every guest who merely
+        // left the page has one with a default self in it. Only real evidence
+        // of onboarding counts: a generated project, or a self the visitor
+        // actually shaped (seed text, inspiration, or non-default traits).
+        if(typeof d.hasSelf==="boolean")S.hasSelf=d.hasSelf;
+        else{
+          var s=d.self||{};
+          var shaped=!!(s.seedText||s.inspirationText||(Array.isArray(s.traits)&&s.traits.join(",")!=="warm,honest"));
+          S.hasSelf=!!((Array.isArray(d.projects)&&d.projects.length)||shaped);
+        }
       }
       if(d.contentLang)setContentLang(d.contentLang);
       if(d.redNoteExperience)S.experience=d.redNoteExperience;
