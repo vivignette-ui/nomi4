@@ -3921,6 +3921,16 @@ this is my whole personality now</div>
         var now=Date.now();
         if(now-lastExit<3000)return; lastExit=now;
         var ss=session(true);
+        // first-screen work that never reached the commit button: keep what
+        // they typed / set, so drop-off is readable in their own words
+        if(S.expActive&&!S.signedIn&&!window._obAb){
+          var idea=(document.getElementById("p-idea").value||"").trim();
+          if(idea&&!S.generated){window._obAb=1;track("compose_abandoned",{len:idea.length,text:idea.slice(0,300)},true);}
+          else if(S.expVariant==="explicit_shape"&&!S.hasSelf&&window._aqt){
+            window._obAb=1;
+            track("a_abandoned",{closeness:+document.getElementById("aq-i").value,energy:+document.getElementById("aq-e").value,structure:+document.getElementById("aq-p").value},true);
+          }
+        }
         track("exit",{s:ss.seconds,via:via},true);
       }
       window.addEventListener("pagehide",function(){bye("pagehide")});

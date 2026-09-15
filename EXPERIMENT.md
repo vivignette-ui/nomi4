@@ -164,6 +164,10 @@ unchanged.
 - `ob_scroll` `{scr}` — first scroll during onboarding
 - `a_slider_touched` `{dim}` / `compose_typed` — first real input before the
   commit button
+- `compose_abandoned` `{len, text}` / `a_abandoned` `{closeness, energy,
+  structure}` — sent on exit when they typed or moved a slider on the first
+  screen but never committed: the abandoned idea text (first 300 chars) or
+  the slider values they left behind
 - `engaged` is looser than all of these: any pointerdown, touch, key or
   scroll. Use `ob_tap` to answer "did they try the control or just look".
 
