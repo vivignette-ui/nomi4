@@ -130,8 +130,12 @@ Every row carries `experiment`, `variant`, `exp_override`, `internal`,
 `local_time`, `day`. Exceptions: Google `register`/`sign_in` rows have no
 session (the OAuth redirect carries no session id) — join to the nearest
 client event by uid. `exit` fires on every background/tab switch as well as
-on close (`meta.via` = `hidden` | `pagehide`); for dwell take
-`max(session_seconds)` per `session_id`. Client once-guards are per page
+on close (`meta.via` = `hidden` | `pagehide`). **Dwell = `meta.s` = seconds
+the page was actually on screen**; `meta.wall` is time since load. Instagram
+keeps a dismissed page alive for exactly 30s before `pagehide`, so wall time
+over-reports every bounce by 30s — never use it as dwell. For rows before
+2026-09-15 14:40 UTC, use the `hidden` exit's `s` (the first one), not the
+`pagehide` one. Client once-guards are per page
 load, so count activation from the `nomi_users` stamps (or
 `count(distinct uid)`), never from raw event counts. `nomi_users.internal`
 means "ever internal" for that browser. Only new/renamed events are listed; the pre-experiment

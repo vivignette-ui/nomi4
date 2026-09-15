@@ -1591,8 +1591,8 @@ this is my whole personality now</div>
     // peek: report the sitting as it stands without rotating or touching it -
     // the exit ping after a long background must not open a phantom session
     if(peek&&sid&&start){
-      var end=(last&&now-last>SESSION_GAP)?last:now;
-      return {sid:sid,minutes:Math.round(((end-start)/60000)*10)/10,seconds:Math.round((end-start)/1000),isNew:false};
+      var vs=visibleSeconds();
+      return {sid:sid,minutes:Math.round((vs/60)*10)/10,seconds:vs,isNew:false};
     }
     if(!sid||!start||(last&&now-last>SESSION_GAP)){
       sid=(crypto.randomUUID?crypto.randomUUID():("s"+now.toString(36)+Math.random().toString(36).slice(2,8))).slice(0,24);
@@ -1609,6 +1609,16 @@ this is my whole personality now</div>
   // hidden-from-birth and flush on first visibility; a page that is thrown
   // away unseen records nothing at all.
   var everVisible=(document.visibilityState!=="hidden"), prefetched=!everVisible, pendingTrack=[];
+  // Visible-time clock. In-app browsers keep a dismissed page alive (Instagram:
+  // exactly 30s) before firing pagehide, so wall time over-reports dwell by
+  // that much for every bounce. Only time with the page in the foreground
+  // counts as the sitting.
+  var visAcc=0, visSince=(document.visibilityState==="visible")?Date.now():null;
+  document.addEventListener("visibilitychange",function(){
+    if(document.visibilityState==="visible"){if(visSince==null)visSince=Date.now();}
+    else if(visSince!=null){visAcc+=Date.now()-visSince;visSince=null;}
+  });
+  function visibleSeconds(){return Math.round((visAcc+(visSince!=null?Date.now()-visSince:0))/1000);}
   document.addEventListener("visibilitychange",function(){
     if(document.visibilityState==="visible"&&!everVisible){
       everVisible=true;
@@ -3921,6 +3931,8 @@ this is my whole personality now</div>
         var now=Date.now();
         if(now-lastExit<3000)return; lastExit=now;
         var ss=session(true);
+        // s = seconds the page was actually on screen; wall = since load
+        var wall=Math.round((Date.now()-(+sessionStorage.getItem("nomiSidStart")||Date.now()))/1000);
         // first-screen work that never reached the commit button: keep what
         // they typed / set, so drop-off is readable in their own words
         if(S.expActive&&!S.signedIn&&!window._obAb){
@@ -3931,7 +3943,7 @@ this is my whole personality now</div>
             track("a_abandoned",{closeness:+document.getElementById("aq-i").value,energy:+document.getElementById("aq-e").value,structure:+document.getElementById("aq-p").value},true);
           }
         }
-        track("exit",{s:ss.seconds,via:via},true);
+        track("exit",{s:ss.seconds,wall:wall,via:via},true);
       }
       window.addEventListener("pagehide",function(){bye("pagehide")});
       document.addEventListener("visibilitychange",function(){
