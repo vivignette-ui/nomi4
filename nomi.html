@@ -1603,7 +1603,27 @@ this is my whole personality now</div>
     return {sid:sid,minutes:Math.round(((now-start)/60000)*10)/10,
             seconds:Math.round((now-start)/1000),isNew:start===now};
   }
+  // Instagram (and other in-app browsers) prefetch an ad's landing page in a
+  // hidden webview before anyone taps, then discard it ~30s later. Nothing
+  // is recorded until the page has actually been SEEN: events queue while
+  // hidden-from-birth and flush on first visibility; a page that is thrown
+  // away unseen records nothing at all.
+  var everVisible=(document.visibilityState!=="hidden"), prefetched=!everVisible, pendingTrack=[];
+  document.addEventListener("visibilitychange",function(){
+    if(document.visibilityState==="visible"&&!everVisible){
+      everVisible=true;
+      // the sitting starts when the person sees the page, not when the
+      // webview fetched it in the background
+      try{sessionStorage.setItem("nomiSidStart",String(Date.now()));sessionStorage.setItem("nomiSidLast",String(Date.now()));}catch(e){}
+      var q=pendingTrack;pendingTrack=[];
+      q.forEach(function(a){track(a[0],a[1],a[2])});
+    }
+  });
   function track(event,meta,beacon){
+    if(!everVisible){
+      if(event!=="exit"&&event!=="heartbeat")pendingTrack.push([event,meta,beacon]);
+      return;
+    }
     try{
       if(event==="signup_started"||event==="export")bResolveMode(S._bcorrected?"corrected":"passive");
     }catch(e){}
@@ -3878,7 +3898,8 @@ this is my whole personality now</div>
         lang:S.lang,
         ua:(navigator.userAgent||"").slice(0,140),
         w:window.innerWidth,
-        inapp:/Instagram|FBAN|FBAV|FB_IAB|Line\/|MicroMessenger|XiaoHongShu|TikTok/i.test(navigator.userAgent||"")?1:0
+        inapp:/Instagram|FBAN|FBAV|FB_IAB|Line\/|MicroMessenger|XiaoHongShu|TikTok/i.test(navigator.userAgent||"")?1:0,
+        prefetched:prefetched?1:undefined
       });
     }
     // "engaged" fires on the FIRST genuine human interaction - it separates
