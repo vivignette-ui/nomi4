@@ -1580,7 +1580,7 @@ this is my whole personality now</div>
   // A session is one sitting: it starts on load and ends after 30 minutes of
   // no activity, so we can measure how long creators actually spend.
   var SESSION_GAP=30*60*1000;
-  function session(){
+  function session(peek){
     var now=Date.now();
     var sid,start,last;
     try{
@@ -1588,6 +1588,12 @@ this is my whole personality now</div>
       start=+sessionStorage.getItem("nomiSidStart")||0;
       last=+sessionStorage.getItem("nomiSidLast")||0;
     }catch(e){}
+    // peek: report the sitting as it stands without rotating or touching it -
+    // the exit ping after a long background must not open a phantom session
+    if(peek&&sid&&start){
+      var end=(last&&now-last>SESSION_GAP)?last:now;
+      return {sid:sid,minutes:Math.round(((end-start)/60000)*10)/10,seconds:Math.round((end-start)/1000),isNew:false};
+    }
     if(!sid||!start||(last&&now-last>SESSION_GAP)){
       sid=(crypto.randomUUID?crypto.randomUUID():("s"+now.toString(36)+Math.random().toString(36).slice(2,8))).slice(0,24);
       start=now;
@@ -1602,7 +1608,7 @@ this is my whole personality now</div>
       if(event==="signup_started"||event==="export")bResolveMode(S._bcorrected?"corrected":"passive");
     }catch(e){}
     try{
-      var payload=JSON.stringify({uid:uid(),internal:INTERNAL,session:session(),
+      var payload=JSON.stringify({uid:uid(),internal:INTERNAL,session:session(!!beacon),
         token:beacon&&S.token?S.token:undefined,
         exp:expPayload(),
         events:[{event:event,meta:meta||undefined}]});
@@ -1610,8 +1616,8 @@ this is my whole personality now</div>
       // in-flight fetches when the page is dismissed, which is exactly the case
       // we most need measured (how long someone actually stayed).
       if(beacon&&navigator.sendBeacon){
-        navigator.sendBeacon(API+"/api/track",new Blob([payload],{type:"application/json"}));
-        return;
+        if(navigator.sendBeacon(API+"/api/track",new Blob([payload],{type:"application/json"})))return;
+        // the beacon queue refused it (budget shared with the exit save): fall through
       }
       fetch(API+"/api/track",{method:"POST",keepalive:true,
         headers:Object.assign({"Content-Type":"application/json"},S.token?{Authorization:"Bearer "+S.token}:{}),
@@ -2075,7 +2081,7 @@ this is my whole personality now</div>
         if(!window._suStarted){window._suStarted=1;track("signup_started",{via:"google",ctx:ctx});}
         var xp=expPayload();
         var startUrl=API+"/auth/google/start?ctx="+ctx+"&uid="+encodeURIComponent(uid())+(INTERNAL?"&internal=1":"")
-          +(xp?("&ev="+(xp.v==="learned_create"?"B":"A")+(xp.o?"&eo=1":"")):"");
+          +(xp?("&ev="+(xp.v==="learned_create"?"B":"A")+(xp.o?"&eo=1":"")+"&en="+encodeURIComponent(EXP_NAME)):"");
         var pop=window.open(startUrl,"nomiGoogle","width=480,height=640,menubar=no,toolbar=no");
         if(!pop){ location.href=startUrl; } // popup blocked: full-page fallback
       };
@@ -2106,7 +2112,7 @@ this is my whole personality now</div>
         var email=document.getElementById(ctx+"-email").value.trim();
         var code=document.getElementById(ctx+"-code").value.trim();
         loading(true,"loadAuth");
-        fetch(API+"/api/auth/email/verify",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:email,code:code,uid:uid(),internal:INTERNAL,exp:expPayload(),guestState:migrationState(ctx)})})
+        fetch(API+"/api/auth/email/verify",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:email,code:code,uid:uid(),internal:INTERNAL,exp:expPayload(),session:session(),guestState:migrationState(ctx)})})
           .then(function(r){return r.json()})
           .then(function(d){ loading(false); if(d.ok) finishAuth(ctx,d.session); else toast(t("tAuthErr")); })
           .catch(function(){ loading(false); toast(t("tOffline")); });
@@ -2300,7 +2306,7 @@ this is my whole personality now</div>
       try{emailInput.focus({preventScroll:true})}catch(e){emailInput.focus()}
       return;
     }
-    fetch(API+"/api/waitlist",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:email,source:"nomi-mvp",uid:uid(),internal:INTERNAL,exp:expPayload()})})
+    fetch(API+"/api/waitlist",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:email,source:"nomi-mvp",uid:uid(),internal:INTERNAL,exp:expPayload(),session:session()})})
       .then(function(r){return r.json()})
       .then(function(d){
         if(d.ok){
@@ -2853,7 +2859,7 @@ this is my whole personality now</div>
     fetch(API+"/api/generate",{
       method:"POST",
       headers:Object.assign({"Content-Type":"application/json"},S.token?{Authorization:"Bearer "+S.token}:{}),
-      body:JSON.stringify({idea:idea,self:collectSelf(),contentLang:S.contentLang,category:currentCategory(),uid:uid(),internal:INTERNAL,exp:expPayload()})
+      body:JSON.stringify({idea:idea,self:collectSelf(),contentLang:S.contentLang,category:currentCategory(),uid:uid(),internal:INTERNAL,exp:expPayload(),session:session()})
     })
     .then(function(r){
       return r.json().catch(function(){return null}).then(function(d){return {status:r.status,body:d}});
@@ -3714,8 +3720,8 @@ this is my whole personality now</div>
     mut();
     var proj=curProject();
     fetch(API+"/api/refine",{
-      method:"POST",headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({draft:proj.drafts[psel],instruction:instruction,self:collectSelf(),contentLang:proj.contentLang||S.contentLang,category:proj.category||currentCategory(),uid:uid(),internal:INTERNAL,exp:expPayload()})
+      method:"POST",headers:Object.assign({"Content-Type":"application/json"},S.token?{Authorization:"Bearer "+S.token}:{}),
+      body:JSON.stringify({draft:proj.drafts[psel],instruction:instruction,self:collectSelf(),contentLang:proj.contentLang||S.contentLang,category:proj.category||currentCategory(),uid:uid(),internal:INTERNAL,exp:expPayload(),session:session()})
     })
     .then(function(r){return r.json()})
     .then(function(d){
@@ -3852,23 +3858,29 @@ this is my whole personality now</div>
     // because nothing else fires between load and departure.
     (function(){
       var lastExit=0;
-      function bye(){
+      function bye(via){
         var now=Date.now();
         if(now-lastExit<3000)return; lastExit=now;
-        track("exit",{s:session().seconds},true);
+        var ss=session(true);
+        track("exit",{s:ss.seconds,via:via},true);
       }
-      window.addEventListener("pagehide",bye);
+      window.addEventListener("pagehide",function(){bye("pagehide")});
       document.addEventListener("visibilitychange",function(){
-        if(document.visibilityState==="hidden")bye();
+        if(document.visibilityState==="hidden")bye("hidden");
       });
     })();
-    track("visit",{
-      source:document.referrer?document.referrer.slice(0,80):"direct",
-      lang:S.lang,
-      ua:(navigator.userAgent||"").slice(0,140),
-      w:window.innerWidth,
-      inapp:/Instagram|FBAN|FBAV|FB_IAB|Line\/|MicroMessenger|XiaoHongShu|TikTok/i.test(navigator.userAgent||"")?1:0
-    });
+    // The visit ping fires right after the entry decision (enterFlow / token
+    // restore) so a first-time visitor's visit row already carries the arm.
+    function pingVisit(){
+      if(pingVisit._d)return;pingVisit._d=1;
+      track("visit",{
+        source:document.referrer?document.referrer.slice(0,80):"direct",
+        lang:S.lang,
+        ua:(navigator.userAgent||"").slice(0,140),
+        w:window.innerWidth,
+        inapp:/Instagram|FBAN|FBAV|FB_IAB|Line\/|MicroMessenger|XiaoHongShu|TikTok/i.test(navigator.userAgent||"")?1:0
+      });
+    }
     // "engaged" fires on the FIRST genuine human interaction - it separates
     // real visitors from link-preview crawlers and silent prefetches.
     (function(){
@@ -3891,6 +3903,7 @@ this is my whole personality now</div>
     if(mHash){
       history.replaceState(null,"",location.pathname);
       finishAuth("m",{token:decodeURIComponent(mHash[1]),identity:decodeURIComponent(mHash[2]||"")});
+      pingVisit();
       return;
     }
     var saved=null,savedId="";
@@ -3905,6 +3918,7 @@ this is my whole personality now</div>
       }
       try{localStorage.setItem("nomiFlowVersion",FLOW_VERSION)}catch(e){}
       enterFlow();
+      pingVisit();
       return;
     }
     if(saved){
@@ -3914,6 +3928,7 @@ this is my whole personality now</div>
       // user is never routed into onboarding, even if their token has lapsed:
       // the identity is still known, so they get the shelf + sign-in instead.
       pGoDirect("p-self");
+      pingVisit();
       fetch(API+"/api/state",{headers:{Authorization:"Bearer "+saved}})
         .then(function(r){return r.json()})
         .then(function(d){

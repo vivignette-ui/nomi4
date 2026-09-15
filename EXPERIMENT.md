@@ -127,7 +127,14 @@ In `nomi.html` (edit `mvp-nomi.html`, then build + push as usual):
 
 Every row carries `experiment`, `variant`, `exp_override`, `internal`,
 `bot`, `uid`, `email` (after login), `session_id`, `session_seconds`, `ts`,
-`local_time`, `day`. Only new/renamed events are listed; the pre-experiment
+`local_time`, `day`. Exceptions: Google `register`/`sign_in` rows have no
+session (the OAuth redirect carries no session id) — join to the nearest
+client event by uid. `exit` fires on every background/tab switch as well as
+on close (`meta.via` = `hidden` | `pagehide`); for dwell take
+`max(session_seconds)` per `session_id`. Client once-guards are per page
+load, so count activation from the `nomi_users` stamps (or
+`count(distinct uid)`), never from raw event counts. `nomi_users.internal`
+means "ever internal" for that browser. Only new/renamed events are listed; the pre-experiment
 vocabulary (`visit`, `engaged`, `generate`, `generate_failed`, `refine`,
 `export`, `register`, `sign_in`, `project_open`, `heartbeat`, `exit`) is
 unchanged.

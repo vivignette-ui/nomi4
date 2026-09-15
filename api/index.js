@@ -126,7 +126,7 @@ async function atPost(path, payload) {
 }
 // Milestone timestamp columns, stamped ONCE at first occurrence, plus the
 // elapsed-minutes columns that make funnel timing a one-click pivot.
-const STAMP_BY_EVENT = { self_saved: "profile_completed_at", generate: "generated_first_at", export: "exported_first_at", waitlist_join: "waitlist_at", register: "registered_at", exposed: "exposed_at", first_output: "first_output_at" };
+const STAMP_BY_EVENT = { self_saved: "profile_completed_at", generate: "generated_first_at", export: "exported_first_at", waitlist_join: "waitlist_at", register: "registered_at", exposed: "exposed_at", exposure_reentered: "exposed_at", first_output: "first_output_at" };
 const ELAPSED_BY_STAMP = { profile_completed_at: "mins_to_profile", generated_first_at: "mins_to_generate", exported_first_at: "mins_to_export", registered_at: "mins_to_register" };
 
 async function atGetUser(uid) {
@@ -169,14 +169,15 @@ async function sbFetch(path, method, body, headers) {
   } catch (e) { console.error("[sb]", path, e.message); return null; }
 }
 function sbClean(o) { const out = {}; for (const k in o) { if (o[k] !== undefined) out[k] = o[k]; } return out; }
+// Returns the row, null for a genuinely new uid, or READ_FAILED when the
+// store could not answer - callers must not treat a failed read as "new",
+// or a transient outage would reset first_seen, sessions and milestones.
+const READ_FAILED = { __readFailed: true };
 async function storeGetUser(uid) {
   if (!useSupabase) return atGetUser(uid);
   const rows = await sbFetch(`nomi_users?uid=eq.${encodeURIComponent(String(uid))}&limit=1`, "GET");
-  if (Array.isArray(rows) && rows[0]) return rows[0];
-  // Not in Supabase yet (or Supabase errored): carry the Airtable history
-  // forward so a returning user's counters and once-only milestones survive
-  // the cutover - the next upsert persists them into Supabase.
-  return atGetUser(uid);
+  if (rows === null) return READ_FAILED;
+  return (Array.isArray(rows) && rows[0]) || null;
 }
 async function storeUpsertUser(fields) {
   if (useSupabase) {
@@ -245,7 +246,9 @@ async function track(uid, email, events, internal, ua, session, exp) {
     exp_override: expOverride || undefined,
   }));
 
-  const prev = (await storeGetUser(uid)) || {};
+  const got = await storeGetUser(uid);
+  const readFailed = got === READ_FAILED;
+  const prev = (got && !readFailed) ? got : {};
   const userFields = { uid, last_seen: nowIso };
   if (isInternal) userFields.internal = true;
   if (isBot) userFields.bot = true;
@@ -278,8 +281,10 @@ async function track(uid, email, events, internal, ua, session, exp) {
       }
       // the exposed ping can be lost and arrive later than first_output; fill
       // the metric in whichever order the two stamps land
+      // exposed arriving AFTER first_output means the exposure ping was lost;
+      // the true interval is unknowable, so the metric stays null rather than 0
       if (stamp === "exposed_at" && prev.first_output_at && prev.mins_to_first_output == null) {
-        userFields.mins_to_first_output = Math.max(0, Math.round(((new Date(prev.first_output_at) - now) / 60000) * 10) / 10);
+        userFields.mins_to_first_output = null;
       }
     }
     if (e.event === "welcome_choice" && e.meta && e.meta.exp) userFields.rednote_experience = e.meta.exp === "experienced" ? "experienced" : "new";
@@ -314,9 +319,13 @@ async function track(uid, email, events, internal, ua, session, exp) {
     userFields.avg_session_minutes = Math.round((tot / Math.max(1, sess)) * 10) / 10;
   }
 
+  // On a failed read the events still land, but only always-safe fields go
+  // to the user row; derived counters and once-only stamps wait for a
+  // request whose read succeeded.
+  const safeFields = readFailed ? { uid, last_seen: nowIso, ...(isInternal ? { internal: true } : {}), ...(isBot ? { bot: true } : {}) } : userFields;
   await Promise.all([
     storeInsertEvents(evs),
-    storeUpsertUser(userFields),
+    storeUpsertUser(safeFields),
   ]);
 }
 
@@ -772,11 +781,13 @@ function localShorten(body, cap) {
 function clamp01(v) { const n = Number(v); return isFinite(n) ? Math.max(0, Math.min(1, n)) : 0; }
 
 /* ---------- google oauth (stateless state param) ---------- */
-function makeOauthState(ctx, uid, internal, ev, eo) {
+function makeOauthState(ctx, uid, internal, ev, eo, en) {
   const exp = Date.now() + 10 * 60 * 1000;
-  // flag chars ride in the first segment: I internal, A/B variant, O override
+  // flag chars ride in the first segment: I internal, A/B variant, O override;
+  // the experiment name (digits only, e.g. "3" for _v3) follows the uid
   const flags = (internal ? "I" : "") + (ev === "A" || ev === "B" ? ev : "") + (eo ? "O" : "");
-  const body = (ctx === "g" ? "g" : "m") + flags + "|" + String(uid || "").replace(/[^\w-]/g, "").slice(0, 40) + "." + exp;
+  const ver = String(en || "").replace(/\D/g, "").slice(0, 3);
+  const body = (ctx === "g" ? "g" : "m") + flags + "|" + String(uid || "").replace(/[^\w-]/g, "").slice(0, 40) + "|" + ver + "." + exp;
   return body + "." + hmac("state:" + body);
 }
 function checkOauthState(state) {
@@ -787,8 +798,9 @@ function checkOauthState(state) {
   const seg = parts[0].split("|");
   const flags = seg[0].slice(1);
   const ev = flags.indexOf("A") >= 0 ? "explicit_shape" : (flags.indexOf("B") >= 0 ? "learned_create" : null);
+  const ver = seg[2] || "3";
   return { ctx: seg[0].charAt(0), internal: flags.indexOf("I") >= 0, uid: seg[1] || null,
-           exp: ev ? { e: "nomi_personalization_onboarding_v3", v: ev, o: flags.indexOf("O") >= 0 } : null };
+           exp: ev ? { e: "nomi_personalization_onboarding_v" + ver, v: ev, o: flags.indexOf("O") >= 0 } : null };
 }
 function originOf(req) {
   const proto = req.headers["x-forwarded-proto"] || "https";
@@ -919,7 +931,7 @@ export default async function handler(req, res) {
       const qp = new URLSearchParams({
         client_id: clientId, redirect_uri: redirect, response_type: "code",
         scope: "openid email profile", prompt: "select_account",
-        state: makeOauthState(q.get("ctx"), q.get("uid"), q.get("internal") === "1", q.get("ev"), q.get("eo") === "1"),
+        state: makeOauthState(q.get("ctx"), q.get("uid"), q.get("internal") === "1", q.get("ev"), q.get("eo") === "1", q.get("en")),
       });
       res.statusCode = 302;
       res.setHeader("Location", "https://accounts.google.com/o/oauth2/v2/auth?" + qp.toString());
@@ -1182,7 +1194,7 @@ Signing you in… you can close this window.</body>`);
       await kvSet("waitlist", list);
       console.log(`[waitlist] ${email}`);
       const sessW = sessionFromToken(tokenFrom(req));
-      await track(body.uid, (sessW && sessW.identity) || email, [{ event: "waitlist_join" }], body.internal, req.headers["user-agent"], body.session, body.exp);
+      await track(body.uid, sessW ? sessW.identity : null, [{ event: "waitlist_join", meta: { email } }], body.internal, req.headers["user-agent"], body.session, body.exp);
       return res.status(200).json({ ok: true });
     }
 
