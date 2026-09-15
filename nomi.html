@@ -1430,7 +1430,7 @@ this is my whole personality now</div>
   // recruited participants are tagged even without ?cohort= in the URL.
   (function(){
     try{
-      if(!localStorage.getItem("nomiCohort")&&/(^|\.)maze\.(co|design)\//.test(document.referrer||""))localStorage.setItem("nomiCohort","maze");
+      if(!localStorage.getItem("nomiCohort")&&/^https?:\/\/([a-z0-9-]+\.)*maze\.(co|design)\//i.test(document.referrer||""))localStorage.setItem("nomiCohort","maze");
     }catch(e){}
   })();
   function cohort(){try{return localStorage.getItem("nomiCohort")||undefined}catch(e){return undefined}}
