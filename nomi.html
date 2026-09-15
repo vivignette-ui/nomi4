@@ -2604,7 +2604,12 @@ this is my whole personality now</div>
     var touched={i:false,e:false,p:false},changes={i:0,e:0,p:0};
     [["aq-i","i"],["aq-e","e"],["aq-p","p"]].forEach(function(d){
       var el=document.getElementById(d[0]);
-      if(el)el.addEventListener("input",function(){touched[d[1]]=true;changes[d[1]]++;});
+      if(el)el.addEventListener("input",function(){
+        touched[d[1]]=true;changes[d[1]]++;
+        // the drop-off question "did they move a slider and quit, or never
+        // find them" needs a signal before the Done button
+        if(!window._aqt){window._aqt=1;track("a_slider_touched",{dim:d[1]});}
+      });
     });
     var done=document.getElementById("aq-done");
     if(done)done.addEventListener("click",function(){
@@ -2906,6 +2911,7 @@ this is my whole personality now</div>
   // typing a new idea clears a stale failure notice
   document.getElementById("p-idea").addEventListener("input",function(){
     if(!genErrBox.hidden)clearGenError();
+    if(!window._ct&&document.getElementById("p-idea").value.trim()){window._ct=1;track("compose_typed",{});}
   });
   function newProject(idea,drafts3,name,id){
     S.projects.unshift({
