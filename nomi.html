@@ -491,10 +491,19 @@
     html[lang^="zh"] .wchoice .wd{line-height:1.85}
     .pshelf{grid-template-columns:1fr;gap:16px}
     .pbuild{grid-template-columns:1fr;gap:24px}
-    .pfoot{flex-direction:column;align-items:stretch;gap:12px}
-    .pfoot .pbtn{width:100%;padding:13px}
-    .attachbtn{justify-content:center;min-height:44px;padding:7px 18px}
+    /* composer on a phone: language -> Generate -> attach. The primary action
+       sits right under the text; attaching is the optional extra, so it goes
+       below the button as a quiet link-style row. */
+    .pfoot{flex-direction:column;align-items:stretch;gap:12px;padding:6px 12px 12px}
+    .pfoot .clangrow{order:1}
+    .pfoot .pbtn{order:2;width:100%;padding:14px;font-size:15.5px}
+    .pfoot .attachbtn{order:3;justify-content:center;min-height:44px;padding:7px 18px;border-style:dashed;background:transparent;font-size:13px}
+    .pomni textarea{min-height:168px;padding:16px 16px 8px}
     .clangrow{justify-content:space-between}
+    .clangrow .cl1{font-size:12.5px}
+    .pq{font-size:20px;line-height:1.35}
+    .pqhint{font-size:13px;margin-top:-4px}
+    .pstarts{gap:8px}
     /* Studio on a phone: the three drafts come FIRST, the page-layout
        preview sits below them - you read your content, then scroll to see
        how it lands on the page. */
@@ -1120,6 +1129,9 @@ this is my whole personality now</div>
       aqDone:"That's me \u2192",
       aqSignin:"Sign in",
       aTransition:"Got it. Let's make something that feels like you.",
+      obStart1:"a place I keep going back to", obFill1:"A place I keep going back to, and the one thing I always order",
+      obStart2:"something I bought and actually use", obFill2:"Something I bought this year that I actually use every day",
+      obStart3:"a small routine that fixed my week", obFill3:"A small routine that quietly fixed my week",
       bReadHead:"Here's what I'm picking up about you.",
       bReadSub:"Adjust anything that feels off.",
       bReadAccept:"That's me",
@@ -1276,6 +1288,9 @@ this is my whole personality now</div>
       aqDone:"就是这样 \u2192",
       aqSignin:"登录",
       aTransition:"懂了。现在来做一点真正像你的东西。",
+      obStart1:"一家我反复去的店", obFill1:"一家我反复去的店，和每次必点的那一样",
+      obStart2:"买了真的在用的东西", obFill2:"今年买的、真的每天都在用的东西",
+      obStart3:"一个救了我这周的小习惯", obFill3:"一个不起眼、却救了我这一周的小习惯",
       bReadHead:"这是我刚刚读到的你。",
       bReadSub:"哪里不像你，就调一下。",
       bReadAccept:"就是我",
@@ -1603,9 +1618,20 @@ this is my whole personality now</div>
         body:payload}).catch(function(){});
     }catch(e){}
   }
+  // Starter chips: during onboarding they are three real idea prompts (in the
+  // current language); otherwise the original demo starters.
+  function syncStarters(){
+    var onboarding=S.expActive&&!S.signedIn;
+    document.querySelectorAll("#p-compose .pstart").forEach(function(b,i){
+      if(!b._orig)b._orig={html:b.innerHTML,fill:b.dataset.fill};
+      if(onboarding){b.textContent=t("obStart"+(i+1));b.dataset.fill=t("obFill"+(i+1));}
+      else{b.innerHTML=b._orig.html;b.dataset.fill=b._orig.fill;}
+    });
+  }
   function applyLang(){
     document.querySelectorAll("[data-i]").forEach(function(el){ el.textContent = t(el.dataset.i); });
     document.querySelectorAll("[data-ip]").forEach(function(el){ el.placeholder = t(el.dataset.ip); });
+    syncStarters();
     // the experiment gate is built in JS, so a language switch re-renders it
     // (selection and learning panel are restored from state inside)
     if(S.expActive&&document.getElementById("r-gate").classList.contains("on"))renderGateExp();
@@ -1743,7 +1769,9 @@ this is my whole personality now</div>
     document.getElementById(id).classList.add("on");
     // the inert 01-04 chips announce four steps of work before anyone has
     // agreed to step one - keep them off the invitation screen
-    document.querySelector(".psteps").style.display = (id==="a-onboard") ? "none" : "";
+    // the 01-04 chips describe the product's architecture; during onboarding
+    // (both arms, until sign-in) the visitor only needs the one next action
+    document.querySelector(".psteps").style.display = (id==="a-onboard"||(S.expActive&&!S.signedIn)) ? "none" : "";
     var hi = id==="p-studio" ? "p-projects" : id;
     document.querySelectorAll(".pstep").forEach(function(s){s.classList.toggle("on",s.dataset.go===hi)});
     if(id==="p-self") renderSelf();
@@ -1760,6 +1788,10 @@ this is my whole personality now</div>
           hint.dataset.i="aTransition";hint.textContent=t("aTransition");hint.hidden=false;
         }else hint.hidden=true;
       }
+      // During onboarding the starter chips must not imply saved work the
+      // visitor does not have ("resume: saved draft from Tuesday"); they
+      // become three real idea prompts. Control users keep the originals.
+      syncStarters();
       var pb=document.querySelector("#p-compose .pback");
       if(pb)pb.style.display=(S.expActive&&!S.signedIn&&!S.hasSelf&&S.expVariant==="learned_create")?"none":"";
       if(S.expActive&&!pGoDirect._ce){pGoDirect._ce=1;track("compose_entered",{});}
@@ -2890,6 +2922,8 @@ this is my whole personality now</div>
     var host=document.getElementById("g-exp");
     document.getElementById("g-note").style.display="none";
     document.getElementById("g-locked").style.display="none";
+    // the header already says "your three notes"; the eyebrow would repeat it
+    var lbl=document.querySelector('#r-gate [data-i="gatePrevLbl"]'); if(lbl)lbl.style.display="none";
     host.hidden=false;host.innerHTML="";
     if(!S.bVerified&&!S.aPicked)gateSel=0;
     var isB=S.expVariant==="learned_create";
@@ -3024,6 +3058,7 @@ this is my whole personality now</div>
     document.getElementById("g-exp").hidden=true;
     document.getElementById("g-note").style.display="";
     document.getElementById("g-locked").style.display="";
+    var lbl0=document.querySelector('#r-gate [data-i="gatePrevLbl"]'); if(lbl0)lbl0.style.display="";
     var d=drafts()[0];
     var g=document.getElementById("g-note");
     g.innerHTML="";
