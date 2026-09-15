@@ -109,6 +109,27 @@ as already onboarded and land on the shelf). Reloading afterwards *without*
 the parameter keeps normal rules, so refresh persistence stays testable. On
 a signed-in browser, sign out first.
 
+## 4b. Recruited cohorts (Maze etc.)
+
+Give recruited participants **`zeyaai.com/nomi?cohort=maze`** (any short
+label). The label persists in that browser and is written as `cohort` on
+every users/events/prompts row they produce. It is a **label, not an
+exclusion**: assignment, flow and events are identical to ad traffic, so the
+two populations are compared side by side, never mixed:
+
+```sql
+select coalesce(cohort,'ads') population, variant, count(*) visitors,
+  count(*) filter (where first_output_at is not null) first_output,
+  count(*) filter (where registered) registered
+from nomi_users where experiment='nomi_personalization_onboarding_v3'
+  and not coalesce(exp_override,false) and not coalesce(internal,false) and not coalesce(bot,false)
+group by 1,2 order by 1,2;
+```
+
+Do not add `internal=1` or `nomi_variant=` to a recruitment link — the hash
+must assign the arm. The page is embeddable (no frame restrictions), so a
+Maze website task can open it inline.
+
 ## 5. Turning it off / shipping an arm
 
 In `nomi.html` (edit `mvp-nomi.html`, then build + push as usual):

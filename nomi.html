@@ -1417,6 +1417,16 @@ this is my whole personality now</div>
     }catch(e){}
   })();
   function expOverride(){try{return localStorage.getItem("nomiVariantOverride")||null}catch(e){return null}}
+  // Recruited cohorts (e.g. ?cohort=maze): a persistent LABEL on every row this
+  // browser writes, so recruited participants and ad traffic can be read
+  // separately. Never an exclusion - assignment and flow are identical.
+  (function(){
+    var m=location.search.match(/[?&]cohort=([A-Za-z0-9_-]{1,24})/);
+    if(!m)return;
+    try{localStorage.setItem("nomiCohort",m[1].toLowerCase())}catch(e){}
+    try{history.replaceState(null,"",location.pathname+location.hash);}catch(e){}
+  })();
+  function cohort(){try{return localStorage.getItem("nomiCohort")||undefined}catch(e){return undefined}}
   function expVariant(){
     var ov=expOverride(); if(ov)return ov;
     var st=null; try{st=localStorage.getItem("nomiVariant")}catch(e){}
@@ -1640,7 +1650,7 @@ this is my whole personality now</div>
     try{
       var payload=JSON.stringify({uid:uid(),internal:INTERNAL,session:session(!!beacon),
         token:beacon&&S.token?S.token:undefined,
-        exp:expPayload(),
+        exp:expPayload(),cohort:cohort(),
         events:[{event:event,meta:meta||undefined}]});
       // On the way out the door only sendBeacon is reliable - iOS webviews kill
       // in-flight fetches when the page is dismissed, which is exactly the case
@@ -2142,7 +2152,7 @@ this is my whole personality now</div>
         var email=document.getElementById(ctx+"-email").value.trim();
         var code=document.getElementById(ctx+"-code").value.trim();
         loading(true,"loadAuth");
-        fetch(API+"/api/auth/email/verify",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:email,code:code,uid:uid(),internal:INTERNAL,exp:expPayload(),session:session(),guestState:migrationState(ctx)})})
+        fetch(API+"/api/auth/email/verify",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:email,code:code,uid:uid(),internal:INTERNAL,exp:expPayload(),cohort:cohort(),session:session(),guestState:migrationState(ctx)})})
           .then(function(r){return r.json()})
           .then(function(d){ loading(false); if(d.ok) finishAuth(ctx,d.session); else toast(t("tAuthErr")); })
           .catch(function(){ loading(false); toast(t("tOffline")); });
@@ -2336,7 +2346,7 @@ this is my whole personality now</div>
       try{emailInput.focus({preventScroll:true})}catch(e){emailInput.focus()}
       return;
     }
-    fetch(API+"/api/waitlist",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:email,source:"nomi-mvp",uid:uid(),internal:INTERNAL,exp:expPayload(),session:session()})})
+    fetch(API+"/api/waitlist",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:email,source:"nomi-mvp",uid:uid(),internal:INTERNAL,exp:expPayload(),cohort:cohort(),session:session()})})
       .then(function(r){return r.json()})
       .then(function(d){
         if(d.ok){
@@ -2927,7 +2937,7 @@ this is my whole personality now</div>
     fetch(API+"/api/generate",{
       method:"POST",
       headers:Object.assign({"Content-Type":"application/json"},S.token?{Authorization:"Bearer "+S.token}:{}),
-      body:JSON.stringify({idea:idea,self:collectSelf(),contentLang:S.contentLang,category:currentCategory(),uid:uid(),internal:INTERNAL,exp:expPayload(),session:session()})
+      body:JSON.stringify({idea:idea,self:collectSelf(),contentLang:S.contentLang,category:currentCategory(),uid:uid(),internal:INTERNAL,exp:expPayload(),cohort:cohort(),session:session()})
     })
     .then(function(r){
       return r.json().catch(function(){return null}).then(function(d){return {status:r.status,body:d}});
@@ -3790,7 +3800,7 @@ this is my whole personality now</div>
     var proj=curProject();
     fetch(API+"/api/refine",{
       method:"POST",headers:Object.assign({"Content-Type":"application/json"},S.token?{Authorization:"Bearer "+S.token}:{}),
-      body:JSON.stringify({draft:proj.drafts[psel],instruction:instruction,self:collectSelf(),contentLang:proj.contentLang||S.contentLang,category:proj.category||currentCategory(),uid:uid(),internal:INTERNAL,exp:expPayload(),session:session()})
+      body:JSON.stringify({draft:proj.drafts[psel],instruction:instruction,self:collectSelf(),contentLang:proj.contentLang||S.contentLang,category:proj.category||currentCategory(),uid:uid(),internal:INTERNAL,exp:expPayload(),cohort:cohort(),session:session()})
     })
     .then(function(r){return r.json()})
     .then(function(d){

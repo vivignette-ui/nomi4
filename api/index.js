@@ -211,8 +211,9 @@ async function storeInsertPrompt(fields) {
 const BOT_UA = /bot|crawler|spider|crawling|preview|facebookexternalhit|meta-externalagent|whatsapp|slackbot|telegram|discord|twitterbot|linkedinbot|bingpreview|headless|lighthouse|pagespeed|gtmetrix|python-requests|curl\/|wget|axios|node-fetch|go-http/i;
 // Nothing is suppressed: internal test traffic and crawler hits are RECORDED
 // and flagged, so the pilot numbers can be filtered at analysis time.
-async function track(uid, email, events, internal, ua, session, exp) {
+async function track(uid, email, events, internal, ua, session, exp, cohort) {
   if (!uid && !email) return;
+  const cohortTag = (typeof cohort === "string" && /^[a-z0-9_-]{1,24}$/.test(cohort)) ? cohort : undefined;
   // Known team/friend accounts are always treated as internal, however they
   // arrive, so the pilot funnel stays clean without deleting anything.
   const knownInternal = String(process.env.INTERNAL_EMAILS || "")
@@ -244,6 +245,7 @@ async function track(uid, email, events, internal, ua, session, exp) {
     experiment: expName,
     variant: expVariant,
     exp_override: expOverride || undefined,
+    cohort: cohortTag,
   }));
 
   const got = await storeGetUser(uid);
@@ -261,6 +263,7 @@ async function track(uid, email, events, internal, ua, session, exp) {
   // The variant sticks to the row the first time it is seen and is never
   // overwritten - registering attaches the email to the SAME uid row, so the
   // original anonymous assignment survives authentication by construction.
+  if (cohortTag && !prev.cohort) userFields.cohort = cohortTag;
   if (expName && !prev.experiment) userFields.experiment = expName;
   if (expVariant && !prev.variant) userFields.variant = expVariant;
   if (expOverride) userFields.exp_override = true;
@@ -337,6 +340,7 @@ async function logPrompt(row) {
     experiment: (row.exp && row.exp.e) ? String(row.exp.e).slice(0, 60) : undefined,
     variant: (row.exp && (row.exp.v === "explicit_shape" || row.exp.v === "learned_create")) ? row.exp.v : undefined,
     exp_override: !!(row.exp && row.exp.o) || undefined,
+    cohort: (typeof row.cohort === "string" && /^[a-z0-9_-]{1,24}$/.test(row.cohort)) ? row.cohort : undefined,
     uid: row.uid ? String(row.uid).slice(0, 64) : undefined,
     email: row.email || undefined,
     idea: String(row.idea || "").slice(0, 4000),
@@ -920,7 +924,7 @@ export default async function handler(req, res) {
       const session = makeSession(email);
       const existed = !!(await kvGet("state:" + session.userId));
       await migrateGuestState(session.userId, body.guestState, true);
-      await track(body.uid, email, [{ event: existed ? "sign_in" : "register", meta: { method: "email" } }], body.internal, req.headers["user-agent"], body.session, body.exp);
+      await track(body.uid, email, [{ event: existed ? "sign_in" : "register", meta: { method: "email" } }], body.internal, req.headers["user-agent"], body.session, body.exp, body.cohort);
       return res.status(200).json({ ok: true, session });
     }
 
@@ -1025,7 +1029,7 @@ Signing you in… you can close this window.</body>`);
       // sendBeacon (used by the exit ping) cannot set an Authorization header,
       // so accept the token in the body as a fallback.
       const sess = sessionFromToken(tokenFrom(req) || body.token);
-      await track(body.uid, sess ? sess.identity : null, Array.isArray(body.events) ? body.events : [], body.internal, req.headers["user-agent"], body.session, body.exp);
+      await track(body.uid, sess ? sess.identity : null, Array.isArray(body.events) ? body.events : [], body.internal, req.headers["user-agent"], body.session, body.exp, body.cohort);
       return res.status(200).json({ ok: true });
     }
 
@@ -1070,8 +1074,8 @@ Signing you in… you can close this window.</body>`);
         cur.projects = projects.slice(0, 30);
         await kvSet("state:" + sess.userId, cur);
       }
-      await track(body.uid, sess ? sess.identity : null, [{ event: "generate", meta: { researched, category: cat, lang: body.contentLang || "en" } }], body.internal, req.headers["user-agent"], body.session, body.exp);
-      await logPrompt({ exp: body.exp, uid: body.uid, email: sess ? sess.identity : null, idea: body.idea, kind: "generate",
+      await track(body.uid, sess ? sess.identity : null, [{ event: "generate", meta: { researched, category: cat, lang: body.contentLang || "en" } }], body.internal, req.headers["user-agent"], body.session, body.exp, body.cohort);
+      await logPrompt({ exp: body.exp, cohort: body.cohort, uid: body.uid, email: sess ? sess.identity : null, idea: body.idea, kind: "generate",
         contentLang: body.contentLang || "en", category: cat, self: body.self, projectName,
         titles: drafts.map(d => d.title), researched, internal: body.internal });
       return res.status(200).json({ drafts, projectName, projectId, model, usage, researched, brief: body.internal ? brief : undefined });
@@ -1105,10 +1109,10 @@ Signing you in… you can close this window.</body>`);
         out = { ...out, ...(await repairLanguage(out, body.contentLang || "en", body.self).catch(() => out)) };
       }
       const sessR = sessionFromToken(tokenFrom(req));
-      await logPrompt({ exp: body.exp, uid: body.uid, email: sessR ? sessR.identity : null, idea: body.instruction, kind: "refine",
+      await logPrompt({ exp: body.exp, cohort: body.cohort, uid: body.uid, email: sessR ? sessR.identity : null, idea: body.instruction, kind: "refine",
         contentLang: body.contentLang || "en", category: body.category, self: body.self,
         titles: [out.title], internal: body.internal });
-      await track(body.uid, sessR ? sessR.identity : null, [{ event: "refine", meta: { instruction: String(body.instruction).slice(0, 60) } }], body.internal, req.headers["user-agent"], body.session, body.exp);
+      await track(body.uid, sessR ? sessR.identity : null, [{ event: "refine", meta: { instruction: String(body.instruction).slice(0, 60) } }], body.internal, req.headers["user-agent"], body.session, body.exp, body.cohort);
       return res.status(200).json({ draft: out, usage });
     }
 
@@ -1194,7 +1198,7 @@ Signing you in… you can close this window.</body>`);
       await kvSet("waitlist", list);
       console.log(`[waitlist] ${email}`);
       const sessW = sessionFromToken(tokenFrom(req));
-      await track(body.uid, sessW ? sessW.identity : null, [{ event: "waitlist_join", meta: { email } }], body.internal, req.headers["user-agent"], body.session, body.exp);
+      await track(body.uid, sessW ? sessW.identity : null, [{ event: "waitlist_join", meta: { email } }], body.internal, req.headers["user-agent"], body.session, body.exp, body.cohort);
       return res.status(200).json({ ok: true });
     }
 

@@ -47,7 +47,8 @@ create table if not exists nomi_users (
   exp_override          boolean,       -- QA-forced variant: exclude from outcomes
   exposed_at            timestamptz,   -- first entry into a variant experience
   first_output_at       timestamptz,   -- first generated output viewed
-  mins_to_first_output  numeric        -- exposure -> first output (time to value)
+  mins_to_first_output  numeric,       -- exposure -> first output (time to value)
+  cohort                text           -- recruited-cohort label (e.g. maze); never an exclusion
 );
 
 create table if not exists nomi_events (
@@ -67,7 +68,8 @@ create table if not exists nomi_events (
   bot             boolean,
   experiment      text,
   variant         text,
-  exp_override    boolean
+  exp_override    boolean,
+  cohort          text
 );
 
 create table if not exists nomi_prompts (
@@ -90,7 +92,8 @@ create table if not exists nomi_prompts (
   local_time   text,
   experiment   text,
   variant      text,
-  exp_override boolean
+  exp_override boolean,
+  cohort       text
 );
 
 create index if not exists nomi_events_uid_idx     on nomi_events (uid);
